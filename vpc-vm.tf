@@ -1,3 +1,10 @@
+terraform {
+  backend "s3" {
+    bucket = "terraform-bucket-alex"
+    key    = "terraform.tfstate"
+    region = "ca-central-1"
+  }
+}
 provider "aws" {
     region = "${var.aws_region}"
 }
@@ -23,7 +30,7 @@ resource "aws_vpc" "terra-demo-vpc" {
 resource "aws_subnet" "web-subnet" {
     vpc_id = "${aws_vpc.terra-demo-vpc.id}"
     cidr_block = "${var.subnet}"
-    availability_zone = "ap-south-1a"
+    availability_zone = "ca-central-1a"
     tags = {
       Name = "terra-demo-websubnet"
     }
