@@ -14,16 +14,6 @@ resource "aws_key_pair" "depl" {
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCL0RD8cxxzjtZgUZWtc9VlD8z6ZLlYGEjd7pmXxGn5qEYJZ6uEcLr10CTL8Q0f8gTrM7wTQX7UolseLfRiH61f8h0t0mZHbprIzd6eoauHPZd7OPo8rDOfK5nF9uJg3GBp3RqbRQYJGLFhJmbLb5wVs/XeMUFdr9klwOa0Wnodz72pGg71ZqNAfq4NI/YPZqkVlo8C6A8IPL5jTu+oeHFcHRux+4g0eEdL+p2m42UgRJmcgcf0/gvNn8rtKaYie9G5F2m4OYtAMcEzVc6g5atJu9MzBcUeyeC0t2iwZM7/vy/DSbkIGZBDA9WWWLx/EL74u4dJ5Dq5Ae1JgoyLLEfB terra-kp"
 }
 
-resource "aws_s3_bucket" "terra-demo-bucket-new" {
-  bucket = "terra-demo-bucket-new"
-  acl    = "private"
-
-  tags = {
-    Name        = "terra demo bucketaa"
-    Environment = "Demo"
-  }
-}
-
 resource "aws_vpc" "terra-demo-vpc" {
     cidr_block = "${var.vpc_cidr}" 
 }
