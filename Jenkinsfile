@@ -18,9 +18,9 @@ try {
         accessKeyVariable: 'AWS_ACCESS_KEY_ID',
         secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
       ]]) {
-        ansiColor('xterm') {
+
           sh 'terraform init'
-        }
+        
       }
     }
   }
@@ -34,9 +34,9 @@ try {
         accessKeyVariable: 'AWS_ACCESS_KEY_ID',
         secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
       ]]) {
-        ansiColor('xterm') {
+
           sh 'terraform plan'
-        }
+        
       }
     }
   }
@@ -52,9 +52,9 @@ try {
           accessKeyVariable: 'AWS_ACCESS_KEY_ID',
           secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
         ]]) {
-          ansiColor('xterm') {
+
             sh 'terraform apply -auto-approve'
-          }
+          
         }
       }
     }
@@ -68,9 +68,9 @@ try {
           accessKeyVariable: 'AWS_ACCESS_KEY_ID',
           secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
         ]]) {
-          ansiColor('xterm') {
+
             sh 'terraform show'
-          }
+          
         }
       }
     }
