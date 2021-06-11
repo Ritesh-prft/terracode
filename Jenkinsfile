@@ -41,8 +41,8 @@ String credentialsId = '603364e2-4eef-446d-a794-ea5d092fc44f'
     }
   }
 
-    // Run terraform destroy
-    stage('destroy') {
+    // Run terraform apply
+    stage('apply') {
       node {
         withCredentials([[
           $class: 'AmazonWebServicesCredentialsBinding',
@@ -51,7 +51,7 @@ String credentialsId = '603364e2-4eef-446d-a794-ea5d092fc44f'
           secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
         ]]) {
 
-            sh 'terraform destroy -auto-approve'
+            sh 'terraform apply -auto-approve'
           
         }
       }
