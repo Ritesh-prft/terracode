@@ -1,7 +1,7 @@
 // Jenkinsfile
 String credentialsId = '603364e2-4eef-446d-a794-ea5d092fc44f'
 
-try {
+
   stage('checkout') {
     node {
       cleanWs()
@@ -56,4 +56,4 @@ try {
         }
       }
     }
-}
+
