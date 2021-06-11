@@ -8,7 +8,7 @@ variable "subnet" {
     default = "10.0.0.0/28"
 }
 variable "ami_id" {
-    default = "ami-0860c9429baba6ad2"
+    default = "ami-07625b74039b1a58b"
 }
 variable "instance_name" {
     default = "demo-vm-01"
