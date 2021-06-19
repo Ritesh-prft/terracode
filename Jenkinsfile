@@ -3,7 +3,7 @@ pipeline {
     agent any
   stages {
       stage('checkout') {
-        node {
+        steps {
           cleanWs()
           checkout scm
         }
