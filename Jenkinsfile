@@ -9,7 +9,6 @@ pipeline {
         }
       }
 
-#############################
       // Run terraform init
       stage('init') {
             steps {
