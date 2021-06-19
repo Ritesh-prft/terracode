@@ -5,7 +5,7 @@
     region = "ap-south-1"
   }
 } */
-data "terraform_remote_state" "network" {
+/* data "terraform_remote_state" "network" {
   backend = "s3"
   config = {
     bucket = "jenkins-bucket-tfstate"
@@ -13,7 +13,7 @@ data "terraform_remote_state" "network" {
     region = "ap-south-1"
   }
 }
-
+ */
 
 provider "aws" {
   region = "ap-south-1"
