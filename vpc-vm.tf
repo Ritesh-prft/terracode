@@ -8,10 +8,7 @@ terraform {
 }
 provider "aws" {
   region = "ap-south-1"
-
-  assume_role {
-    role_arn = "arn:aws:iam::466515034134:role/jenkins-deploy"
-  }
+  profile = "aws_profile"
 }
 
 
