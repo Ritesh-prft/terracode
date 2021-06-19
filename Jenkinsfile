@@ -12,7 +12,7 @@ pipeline {
       // Run terraform init
       stage('init') {
             steps {
-              withAWS(role:'jenkins-deploy') {
+              withAWS(role:'jenkins-deploy', roleArn: 'arn:aws:iam::466515034134:role/jenkins-deploy',roleSessionName: 'jenkins-session'  ) {
                     sh 'terraform init -no-color'
                 }
             }
@@ -20,7 +20,7 @@ pipeline {
       // Run terraform plan
       stage('plan') {
         steps {
-          withAWS(role:'jenkins-deploy') {
+          withAWS(role:'jenkins-deploy', roleArn: 'arn:aws:iam::466515034134:role/jenkins-deploy',roleSessionName: 'jenkins-session') {
               sh 'terraform plan'           
           }
         }
