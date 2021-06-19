@@ -3,13 +3,14 @@ terraform {
     bucket = "terraform-bucket-terra"
     key    = "terraform.tfstate"
     region = "ca-central-1"
+    role_arn = "arn:aws:iam::466515034134:role/jenkins-deploy"
   }
 }
 provider "aws" {
   region = "ap-south-1"
 
   assume_role {
-    role_arn = "arn:aws:iam::XXXXX:role/XXXXXX"
+    role_arn = "arn:aws:iam::466515034134:role/jenkins-deploy"
   }
 }
 
