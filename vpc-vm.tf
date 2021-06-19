@@ -34,7 +34,7 @@ resource "aws_vpc" "terra-demo-vpc-role" {
     cidr_block = "192.168.0.0/16" 
 }
 resource "aws_subnet" "web-subnet-role" {
-    vpc_id = "${aws_vpc.terra-demo-vpc.id}"
+    vpc_id = "${aws_vpc.terra-demo-vpc-role.id}"
     cidr_block = "192.168.1.0/24"
     availability_zone = "ca-central-1a"
     tags = {
