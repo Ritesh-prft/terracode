@@ -3,7 +3,7 @@ terraform {
     bucket = "jenkins-bucket-tfstate"
     key    = "terraform.tfstate"
     region = "ap-south-1"
-    role_arn = "arn:aws:iam::466515034134:role/role_s3"
+    profile = "${var.AWS_PROFILE}"
   }
 }
 
