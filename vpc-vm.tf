@@ -1,10 +1,16 @@
 
 provider "aws" {
   region = "ap-south-1"
+  assume_role {
+    role_arn     = "arn:aws:iam::466515034134:role/jenkins-deploy"
+  }
+}
+/* provider "aws" {
+  region = "ap-south-1"
   shared_credentials_file = "$HOME/.aws/credentials"
   profile = "aws_profile"
 }
-
+ */
 
 resource "aws_vpc" "terra-demo-vpc-role" {
     cidr_block = "192.168.0.0/16" 
