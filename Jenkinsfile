@@ -12,7 +12,7 @@ pipeline {
       // Run terraform init
       stage('init') {
             steps {
-              withAWS(role:'jenkins-deploy' roleSessionName: 'jenkins-session') {
+              withAWS(role:'jenkins-deploy') {
                     sh 'terraform init -no-color'
                 }
             }
