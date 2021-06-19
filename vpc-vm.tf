@@ -6,9 +6,12 @@ terraform {
   }
 }
 provider "aws" {
-    region = "${var.aws_region}"
-    profile = "aws_profile"
+  region = "ap-south-1"
+
+  assume_role {
+    role_arn = "arn:aws:iam::XXXXX:role/XXXXXX"
   }
+}
 
 
 resource "aws_vpc" "terra-demo-vpc-role" {
