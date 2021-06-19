@@ -20,7 +20,7 @@ pipeline {
       // Run terraform plan
       stage('plan') {
         steps {
-          withAWS(role:'jenkins-deploy' duration: 900, roleSessionName: 'jenkins-session') {
+          withAWS(role:'jenkins-deploy') {
               sh 'terraform plan'           
           }
         }
