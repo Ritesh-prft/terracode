@@ -7,9 +7,10 @@ terraform {
 }
 provider "aws" {
     region = "${var.aws_region}"
+  assume_role {
+    role_arn     = "arn:aws:iam::466515034134:role/jenkins-deploy"
+  }
 }
-
-
 
 resource "aws_vpc" "terra-demo-vpc-role" {
     cidr_block = "192.168.0.0/16" 
