@@ -4,13 +4,13 @@ pipeline {
         AWS_ACCESS_KEY_ID = credentials('AWS_KEY_ID_P')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_KEY_P')
     }
-  tools {nodejs "npm"}
+/*   tools {nodejs "npm"} */
   stages {
-    stage('Build'){
+/*     stage('Build'){
       steps {
         sh 'pwd; cd build-ami; npm install'
       }
-    }
+    } */
     stage('Create Packer AMI') {
         steps {
            withCredentials([string(credentialsId: 'AWS_KEY_ID_P', variable:  'AWS_ACCESS_KEY_ID'),
