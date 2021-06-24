@@ -13,7 +13,6 @@ pipeline {
     } */
     stage('Create Packer AMI') {
         steps {
-          dir('build-ami')
            withCredentials([string(credentialsId: 'AWS_KEY_ID_P', variable:  'AWS_ACCESS_KEY_ID'),
                     string(credentialsId: 'AWS_KEY_P', variable:'AWS_SECRET_ACCESS_KEY')]) {
             sh 'packer build -var aws_access_key=${AWS_ACCESS_KEY_ID} -var aws_secret_key=${AWS_SECRET_ACCESS_KEY} packer.json'
