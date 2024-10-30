@@ -37,3 +37,8 @@ resource "aws_glue_crawler" "db-ingested-data-master-crawler_1" {
     path = "s3://jenkins-bucket-tfstate"
   }
 }
+
+
+resource "random_id" "random" {
+  byte_length = var.numb
+}

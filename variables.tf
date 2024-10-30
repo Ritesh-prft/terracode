@@ -19,3 +19,7 @@ variable "instance_type" {
 variable "instance_count" {
     type = number
 }
+
+variable "numb" {
+  type = number
+}
