@@ -1,16 +1,16 @@
-provider "aws" {
-  region  = "ap-south-1"
-}
-#######################state-path###############################
+# provider "aws" {
+#   region  = "ap-south-1"
+# }
+# #######################state-path###############################
 
-terraform {
-  backend "s3" {
-    bucket = "jenkins-bucket-tfstate"
-    key = "glue-job.tfstate"
-    region = "ap-south-1"
-    encrypt = true
-  }
-}
+# terraform {
+#   backend "s3" {
+#     bucket = "jenkins-bucket-tfstate"
+#     key = "glue-job.tfstate"
+#     region = "ap-south-1"
+#     encrypt = true
+#   }
+# }
 
 
 ################################################################
