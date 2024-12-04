@@ -28,8 +28,11 @@ jobs:
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="dev"
 
-          # Use git show to get the commit message for the tag (ignores merge commits)
-          COMMIT_MESSAGE=$(git show -s --pretty=%B "${TAG_NAME}")
+          # Get the commit hash associated with the tag
+          COMMIT_HASH=$(git rev-list -n 1 "$TAG_NAME")
+
+          # Use git show to get the commit message for the specific commit (not merge commit)
+          COMMIT_MESSAGE=$(git show -s --pretty=%B "$COMMIT_HASH")
           echo "Commit message: $COMMIT_MESSAGE"
           
           # Parse the commit message to extract the changes (example)
@@ -66,8 +69,11 @@ jobs:
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="qa"
 
-          # Get the commit message that created the tag
-          COMMIT_MESSAGE=$(git show -s --pretty=%B "${TAG_NAME}")
+          # Get the commit hash associated with the tag
+          COMMIT_HASH=$(git rev-list -n 1 "$TAG_NAME")
+
+          # Use git show to get the commit message for the specific commit (not merge commit)
+          COMMIT_MESSAGE=$(git show -s --pretty=%B "$COMMIT_HASH")
           echo "Commit message: $COMMIT_MESSAGE"
 
           # Parse the commit message to extract the changes (example)
@@ -104,8 +110,11 @@ jobs:
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="prod"
 
-          # Get the commit message that created the tag
-          COMMIT_MESSAGE=$(git show -s --pretty=%B "${TAG_NAME}")
+          # Get the commit hash associated with the tag
+          COMMIT_HASH=$(git rev-list -n 1 "$TAG_NAME")
+
+          # Use git show to get the commit message for the specific commit (not merge commit)
+          COMMIT_MESSAGE=$(git show -s --pretty=%B "$COMMIT_HASH")
           echo "Commit message: $COMMIT_MESSAGE"
 
           # Parse the commit message to extract the changes (example)
