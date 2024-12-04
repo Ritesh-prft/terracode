@@ -1,0 +1,64 @@
+name: Create Tag on PR Approval
+
+on:
+  pull_request:
+    # types: [submitted]  # Trigger when a review is submitted
+    branches:
+      - main  # Only for PRs targeting the main branch
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - closed
+jobs:
+  create_tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # - name: Check if review is approved
+      #   id: check_approval
+      #   run: |
+      #     REVIEW_STATE=$(jq --raw-output .review.state $GITHUB_EVENT_PATH)
+      #     if [[ "$REVIEW_STATE" != "APPROVED" ]]; then
+      #       echo "PR not approved, skipping tag creation."
+      #       exit 1
+      #     fi
+      #     echo "PR is approved. Proceeding to create the tag."
+
+      - name: Set up Git for tagging
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+
+      - name: Create tag based on commit message
+        id: create_tag
+        run: |
+          # Fetch latest commits to determine version bump
+          git fetch --prune --unshallow
+          LAST_COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+
+          # Set default version (can be adjusted as per requirement)
+          VERSION="1.0.0"
+
+          # Determine version based on commit message (MAJOR, MINOR, PATCH)
+          if [[ "$LAST_COMMIT_MESSAGE" == *"MAJOR"* ]]; then
+            VERSION="2.0.0"
+          elif [[ "$LAST_COMMIT_MESSAGE" == *"MINOR"* ]]; then
+            VERSION="1.1.0"
+          elif [[ "$LAST_COMMIT_MESSAGE" == *"PATCH"* ]]; then
+            VERSION="1.0.1"
+          fi
+
+          # Create the tag based on the determined version
+          echo "Creating tag: $VERSION"
+          git tag $VERSION
+          git push origin $VERSION
+
+          # Set the tag version as output to be used in the deployment pipeline
+          echo "::set-output name=version::$VERSION"
+
+      - name: Display created tag
+        run: |
+          echo "Created tag: ${{ steps.create_tag.outputs.version }}"
