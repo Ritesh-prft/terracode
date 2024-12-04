@@ -23,8 +23,8 @@ jobs:
 
       - name: Set up Git for tagging
         run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
+          git config --global user.name "rkhadke-ven"
+          git config --global user.email "rkhadke@gmail.com"
 
       - name: Fetch tags from remote
         run: |
