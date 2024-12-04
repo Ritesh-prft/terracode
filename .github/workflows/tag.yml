@@ -102,14 +102,14 @@ jobs:
           echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
 
       - name: Create and push the new tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}  # Using PAT stored in GitHub secrets
         run: |
           NEW_TAG="${{ env.NEW_TAG }}"
           git tag $NEW_TAG
-          # git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
+          
+          # Authenticate using the PAT and push the tag to the remote repository
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
           git push origin $NEW_TAG
+          
           echo "Created and pushed tag: $NEW_TAG"
-
-
-      - name: Display the created tag
-        run: |
-          echo "Created tag: ${{ env.NEW_TAG }}"
