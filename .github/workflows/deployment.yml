@@ -1,10 +1,9 @@
-
-name: Deploy from Tag
+name: Deploy to Environments
 
 on:
   push:
     tags:
-      - 'tag-v*.*.*'  # Trigger deployment for any versioned tags (e.g., v1.0.0)
+      - 'tag-v*'  # Trigger on any push to tags that start with tag-v
 
 jobs:
   deploy_to_dev:
@@ -13,48 +12,34 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Deploy to Dev environment
+      # - name: Set up AWS CLI
+      #   run: |
+      #     aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws configure set region ${{ secrets.AWS_REGION }}
+
+      - name: Deploy to DEV
         run: |
-          TAG_VERSION="${GITHUB_REF#refs/tags/}"  # Extract tag from the GITHUB_REF variable
-          echo "Deploying to Dev with tag: $TAG_VERSION"
-          # Deploy to Dev using the tag version (AWS, GCP, etc.)
+          echo "Deploying to DEV environment using tag ${{ github.ref }}"
 
   deploy_to_qa:
-    needs: deploy_to_dev
     runs-on: ubuntu-latest
-    environment: qa
+    needs: deploy_to_dev
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Deploy to QA environment
+      - name: Deploy to QA
         run: |
-          TAG_VERSION="${GITHUB_REF#refs/tags/}"
-          echo "Deploying to QA with tag: $TAG_VERSION"
-          # Deploy to QA using the tag version
-
-      - name: Request QA Approval
-        if: success()
-        uses: peter-evans/approve-pull-request-action@v2
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          echo "Deploying to QA environment using tag ${{ github.ref }}"
 
   deploy_to_prod:
-    needs: deploy_to_qa
     runs-on: ubuntu-latest
-    environment: prod
+    needs: deploy_to_qa
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Deploy to Prod environment
+      - name: Deploy to PROD
         run: |
-          TAG_VERSION="${GITHUB_REF#refs/tags/}"
-          echo "Deploying to Prod with tag: $TAG_VERSION"
-          # Deploy to Prod using the tag version
-
-      - name: Request Prod Approval
-        if: success()
-        uses: peter-evans/approve-pull-request-action@v2
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          echo "Deploying to PROD environment using tag ${{ github.ref }}"
