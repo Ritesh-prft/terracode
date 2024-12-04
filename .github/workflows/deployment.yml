@@ -17,29 +17,19 @@ jobs:
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
 
-      - name: Get Commit Messages for Changelog Update
+      - name: Get Commit Message for Changelog Update
         run: |
           TAG_NAME="${{ github.ref_name }}"
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="dev"
 
-          # Get the commit messages from the feature branch associated with the tag
-          PR_NUMBER=$(echo $TAG_NAME | grep -oP '(?<=v)\d+')
-          echo "PR Number: $PR_NUMBER"
-
-          # Fetch PR details using GitHub API
-          PR_URL="https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}"
-          PR_SOURCE_BRANCH=$(curl -s $PR_URL | jq -r .head.ref)
-          echo "Feature Branch: $PR_SOURCE_BRANCH"
-
-          # Fetch commits from the feature branch
-          git fetch origin $PR_SOURCE_BRANCH
-          COMMITS=$(git log origin/$PR_SOURCE_BRANCH --oneline)
-          echo "Commits in feature branch $PR_SOURCE_BRANCH: $COMMITS"
+          # Use `git show` to get the last commit message for the tag
+          COMMIT_MESSAGE=$(git show -s --pretty=%B "${TAG_NAME}")
+          echo "Commit message: $COMMIT_MESSAGE"
 
           # Prepare changelog entry for DEV
           # Add a separator line before the new changelog entry
-          echo -e "\n---\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **$ENVIRONMENT**: $DATE\n$COMMITS\n\n---\n" >> CHANGELOG.md
+          echo -e "\n---\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **$ENVIRONMENT**: $DATE\n$COMMIT_MESSAGE\n\n---\n" >> CHANGELOG.md
           
           # Checkout the main branch to ensure we're updating the right branch
           git fetch --all
@@ -50,6 +40,7 @@ jobs:
           git commit -m "Update changelog for $TAG_NAME deployment to $ENVIRONMENT"
           git push origin main
           echo "Changelog updated for $TAG_NAME deployment to $ENVIRONMENT"
+
 
 
 
