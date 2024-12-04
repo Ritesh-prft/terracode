@@ -40,7 +40,7 @@ jobs:
         run: |
           VERSION="${{ env.latest_tag }}"
           VERSION_PARTS=(${VERSION//./ })
-          MAJOR="${VERSION_PARTS[0]//v/}"
+          MAJOR="${VERSION_PARTS[0]//tag-v/}"  # Remove leading 'tag-v'
           MINOR="${VERSION_PARTS[1]}"
           PATCH="${VERSION_PARTS[2]}"
 
@@ -72,10 +72,10 @@ jobs:
           fi
 
           # Update the version components
-          echo "Updated Version: v${MAJOR}.${MINOR}.${PATCH}"
+          echo "Updated Version: tag-v${MAJOR}.${MINOR}.${PATCH}"
 
           # Set environment variables for updated version
-          echo "NEW_TAG=v${MAJOR}.${MINOR}.${PATCH}" >> $GITHUB_ENV
+          echo "NEW_TAG=tag-v${MAJOR}.${MINOR}.${PATCH}" >> $GITHUB_ENV
 
       - name: Check if the tag already exists
         id: check_tag
@@ -86,7 +86,7 @@ jobs:
           if [[ -n "$TAG_EXISTS" ]]; then
             echo "Tag $NEW_TAG already exists. Incrementing PATCH version."
             PATCH=$((PATCH + 1))
-            NEW_TAG="v${MAJOR}.${MINOR}.${PATCH}"
+            NEW_TAG="tag-v${MAJOR}.${MINOR}.${PATCH}"
             echo "Updated to new tag: $NEW_TAG"
           fi
           echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
