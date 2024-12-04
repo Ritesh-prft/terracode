@@ -3,7 +3,8 @@ name: Deploy to Environments
 on:
   push:
     tags:
-      - tag-v*
+      - '*'
+
 
 jobs:
   deploy_to_dev:
