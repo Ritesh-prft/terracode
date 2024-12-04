@@ -31,11 +31,11 @@ jobs:
           # Get the commit hash associated with the tag
           COMMIT_HASH=$(git rev-list -n 1 "$TAG_NAME")
 
-          # Use git log to find the first non-merge commit in the history of the tag
-          NON_MERGE_COMMIT_HASH=$(git log --merges="$COMMIT_HASH" --first-parent -n 1 --no-merges --pretty=%H)
+          # Find the first non-merge commit in the history of the tag using 'git log'
+          NON_MERGE_COMMIT_HASH=$(git log "$COMMIT_HASH" --no-merges --first-parent -n 1 --pretty=%H)
 
+          # If no non-merge commit found, fall back to the original commit
           if [ -z "$NON_MERGE_COMMIT_HASH" ]; then
-            # If no non-merge commit found, fall back to the original commit
             NON_MERGE_COMMIT_HASH=$COMMIT_HASH
           fi
 
@@ -60,6 +60,7 @@ jobs:
           git commit -m "Update changelog for $TAG_NAME deployment to $ENVIRONMENT"
           git push origin main
           echo "Changelog updated for $TAG_NAME deployment to $ENVIRONMENT"
+
 
 
 
