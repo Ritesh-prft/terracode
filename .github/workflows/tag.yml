@@ -1,7 +1,9 @@
-name: Tag Creation and Deployment Workflow
+
+name: Create and Push Tag for Semantic Versioning
 
 on:
   pull_request:
+    # types: [submitted]  # Trigger when a review is submitted
     branches:
       - main  # Only for PRs targeting the main branch
     types:
@@ -9,18 +11,15 @@ on:
       - synchronize
       - reopened
       - closed
-  push:
-    tags:
-      - 'tag-v*'  # Trigger deployment on tag creation
 
 jobs:
-  # Job 1: Create Tag
   create_tag:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true  # Only run after PR merge
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          github_token: ${{ secrets.PAT_TOKEN }}
 
       - name: Set up Git for tagging
         run: |
@@ -37,9 +36,12 @@ jobs:
         run: |
           # List all tags and find the most recent one
           LATEST_TAG=$(git tag --list 'tag-v*' | sort -V | tail -n 1)
+
           if [ -z "$LATEST_TAG" ]; then
+            # If no tag found, default to 'tag-v0.0.0'
             LATEST_TAG="tag-v0.0.0"
           fi
+
           echo "Latest tag: $LATEST_TAG"
           echo "latest_tag=$LATEST_TAG" >> $GITHUB_ENV
 
@@ -48,12 +50,15 @@ jobs:
         run: |
           VERSION="${{ env.latest_tag }}"
           VERSION_PARTS=(${VERSION//./ })
-          MAJOR="${VERSION_PARTS[0]//tag-v/}"
+          MAJOR="${VERSION_PARTS[0]//tag-v/}"  # Remove leading 'tag-v'
           MINOR="${VERSION_PARTS[1]}"
           PATCH="${VERSION_PARTS[2]}"
+
           echo "MAJOR=$MAJOR"
           echo "MINOR=$MINOR"
           echo "PATCH=$PATCH"
+
+          # Set environment variables for version parts
           echo "MAJOR=$MAJOR" >> $GITHUB_ENV
           echo "MINOR=$MINOR" >> $GITHUB_ENV
           echo "PATCH=$PATCH" >> $GITHUB_ENV
@@ -61,7 +66,10 @@ jobs:
       - name: Increment version based on commit message
         id: increment_version
         run: |
+          # Check if the commit message contains "MAJOR", "MINOR", or "PATCH"
           COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+          echo "Commit message: $COMMIT_MESSAGE"
+
           if [[ "$COMMIT_MESSAGE" == *MAJOR* ]]; then
             MAJOR=$((MAJOR + 1))
             MINOR=0
@@ -72,8 +80,12 @@ jobs:
           elif [[ "$COMMIT_MESSAGE" == *PATCH* ]]; then
             PATCH=$((PATCH + 1))
           fi
-          NEW_TAG="tag-v${MAJOR}.${MINOR}.${PATCH}"
-          echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
+
+          # Update the version components
+          echo "Updated Version: tag-v${MAJOR}.${MINOR}.${PATCH}"
+
+          # Set environment variables for updated version
+          echo "NEW_TAG=tag-v${MAJOR}.${MINOR}.${PATCH}" >> $GITHUB_ENV
 
       - name: Check if the tag already exists
         id: check_tag
@@ -90,38 +102,14 @@ jobs:
           echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
 
       - name: Create and push the new tag
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           NEW_TAG="${{ env.NEW_TAG }}"
           git tag $NEW_TAG
-          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
+          # git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
           git push origin $NEW_TAG
           echo "Created and pushed tag: $NEW_TAG"
 
-  # Job 2: Deploy to DEV, QA, and PROD (triggered by tag push)
-  deploy_to_environments:
-    runs-on: ubuntu-latest
-    needs: create_tag  # Only run after the tag is created
-    if: github.event.ref == 'refs/tags/tag-v*'  # Only run when a tag is pushed
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
 
-      - name: Deploy to DEV
+      - name: Display the created tag
         run: |
-          TAG_NAME=${GITHUB_REF#refs/tags/}
-          echo "Deploying to DEV environment using tag $TAG_NAME"
-          # Add actual deployment command here
-
-      - name: Deploy to QA
-        run: |
-          TAG_NAME=${GITHUB_REF#refs/tags/}
-          echo "Deploying to QA environment using tag $TAG_NAME"
-          # Add actual deployment command here
-
-      - name: Deploy to PROD
-        run: |
-          TAG_NAME=${GITHUB_REF#refs/tags/}
-          echo "Deploying to PROD environment using tag $TAG_NAME"
-          # Add actual deployment command here
+          echo "Created tag: ${{ env.NEW_TAG }}"
