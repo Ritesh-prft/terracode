@@ -28,21 +28,21 @@ jobs:
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="dev"
 
-          # Get the commit hash associated with the tag
+          # Use git show to get the commit hash associated with the tag (skipping merge commits)
           COMMIT_HASH=$(git rev-list -n 1 "$TAG_NAME")
 
-          # Ensure we're skipping merge commits by getting the first parent commit of the tag's commit
+          # Skip merge commits by finding the first non-merge commit in the history
           NON_MERGE_COMMIT_HASH=$(git log "$COMMIT_HASH" --no-merges --first-parent -n 1 --pretty=%H)
 
-          # If no non-merge commit found, fall back to the original commit
+          # If no non-merge commit found, use the original commit hash
           if [ -z "$NON_MERGE_COMMIT_HASH" ]; then
             NON_MERGE_COMMIT_HASH=$COMMIT_HASH
           fi
 
           # Get the commit message for the non-merge commit
           COMMIT_MESSAGE=$(git show -s --pretty=%B "$NON_MERGE_COMMIT_HASH")
-
-          # Debug: Echo commit message
+          
+          # Debug: Echo commit message to verify it's correct
           echo "Commit message: $COMMIT_MESSAGE"
           
           # Parse the commit message to extract the changes (example)
@@ -60,6 +60,7 @@ jobs:
           git commit -m "Update changelog for $TAG_NAME deployment to $ENVIRONMENT"
           git push origin main
           echo "Changelog updated for $TAG_NAME deployment to $ENVIRONMENT"
+
 
 
 
