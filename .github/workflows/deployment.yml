@@ -32,7 +32,7 @@ jobs:
           COMMIT_HASH=$(git rev-list -n 1 "$TAG_NAME")
 
           # Use git show to get the commit message for the specific commit (not merge commit)
-          COMMIT_MESSAGE=$(git show -s --pretty=%B "$COMMIT_HASH")
+          COMMIT_MESSAGE=$(git show -s --pretty=%B)
           echo "Commit message: $COMMIT_MESSAGE"
           
           # If you want to capture only the major part of the commit message (like the "MAJOR" label):
