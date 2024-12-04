@@ -25,13 +25,19 @@ jobs:
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
 
-      - name: Get latest tag
-        id: get_latest_tag
+      - name: Fetch tags
         run: |
           # Fetch all tags from the remote
           git fetch --tags
-          # Get the latest tag, or default to tag-v0.0.0 if no tag exists
-          LATEST_TAG=$(git describe --tags --abbrev=0 || echo "tag-v0.0.0")
+
+      - name: Get latest tag
+        id: get_latest_tag
+        run: |
+          # Check if tags exist and fetch the latest one
+          LATEST_TAG=$(git describe --tags --abbrev=0)
+          if [ -z "$LATEST_TAG" ]; then
+            LATEST_TAG="tag-v0.0.0"
+          fi
           echo "Latest tag: $LATEST_TAG"
           echo "latest_tag=$LATEST_TAG" >> $GITHUB_ENV
 
