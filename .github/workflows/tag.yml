@@ -1,0 +1,103 @@
+
+name: Create and Push Tag for Semantic Versioning
+
+on:
+  pull_request:
+    # types: [submitted]  # Trigger when a review is submitted
+    branches:
+      - main  # Only for PRs targeting the main branch
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - closed
+
+jobs:
+  create_tag:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Git for tagging
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+
+      - name: Get latest tag
+        id: get_latest_tag
+        run: |
+          # Fetch all tags from the remote
+          git fetch --tags
+          # Get the latest tag, or default to tag-v0.0.0 if no tag exists
+          LATEST_TAG=$(git describe --tags --abbrev=0 || echo "tag-v0.0.0")
+          echo "Latest tag: $LATEST_TAG"
+          echo "latest_tag=$LATEST_TAG" >> $GITHUB_ENV
+
+      - name: Parse version components
+        id: parse_version
+        run: |
+          VERSION="${{ env.latest_tag }}"
+          VERSION_PARTS=(${VERSION//./ })
+          MAJOR="${VERSION_PARTS[0]//tag-v/}"  # Remove leading 'tag-v'
+          MINOR="${VERSION_PARTS[1]}"
+          PATCH="${VERSION_PARTS[2]}"
+
+          echo "MAJOR=$MAJOR"
+          echo "MINOR=$MINOR"
+          echo "PATCH=$PATCH"
+
+          # Set environment variables for version parts
+          echo "MAJOR=$MAJOR" >> $GITHUB_ENV
+          echo "MINOR=$MINOR" >> $GITHUB_ENV
+          echo "PATCH=$PATCH" >> $GITHUB_ENV
+
+      - name: Increment version based on commit message
+        id: increment_version
+        run: |
+          # Check if the commit message contains "MAJOR", "MINOR", or "PATCH"
+          COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+          echo "Commit message: $COMMIT_MESSAGE"
+
+          if [[ "$COMMIT_MESSAGE" == *"MAJOR"* ]]; then
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+          elif [[ "$COMMIT_MESSAGE" == *"MINOR"* ]]; then
+            MINOR=$((MINOR + 1))
+            PATCH=0
+          elif [[ "$COMMIT_MESSAGE" == *"PATCH"* ]]; then
+            PATCH=$((PATCH + 1))
+          fi
+
+          # Update the version components
+          echo "Updated Version: tag-v${MAJOR}.${MINOR}.${PATCH}"
+
+          # Set environment variables for updated version
+          echo "NEW_TAG=tag-v${MAJOR}.${MINOR}.${PATCH}" >> $GITHUB_ENV
+
+      - name: Check if the tag already exists
+        id: check_tag
+        run: |
+          NEW_TAG="${{ env.NEW_TAG }}"
+          # Check if the tag already exists in the remote repository
+          TAG_EXISTS=$(git tag -l | grep "$NEW_TAG" || echo "")
+          if [[ -n "$TAG_EXISTS" ]]; then
+            echo "Tag $NEW_TAG already exists. Incrementing PATCH version."
+            PATCH=$((PATCH + 1))
+            NEW_TAG="tag-v${MAJOR}.${MINOR}.${PATCH}"
+            echo "Updated to new tag: $NEW_TAG"
+          fi
+          echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
+
+      - name: Create and push the new tag
+        run: |
+          NEW_TAG="${{ env.NEW_TAG }}"
+          git tag $NEW_TAG
+          git push origin $NEW_TAG
+          echo "Created and pushed tag: $NEW_TAG"
+
+      - name: Display the created tag
+        run: |
+          echo "Created tag: ${{ env.NEW_TAG }}"
