@@ -3,12 +3,13 @@ name: Deploy to Environments
 on:
   push:
     tags:
-      - '*'
+      - 'tag-v*'
   workflow_dispatch:  # Allow manual triggering
 
 jobs:
   deploy_to_dev:
     runs-on: ubuntu-latest
+    environment: dev
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -17,8 +18,22 @@ jobs:
         run: |
           echo "Deploying to DEV environment using tag ${{ github.ref }}"
 
+      - name: Update Changelog for DEV
+        run: |
+          TAG_NAME="${{ github.ref }}"
+          DATE=$(date +'%Y-%m-%d')
+          ENVIRONMENT="dev"
+          CHANGES="### Changes:\n- Added new authentication feature\n- Refactored database config for improved performance"  # Adjust based on commit messages or other means
+          # Prepare changelog entry for DEV
+          echo -e "## [${TAG_NAME//refs\/tags\//}] - $DATE\n### Deployed to:\n- **$ENVIRONMENT**: $DATE\n$CHANGES\n\n---\n" >> CHANGELOG.md
+          git add CHANGELOG.md
+          git commit -m "Update changelog for $TAG_NAME deployment to $ENVIRONMENT"
+          git push origin main
+          echo "Changelog updated for $TAG_NAME deployment to $ENVIRONMENT"
+
   deploy_to_qa:
     runs-on: ubuntu-latest
+    environment: qa
     needs: deploy_to_dev
     steps:
       - name: Checkout code
@@ -28,8 +43,22 @@ jobs:
         run: |
           echo "Deploying to QA environment using tag ${{ github.ref }}"
 
+      - name: Update Changelog for QA
+        run: |
+          TAG_NAME="${{ github.ref }}"
+          DATE=$(date +'%Y-%m-%d')
+          ENVIRONMENT="qa"
+          CHANGES="### Changes:\n- Fixed role permissions\n- Updated error handling logs"  # Adjust based on commit messages or other means
+          # Prepare changelog entry for QA
+          echo -e "## [${TAG_NAME//refs\/tags\//}] - $DATE\n### Deployed to:\n- **$ENVIRONMENT**: $DATE\n$CHANGES\n\n---\n" >> CHANGELOG.md
+          git add CHANGELOG.md
+          git commit -m "Update changelog for $TAG_NAME deployment to $ENVIRONMENT"
+          git push origin main
+          echo "Changelog updated for $TAG_NAME deployment to $ENVIRONMENT"
+
   deploy_to_prod:
     runs-on: ubuntu-latest
+    environment: prod
     needs: deploy_to_qa
     steps:
       - name: Checkout code
@@ -38,3 +67,17 @@ jobs:
       - name: Deploy to PROD
         run: |
           echo "Deploying to PROD environment using tag ${{ github.ref }}"
+
+
+      - name: Update Changelog for PROD
+        run: |
+          TAG_NAME="${{ github.ref }}"
+          DATE=$(date +'%Y-%m-%d')
+          ENVIRONMENT="prd"
+          CHANGES="### Changes:\n- Fixed role permissions\n- Updated error handling logs"  # Adjust based on commit messages or other means
+          # Prepare changelog entry for PROD
+          echo -e "## [${TAG_NAME//refs\/tags\//}] - $DATE\n### Deployed to:\n- **$ENVIRONMENT**: $DATE\n$CHANGES\n\n---\n" >> CHANGELOG.md
+          git add CHANGELOG.md
+          git commit -m "Update changelog for $TAG_NAME deployment to $ENVIRONMENT"
+          git push origin main
+          echo "Changelog updated for $TAG_NAME deployment to $ENVIRONMENT"
