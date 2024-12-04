@@ -3,8 +3,7 @@ name: Deploy to Environments
 on:
   push:
     tags:
-      - '*'
-  workflow_dispatch:  # Allow manual triggering
+      - 'tag-v*'  # Trigger on any push to a tag starting with 'tag-v'
 
 jobs:
   deploy_to_dev:
@@ -13,28 +12,124 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Set up Git for tagging
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+
       - name: Deploy to DEV
         run: |
           echo "Deploying to DEV environment using tag ${{ github.ref }}"
+          # Add your deployment commands for DEV environment here
+        
+      - name: Get Changes from Commit Message and Update Changelog for DEV
+        run: |
+          TAG_NAME="${{ github.ref }}"
+          DATE=$(date +'%Y-%m-%d')
+          ENVIRONMENT="dev"
+
+          # Get the commit message that created the tag
+          COMMIT_MESSAGE=$(git log -1 --pretty=%B "${TAG_NAME}")
+          echo "Commit message: $COMMIT_MESSAGE"
+
+          # Parse the commit message to extract the changes (example)
+          CHANGES=$(echo "$COMMIT_MESSAGE" | grep -Eo '[-*]\s.+')  # Simple regex to find lines starting with "-" or "*"
+          
+          # Prepare changelog entry for DEV
+          echo -e "## [${TAG_NAME//refs\/tags\//}] - $DATE\n### Deployed to:\n- **$ENVIRONMENT**: $DATE\n$CHANGES\n\n---\n" >> CHANGELOG.md
+          
+          # Checkout the main branch to ensure we're updating the right branch
+          git fetch --all
+          git checkout main
+
+          # Stage the changelog and commit changes
+          git add CHANGELOG.md
+          git commit -m "Update changelog for $TAG_NAME deployment to $ENVIRONMENT"
+          git push origin main
+          echo "Changelog updated for $TAG_NAME deployment to $ENVIRONMENT"
 
   deploy_to_qa:
     runs-on: ubuntu-latest
-    needs: deploy_to_dev
+    needs: deploy_to_dev  # Ensure QA deployment waits for DEV deployment
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+      
+      - name: Set up Git for tagging
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
 
       - name: Deploy to QA
         run: |
           echo "Deploying to QA environment using tag ${{ github.ref }}"
+          # Add your deployment commands for QA environment here
+
+      - name: Get Changes from Commit Message and Update Changelog for QA
+        run: |
+          TAG_NAME="${{ github.ref }}"
+          DATE=$(date +'%Y-%m-%d')
+          ENVIRONMENT="qa"
+
+          # Get the commit message that created the tag
+          COMMIT_MESSAGE=$(git log -1 --pretty=%B "${TAG_NAME}")
+          echo "Commit message: $COMMIT_MESSAGE"
+
+          # Parse the commit message to extract the changes (example)
+          CHANGES=$(echo "$COMMIT_MESSAGE" | grep -Eo '[-*]\s.+')  # Simple regex to find lines starting with "-" or "*"
+          
+          # Prepare changelog entry for QA
+          echo -e "## [${TAG_NAME//refs\/tags\//}] - $DATE\n### Deployed to:\n- **$ENVIRONMENT**: $DATE\n$CHANGES\n\n---\n" >> CHANGELOG.md
+          
+          # Checkout the main branch to ensure we're updating the right branch
+          git fetch --all
+          git checkout main
+
+          # Stage the changelog and commit changes
+          git add CHANGELOG.md
+          git commit -m "Update changelog for $TAG_NAME deployment to $ENVIRONMENT"
+          git push origin main
+          echo "Changelog updated for $TAG_NAME deployment to $ENVIRONMENT"
 
   deploy_to_prod:
     runs-on: ubuntu-latest
-    needs: deploy_to_qa
+    needs: deploy_to_qa  # Ensure PROD deployment waits for QA deployment
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Set up Git for tagging
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+
       - name: Deploy to PROD
         run: |
           echo "Deploying to PROD environment using tag ${{ github.ref }}"
+          # Add your deployment commands for PROD environment here
+
+      - name: Get Changes from Commit Message and Update Changelog for PROD
+        run: |
+          TAG_NAME="${{ github.ref }}"
+          DATE=$(date +'%Y-%m-%d')
+          ENVIRONMENT="prod"
+
+          # Get the commit message that created the tag
+          COMMIT_MESSAGE=$(git log -1 --pretty=%B "${TAG_NAME}")
+          echo "Commit message: $COMMIT_MESSAGE"
+
+          # Parse the commit message to extract the changes (example)
+          CHANGES=$(echo "$COMMIT_MESSAGE" | grep -Eo '[-*]\s.+')  # Simple regex to find lines starting with "-" or "*"
+          
+          # Prepare changelog entry for PROD
+          echo -e "## [${TAG_NAME//refs\/tags\//}] - $DATE\n### Deployed to:\n- **$ENVIRONMENT**: $DATE\n$CHANGES\n\n---\n" >> CHANGELOG.md
+          
+          # Checkout the main branch to ensure we're updating the right branch
+          git fetch --all
+          git checkout main
+
+          # Stage the changelog and commit changes
+          git add CHANGELOG.md
+          git commit -m "Update changelog for $TAG_NAME deployment to $ENVIRONMENT"
+          git push origin main
+          echo "Changelog updated for $TAG_NAME deployment to $ENVIRONMENT"
