@@ -15,7 +15,6 @@ on:
 jobs:
   create_tag:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -69,14 +68,14 @@ jobs:
           COMMIT_MESSAGE=$(git log -1 --pretty=%B)
           echo "Commit message: $COMMIT_MESSAGE"
 
-          if [[ "$COMMIT_MESSAGE" == *"MAJOR"* ]]; then
+          if [[ "$COMMIT_MESSAGE" == *MAJOR* ]]; then
             MAJOR=$((MAJOR + 1))
             MINOR=0
             PATCH=0
-          elif [[ "$COMMIT_MESSAGE" == *"MINOR"* ]]; then
+          elif [[ "$COMMIT_MESSAGE" == *MINOR* ]]; then
             MINOR=$((MINOR + 1))
             PATCH=0
-          elif [[ "$COMMIT_MESSAGE" == *"PATCH"* ]]; then
+          elif [[ "$COMMIT_MESSAGE" == *PATCH* ]]; then
             PATCH=$((PATCH + 1))
           fi
 
