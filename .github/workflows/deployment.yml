@@ -28,13 +28,26 @@ jobs:
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="dev"
 
-          # Use git show to get the commit message for the tag (ignores merge commits)
-          COMMIT_MESSAGE=$(git show -s --pretty=%B "${TAG_NAME}")
+          # Get the commit hash associated with the tag
+          COMMIT_HASH=$(git rev-list -n 1 "$TAG_NAME")
+
+          # Ensure we're skipping merge commits by getting the first parent commit of the tag's commit
+          NON_MERGE_COMMIT_HASH=$(git log "$COMMIT_HASH" --no-merges --first-parent -n 1 --pretty=%H)
+
+          # If no non-merge commit found, fall back to the original commit
+          if [ -z "$NON_MERGE_COMMIT_HASH" ]; then
+            NON_MERGE_COMMIT_HASH=$COMMIT_HASH
+          fi
+
+          # Get the commit message for the non-merge commit
+          COMMIT_MESSAGE=$(git show -s --pretty=%B "$NON_MERGE_COMMIT_HASH")
+
+          # Debug: Echo commit message
           echo "Commit message: $COMMIT_MESSAGE"
           
           # Parse the commit message to extract the changes (example)
           CHANGES=$(echo "$COMMIT_MESSAGE" | grep -Eo '[-*]\s.+')  # Simple regex to find lines starting with "-" or "*"
-          
+
           # Prepare changelog entry for DEV
           echo -e "## [${TAG_NAME//refs\/tags\//}] - $DATE\n### Deployed to:\n- **$ENVIRONMENT**: $DATE\n$CHANGES\n\n---\n" >> CHANGELOG.md
           
@@ -47,6 +60,8 @@ jobs:
           git commit -m "Update changelog for $TAG_NAME deployment to $ENVIRONMENT"
           git push origin main
           echo "Changelog updated for $TAG_NAME deployment to $ENVIRONMENT"
+
+
 
   deploy_to_qa:
     runs-on: ubuntu-latest
@@ -66,12 +81,15 @@ jobs:
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="qa"
 
-          # Get the commit message that created the tag
-          COMMIT_MESSAGE=$(git show -s --pretty=%B "${TAG_NAME}")
+          # Get the commit hash associated with the tag
+          COMMIT_HASH=$(git rev-list -n 1 "$TAG_NAME")
+
+          # Use git show to get the commit message for the specific commit (not merge commit)
+          COMMIT_MESSAGE=$(git show -s --pretty=%B "$COMMIT_HASH")
           echo "Commit message: $COMMIT_MESSAGE"
 
-          # Parse the commit message to extract the changes (example)
-          CHANGES=$(echo "$COMMIT_MESSAGE" | grep -Eo '[-*]\s.+')  # Simple regex to find lines starting with "-" or "*"
+          # If you want to capture only the major part of the commit message (like the "MAJOR" label):
+          CHANGES=$(echo "$COMMIT_MESSAGE" | grep -Eo 'MAJOR,.*|.*')  # Simple regex to match the changes
           
           # Prepare changelog entry for QA
           echo -e "## [${TAG_NAME//refs\/tags\//}] - $DATE\n### Deployed to:\n- **$ENVIRONMENT**: $DATE\n$CHANGES\n\n---\n" >> CHANGELOG.md
@@ -104,12 +122,15 @@ jobs:
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="prod"
 
-          # Get the commit message that created the tag
-          COMMIT_MESSAGE=$(git show -s --pretty=%B "${TAG_NAME}")
+          # Get the commit hash associated with the tag
+          COMMIT_HASH=$(git rev-list -n 1 "$TAG_NAME")
+
+          # Use git show to get the commit message for the specific commit (not merge commit)
+          COMMIT_MESSAGE=$(git show -s --pretty=%B "$COMMIT_HASH")
           echo "Commit message: $COMMIT_MESSAGE"
 
-          # Parse the commit message to extract the changes (example)
-          CHANGES=$(echo "$COMMIT_MESSAGE" | grep -Eo '[-*]\s.+')  # Simple regex to find lines starting with "-" or "*"
+          # If you want to capture only the major part of the commit message (like the "MAJOR" label):
+          CHANGES=$(echo "$COMMIT_MESSAGE" | grep -Eo 'MAJOR,.*|.*')  # Simple regex to match the changes
           
           # Prepare changelog entry for PROD
           echo -e "## [${TAG_NAME//refs\/tags\//}] - $DATE\n### Deployed to:\n- **$ENVIRONMENT**: $DATE\n$CHANGES\n\n---\n" >> CHANGELOG.md
