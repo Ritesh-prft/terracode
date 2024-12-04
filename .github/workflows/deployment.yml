@@ -46,11 +46,7 @@ jobs:
           # Add a separator line before the new changelog entry
           echo -e "\n---\n## [${TAG_NAME}] - $DATE\n### Deployed to:- $ENVIRONMENT\n Dated $DATE\n### Commit Message:- $COMMITS\n\n---\n" >> CHANGELOG.md
           
-          # Checkout the main branch to ensure we're updating the right branch
-          git fetch --all
-          git checkout main
-
-          # Stage the changelog and commit changes
+          # Stage and commit the changelog before switching branches
           git add CHANGELOG.md
           git commit -m "Update changelog for $TAG_NAME deployment to $ENVIRONMENT"
           git push origin main
@@ -97,11 +93,7 @@ jobs:
           # Add a separator line before the new changelog entry
           echo -e "\n---\n## [${TAG_NAME}] - $DATE\n### Deployed to:- $ENVIRONMENT\n Dated $DATE\n### Commit Message:- $COMMITS\n\n---\n" >> CHANGELOG.md
           
-          # Checkout the main branch to ensure we're updating the right branch
-          git fetch --all
-          git checkout main
-
-          # Stage the changelog and commit changes
+          # Stage and commit the changelog before switching branches
           git add CHANGELOG.md
           git commit -m "Update changelog for $TAG_NAME deployment to $ENVIRONMENT"
           git push origin main
@@ -148,11 +140,7 @@ jobs:
           # Add a separator line before the new changelog entry
           echo -e "\n---\n## [${TAG_NAME}] - $DATE\n### Deployed to:- $ENVIRONMENT\n Dated $DATE\n### Commit Message:- $COMMITS\n\n---\n" >> CHANGELOG.md
           
-          # Checkout the main branch to ensure we're updating the right branch
-          git fetch --all
-          git checkout main
-
-          # Stage the changelog and commit changes
+          # Stage and commit the changelog before switching branches
           git add CHANGELOG.md
           git commit -m "Update changelog for $TAG_NAME deployment to $ENVIRONMENT"
           git push origin main
