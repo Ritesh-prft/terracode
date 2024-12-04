@@ -8,7 +8,6 @@ on:
 jobs:
   deploy_to_dev:
     runs-on: ubuntu-latest
-    environment: dev
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -16,7 +15,7 @@ jobs:
       - name: Deploy to DEV
         run: |
           echo "Deploying to DEV environment using tag ${{ github.ref }}"
-          # Add your deployment commands for DEV environment here (e.g., AWS CLI, Kubernetes, etc.)
+          # Add your deployment commands for DEV environment here
         
       - name: Update Changelog for DEV
         run: |
@@ -25,7 +24,8 @@ jobs:
           ENVIRONMENT="dev"
           CHANGES="### Changes:\n- Added new authentication feature\n- Refactored database config for improved performance"  # Adjust based on commit messages or other means
           
-          # Checkout the main branch explicitly to avoid detached HEAD state
+          # Fetch all branches and then checkout main to ensure it's available
+          git fetch --all
           git checkout main
 
           # Prepare changelog entry for DEV
@@ -39,7 +39,6 @@ jobs:
 
   deploy_to_qa:
     runs-on: ubuntu-latest
-    environment: qa
     needs: deploy_to_dev  # Ensure QA deployment waits for DEV deployment
     steps:
       - name: Checkout code
@@ -57,7 +56,8 @@ jobs:
           ENVIRONMENT="qa"
           CHANGES="### Changes:\n- Added new authentication feature\n- Refactored database config for improved performance"  # Adjust based on commit messages or other means
           
-          # Checkout the main branch explicitly to avoid detached HEAD state
+          # Fetch all branches and then checkout main to ensure it's available
+          git fetch --all
           git checkout main
 
           # Prepare changelog entry for QA
@@ -71,7 +71,6 @@ jobs:
 
   deploy_to_prod:
     runs-on: ubuntu-latest
-    environment: prod
     needs: deploy_to_qa  # Ensure PROD deployment waits for QA deployment
     steps:
       - name: Checkout code
@@ -89,7 +88,8 @@ jobs:
           ENVIRONMENT="prod"
           CHANGES="### Changes:\n- Added new authentication feature\n- Refactored database config for improved performance"  # Adjust based on commit messages or other means
           
-          # Checkout the main branch explicitly to avoid detached HEAD state
+          # Fetch all branches and then checkout main to ensure it's available
+          git fetch --all
           git checkout main
 
           # Prepare changelog entry for PROD
