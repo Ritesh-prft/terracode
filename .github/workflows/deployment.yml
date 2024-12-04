@@ -9,22 +9,23 @@ jobs:
   deploy_to_dev:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout the repository
         uses: actions/checkout@v3
 
-      - name: Set up Git for tagging
+      - name: Set up Git
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
 
-      - name: Get Commit Message from Feature Branch and Update Changelog
+      - name: Get Commit Messages for Changelog Update
         run: |
-          TAG_NAME="${{ github.ref }}"
+          TAG_NAME="${{ github.ref_name }}"
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="dev"
 
-          # Get the pull request number from the commit history
-          PR_NUMBER=$(git log --merges -n 1 --pretty=format:"%s" | grep -oP '(?<=#)\d+')
+          # Get the commit messages from the feature branch associated with the tag
+          PR_NUMBER=$(echo $TAG_NAME | grep -oP '(?<=v)\d+')
+          echo "PR Number: $PR_NUMBER"
 
           # Fetch PR details using GitHub API
           PR_URL="https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}"
@@ -37,7 +38,7 @@ jobs:
           echo "Commits in feature branch $PR_SOURCE_BRANCH: $COMMITS"
 
           # Prepare changelog entry for DEV
-          echo -e "## [${TAG_NAME//refs\/tags\//}] - $DATE\n### Deployed to:\n- **$ENVIRONMENT**: $DATE\n$COMMITS\n\n---\n" >> CHANGELOG.md
+          echo -e "## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **$ENVIRONMENT**: $DATE\n$COMMITS\n\n---\n" >> CHANGELOG.md
           
           # Checkout the main branch to ensure we're updating the right branch
           git fetch --all
@@ -48,6 +49,7 @@ jobs:
           git commit -m "Update changelog for $TAG_NAME deployment to $ENVIRONMENT"
           git push origin main
           echo "Changelog updated for $TAG_NAME deployment to $ENVIRONMENT"
+
 
 
 
