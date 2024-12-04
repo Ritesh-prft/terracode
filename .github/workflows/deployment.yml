@@ -38,7 +38,8 @@ jobs:
           echo "Commits in feature branch $PR_SOURCE_BRANCH: $COMMITS"
 
           # Prepare changelog entry for DEV
-          echo -e "## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **$ENVIRONMENT**: $DATE\n$COMMITS\n\n---\n" >> CHANGELOG.md
+          # Add a separator line before the new changelog entry
+          echo -e "\n---\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **$ENVIRONMENT**: $DATE\n$COMMITS\n\n---\n" >> CHANGELOG.md
           
           # Checkout the main branch to ensure we're updating the right branch
           git fetch --all
@@ -49,6 +50,7 @@ jobs:
           git commit -m "Update changelog for $TAG_NAME deployment to $ENVIRONMENT"
           git push origin main
           echo "Changelog updated for $TAG_NAME deployment to $ENVIRONMENT"
+
 
 
 
