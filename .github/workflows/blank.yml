@@ -48,7 +48,8 @@ jobs:
           git push origin $VERSION
 
       - name: Display created tag
-        run: echo "Created tag: ${{ steps.create_tag.outputs.version }}"
+        run: |
+          echo "Created tag: ${{ steps.create_tag.outputs.version }}"
 
   deploy_to_dev:
     needs: tag_version
@@ -72,7 +73,7 @@ jobs:
 
       - name: Deploy to QA environment
         run: |
-          echo "Deploying to QA with tag: ${{ needs.tag_version.outputs.version }}"
+          echo "Deploying to QA with tag: ${{ needs.deploy_to_dev.outputs.version }}"
           # Add your deployment commands to QA environment here
 
       - name: Request QA Approval
