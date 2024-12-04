@@ -28,10 +28,10 @@ jobs:
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="dev"
 
-          # Get the commit message that created the tag
-          COMMIT_MESSAGE=$(git log -1 --pretty=%B "${TAG_NAME}")
+          # Use git show to get the commit message for the tag (ignores merge commits)
+          COMMIT_MESSAGE=$(git show -s --pretty=%B "${TAG_NAME}")
           echo "Commit message: $COMMIT_MESSAGE"
-
+          
           # Parse the commit message to extract the changes (example)
           CHANGES=$(echo "$COMMIT_MESSAGE" | grep -Eo '[-*]\s.+')  # Simple regex to find lines starting with "-" or "*"
           
@@ -54,11 +54,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      
-      - name: Set up Git for tagging
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
 
       - name: Deploy to QA
         run: |
@@ -72,7 +67,7 @@ jobs:
           ENVIRONMENT="qa"
 
           # Get the commit message that created the tag
-          COMMIT_MESSAGE=$(git log -1 --pretty=%B "${TAG_NAME}")
+          COMMIT_MESSAGE=$(git show -s --pretty=%B "${TAG_NAME}")
           echo "Commit message: $COMMIT_MESSAGE"
 
           # Parse the commit message to extract the changes (example)
@@ -98,11 +93,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Git for tagging
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
-
       - name: Deploy to PROD
         run: |
           echo "Deploying to PROD environment using tag ${{ github.ref }}"
@@ -115,7 +105,7 @@ jobs:
           ENVIRONMENT="prod"
 
           # Get the commit message that created the tag
-          COMMIT_MESSAGE=$(git log -1 --pretty=%B "${TAG_NAME}")
+          COMMIT_MESSAGE=$(git show -s --pretty=%B "${TAG_NAME}")
           echo "Commit message: $COMMIT_MESSAGE"
 
           # Parse the commit message to extract the changes (example)
