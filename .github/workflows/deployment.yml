@@ -22,44 +22,29 @@ jobs:
           echo "Deploying to DEV environment using tag ${{ github.ref }}"
           # Add your deployment commands for DEV environment here
         
-      - name: Get Changes from Commit Message and Update Changelog for DEV
-        run: |
-          TAG_NAME="${{ github.ref }}"
-          DATE=$(date +'%Y-%m-%d')
-          ENVIRONMENT="dev"
+      - name: Update CHANGELOG
+        id: changelog
+        uses: requarks/changelog-action@v1
+        with:
+          token: ${{ github.token }}
+          tag: ${{ github.ref_name }}
 
-          # Use git show to get the commit hash associated with the tag (skipping merge commits)
-          COMMIT_HASH=$(git rev-list -n 1 "$TAG_NAME")
+      - name: Create Release
+        uses: ncipollo/release-action@v1.12.0
+        with:
+          allowUpdates: true
+          draft: false
+          makeLatest: true
+          name: ${{ github.ref_name }}
+          body: ${{ steps.changelog.outputs.changes }}
+          token: ${{ github.token }}
 
-          # Skip merge commits by finding the first non-merge commit in the history
-          NON_MERGE_COMMIT_HASH=$(git log "$COMMIT_HASH" --no-merges --first-parent -n 1 --pretty=%H)
-
-          # If no non-merge commit found, use the original commit hash
-          if [ -z "$NON_MERGE_COMMIT_HASH" ]; then
-            NON_MERGE_COMMIT_HASH=$COMMIT_HASH
-          fi
-
-          # Get the commit message for the non-merge commit
-          COMMIT_MESSAGE=$(git show -s --pretty=%B "$NON_MERGE_COMMIT_HASH")
-          
-          # Debug: Echo commit message to verify it's correct
-          echo "Commit message: $COMMIT_MESSAGE"
-          
-          # Parse the commit message to extract the changes (example)
-          CHANGES=$(echo "$COMMIT_MESSAGE" | grep -Eo '[-*]\s.+')  # Simple regex to find lines starting with "-" or "*"
-
-          # Prepare changelog entry for DEV
-          echo -e "## [${TAG_NAME//refs\/tags\//}] - $DATE\n### Deployed to:\n- **$ENVIRONMENT**: $DATE\n$CHANGES\n\n---\n" >> CHANGELOG.md
-          
-          # Checkout the main branch to ensure we're updating the right branch
-          git fetch --all
-          git checkout main
-
-          # Stage the changelog and commit changes
-          git add CHANGELOG.md
-          git commit -m "Update changelog for $TAG_NAME deployment to $ENVIRONMENT"
-          git push origin main
-          echo "Changelog updated for $TAG_NAME deployment to $ENVIRONMENT"
+      - name: Commit CHANGELOG.md
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          branch: main
+          commit_message: 'docs: update CHANGELOG.md for ${{ github.ref_name }} [skip ci]'
+          file_pattern: CHANGELOG.md
 
 
 
