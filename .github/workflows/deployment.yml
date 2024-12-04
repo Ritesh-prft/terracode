@@ -31,8 +31,15 @@ jobs:
           # Get the commit hash associated with the tag
           COMMIT_HASH=$(git rev-list -n 1 "$TAG_NAME")
 
-          # Use git show to get the commit message for the specific commit (ignores merge commits)
-          COMMIT_MESSAGE=$(git show -s --pretty=%B "$COMMIT_HASH")  # Get commit message
+          # Use git show to get the commit message for the specific commit
+          # Skip if it's a merge commit
+          COMMIT_MESSAGE=$(git show -s --pretty=%B "$COMMIT_HASH")
+
+          # Check if the commit is a merge commit
+          if [[ "$COMMIT_MESSAGE" == Merge* ]]; then
+            echo "The commit is a merge commit, skipping."
+            exit 0
+          fi
 
           # Debug: Echo commit message
           echo "Commit message: $COMMIT_MESSAGE"
@@ -52,6 +59,7 @@ jobs:
           git commit -m "Update changelog for $TAG_NAME deployment to $ENVIRONMENT"
           git push origin main
           echo "Changelog updated for $TAG_NAME deployment to $ENVIRONMENT"
+
 
 
   deploy_to_qa:
