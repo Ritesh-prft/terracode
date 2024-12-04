@@ -3,8 +3,7 @@ name: Deploy to Environments
 on:
   push:
     tags:
-      - 'tag-v*'
-  workflow_dispatch:  # Allow manual triggering
+      - 'tag-v*'  # Trigger on any push to a tag starting with 'tag-v'
 
 jobs:
   deploy_to_dev:
@@ -13,26 +12,26 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.PAT_TOKEN }}
-
-      - name: Set up Git for tagging
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
 
       - name: Deploy to DEV
         run: |
           echo "Deploying to DEV environment using tag ${{ github.ref }}"
-
+          # Add your deployment commands for DEV environment here (e.g., AWS CLI, Kubernetes, etc.)
+        
       - name: Update Changelog for DEV
         run: |
           TAG_NAME="${{ github.ref }}"
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="dev"
           CHANGES="### Changes:\n- Added new authentication feature\n- Refactored database config for improved performance"  # Adjust based on commit messages or other means
+          
+          # Checkout the main branch explicitly to avoid detached HEAD state
+          git checkout main
+
           # Prepare changelog entry for DEV
           echo -e "## [${TAG_NAME//refs\/tags\//}] - $DATE\n### Deployed to:\n- **$ENVIRONMENT**: $DATE\n$CHANGES\n\n---\n" >> CHANGELOG.md
+          
+          # Stage the changelog and commit changes
           git add CHANGELOG.md
           git commit -m "Update changelog for $TAG_NAME deployment to $ENVIRONMENT"
           git push origin main
@@ -41,7 +40,7 @@ jobs:
   deploy_to_qa:
     runs-on: ubuntu-latest
     environment: qa
-    needs: deploy_to_dev
+    needs: deploy_to_dev  # Ensure QA deployment waits for DEV deployment
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -49,15 +48,22 @@ jobs:
       - name: Deploy to QA
         run: |
           echo "Deploying to QA environment using tag ${{ github.ref }}"
+          # Add your deployment commands for QA environment here
 
       - name: Update Changelog for QA
         run: |
           TAG_NAME="${{ github.ref }}"
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="qa"
-          CHANGES="### Changes:\n- Fixed role permissions\n- Updated error handling logs"  # Adjust based on commit messages or other means
+          CHANGES="### Changes:\n- Added new authentication feature\n- Refactored database config for improved performance"  # Adjust based on commit messages or other means
+          
+          # Checkout the main branch explicitly to avoid detached HEAD state
+          git checkout main
+
           # Prepare changelog entry for QA
           echo -e "## [${TAG_NAME//refs\/tags\//}] - $DATE\n### Deployed to:\n- **$ENVIRONMENT**: $DATE\n$CHANGES\n\n---\n" >> CHANGELOG.md
+          
+          # Stage the changelog and commit changes
           git add CHANGELOG.md
           git commit -m "Update changelog for $TAG_NAME deployment to $ENVIRONMENT"
           git push origin main
@@ -66,7 +72,7 @@ jobs:
   deploy_to_prod:
     runs-on: ubuntu-latest
     environment: prod
-    needs: deploy_to_qa
+    needs: deploy_to_qa  # Ensure PROD deployment waits for QA deployment
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -74,16 +80,22 @@ jobs:
       - name: Deploy to PROD
         run: |
           echo "Deploying to PROD environment using tag ${{ github.ref }}"
-
+          # Add your deployment commands for PROD environment here
 
       - name: Update Changelog for PROD
         run: |
           TAG_NAME="${{ github.ref }}"
           DATE=$(date +'%Y-%m-%d')
-          ENVIRONMENT="prd"
-          CHANGES="### Changes:\n- Fixed role permissions\n- Updated error handling logs"  # Adjust based on commit messages or other means
+          ENVIRONMENT="prod"
+          CHANGES="### Changes:\n- Added new authentication feature\n- Refactored database config for improved performance"  # Adjust based on commit messages or other means
+          
+          # Checkout the main branch explicitly to avoid detached HEAD state
+          git checkout main
+
           # Prepare changelog entry for PROD
           echo -e "## [${TAG_NAME//refs\/tags\//}] - $DATE\n### Deployed to:\n- **$ENVIRONMENT**: $DATE\n$CHANGES\n\n---\n" >> CHANGELOG.md
+          
+          # Stage the changelog and commit changes
           git add CHANGELOG.md
           git commit -m "Update changelog for $TAG_NAME deployment to $ENVIRONMENT"
           git push origin main
