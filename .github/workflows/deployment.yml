@@ -31,12 +31,14 @@ jobs:
           # Get the commit hash associated with the tag
           COMMIT_HASH=$(git rev-list -n 1 "$TAG_NAME")
 
-          # Use git show to get the commit message for the specific commit (not merge commit)
-          COMMIT_MESSAGE=$(git show -s --pretty=%B)
+          # Use git show to get the commit message for the specific commit (ignores merge commits)
+          COMMIT_MESSAGE=$(git show -s --pretty=%B "$COMMIT_HASH")  # Get commit message
+
+          # Debug: Echo commit message
           echo "Commit message: $COMMIT_MESSAGE"
           
-          # If you want to capture only the major part of the commit message (like the "MAJOR" label):
-          CHANGES=$(echo "$COMMIT_MESSAGE" | grep -Eo 'MAJOR,.*|.*')  # Simple regex to match the changes
+          # Parse the commit message to extract the changes (example)
+          CHANGES=$(echo "$COMMIT_MESSAGE" | grep -Eo '[-*]\s.+')  # Simple regex to find lines starting with "-" or "*"
 
           # Prepare changelog entry for DEV
           echo -e "## [${TAG_NAME//refs\/tags\//}] - $DATE\n### Deployed to:\n- **$ENVIRONMENT**: $DATE\n$CHANGES\n\n---\n" >> CHANGELOG.md
@@ -50,6 +52,7 @@ jobs:
           git commit -m "Update changelog for $TAG_NAME deployment to $ENVIRONMENT"
           git push origin main
           echo "Changelog updated for $TAG_NAME deployment to $ENVIRONMENT"
+
 
   deploy_to_qa:
     runs-on: ubuntu-latest
