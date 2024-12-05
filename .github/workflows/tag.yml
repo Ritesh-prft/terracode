@@ -107,6 +107,8 @@ jobs:
       - name: Deploy to Dev
         run: |
           echo "Deploying to Dev environment using tag ${{ env.NEW_TAG }}"
+          dir
+          ls
           # Add your deployment commands for the Dev environment here.
 
       - name: Update Changelog for Dev Deployment
