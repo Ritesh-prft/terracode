@@ -19,7 +19,7 @@ jobs:
       github.event.pull_request.action == 'opened' ||
       github.event.pull_request.action == 'reopened' ||
       github.event.pull_request.action == 'synchronize' ||
-      github.event.pull_request.action == 'edited'  # Add more as needed  # Trigger only when PR is opened
+      github.event.pull_request.action == 'edited'  # Add more as needed
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
