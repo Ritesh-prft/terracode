@@ -38,7 +38,7 @@ jobs:
           echo "Feature Branch: $PR_SOURCE_BRANCH"
 
           git fetch origin $PR_SOURCE_BRANCH
-          COMMITS=$(git log origin/$PR_SOURCE_BRANCH --oneline)
+          COMMITS=$(git log origin/$PR_SOURCE_BRANCH -n 1 --oneline)
           echo "Commits in feature branch $PR_SOURCE_BRANCH: $COMMITS"
 
           # Prepare changelog entry for DEV
