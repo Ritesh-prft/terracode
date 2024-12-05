@@ -114,11 +114,12 @@ jobs:
           # Add your deployment commands for the Dev environment here.
 
 
-      - name: Get Commit Message for Changelog Update (Dev)
+      - name: Update Changelog for Dev Deployment
         run: |
-          TAG_NAME="${{ github.ref_name }}"
+          TAG_NAME="${{ env.NEW_TAG }}"
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="dev"
+          COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
 
           # Get the commit message associated with the tag
           COMMIT_MESSAGE=$(git log -1 --pretty=%B "$TAG_NAME")
