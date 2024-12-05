@@ -24,33 +24,18 @@ jobs:
           echo "Deploying to Dev environment using tag ${{ github.ref }}"
           # Add your deployment commands for the Dev environment here.
 
-
-      - name: Get Commit Messages for Changelog Update (Dev)
+      - name: Get Commit Message for Changelog Update (Dev)
         run: |
           TAG_NAME="${{ github.ref_name }}"
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="dev"
 
-          # Fetch the PR number associated with the tag from GitHub API
-          PR_URL="https://api.github.com/repos/${{ github.repository }}/pulls?state=all&head=${{ github.actor }}:${TAG_NAME}"
+          # Get the commit message associated with the tag
+          COMMIT_MESSAGE=$(git log -1 --pretty=%B "$TAG_NAME")
+          echo "Commit Message for tag $TAG_NAME: $COMMIT_MESSAGE"
 
-          PR_NUMBER=$(curl -s $PR_URL | jq -r '.[0].number')  # Get the first PR number from the response
-
-          if [ "$PR_NUMBER" == "null" ]; then
-            echo "No PR found for this tag."
-            exit 1
-          fi
-
-          echo "PR Number: $PR_NUMBER"
-
-          # Fetch commits related to the PR
-          PR_COMMITS_URL="https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}/commits"
-          LATEST_COMMIT_MESSAGE=$(curl -s $PR_COMMITS_URL | jq -r '.[-1].commit.message')
-
-          echo "Latest Commit Message: $LATEST_COMMIT_MESSAGE"
-
-          # Prepare changelog entry for DEV with the latest commit message
-          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- ${LATEST_COMMIT_MESSAGE}\n" >> CHANGELOG_Dev.md
+          # Prepare changelog entry for DEV with the commit message
+          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- ${COMMIT_MESSAGE}\n" >> CHANGELOG_Dev.md
 
           # Commit and push changes
           git add CHANGELOG_Dev.md
@@ -74,9 +59,6 @@ jobs:
           # Push the changes
           git push origin HEAD:main
 
-
-
-
   deploy_to_qa:
     runs-on: ubuntu-latest
     needs: deploy_to_dev  # Ensure QA deployment waits for DEV deployment
@@ -94,25 +76,18 @@ jobs:
           echo "Deploying to QA environment using tag ${{ github.ref }}"
           # Add your deployment commands for the QA environment here.
 
-      - name: Get Commit Messages for Changelog Update (Qa)
+      - name: Get Commit Message for Changelog Update (QA)
         run: |
           TAG_NAME="${{ github.ref_name }}"
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="qa"
 
-          PR_NUMBER=$(echo $TAG_NAME | grep -oP '(?<=v)\d+')
-          echo "PR Number: $PR_NUMBER"
+          # Get the commit message associated with the tag
+          COMMIT_MESSAGE=$(git log -1 --pretty=%B "$TAG_NAME")
+          echo "Commit Message for tag $TAG_NAME: $COMMIT_MESSAGE"
 
-          PR_URL="https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}"
-          PR_SOURCE_BRANCH=$(curl -s $PR_URL | jq -r .head.ref)
-          echo "Feature Branch: $PR_SOURCE_BRANCH"
-
-          git fetch origin $PR_SOURCE_BRANCH
-          COMMITS=$(git log origin/$PR_SOURCE_BRANCH --oneline)
-          echo "Commits in feature branch $PR_SOURCE_BRANCH: $COMMITS"
-
-          # Prepare changelog entry for QA
-          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n${COMMITS// /- }\n" >> CHANGELOG_Qa.md
+          # Prepare changelog entry for QA with the commit message
+          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- ${COMMIT_MESSAGE}\n" >> CHANGELOG_Qa.md
 
           # Commit and push changes
           git add CHANGELOG_Qa.md
@@ -148,31 +123,23 @@ jobs:
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
 
-
       - name: Deploy to PROD
         run: |
           echo "Deploying to PROD environment using tag ${{ github.ref }}"
           # Add your deployment commands for the PROD environment here.
 
-      - name: Get Commit Messages for Changelog Update (Prod)
+      - name: Get Commit Message for Changelog Update (Prod)
         run: |
           TAG_NAME="${{ github.ref_name }}"
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="prod"
 
-          PR_NUMBER=$(echo $TAG_NAME | grep -oP '(?<=v)\d+')
-          echo "PR Number: $PR_NUMBER"
+          # Get the commit message associated with the tag
+          COMMIT_MESSAGE=$(git log -1 --pretty=%B "$TAG_NAME")
+          echo "Commit Message for tag $TAG_NAME: $COMMIT_MESSAGE"
 
-          PR_URL="https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}"
-          PR_SOURCE_BRANCH=$(curl -s $PR_URL | jq -r .head.ref)
-          echo "Feature Branch: $PR_SOURCE_BRANCH"
-
-          git fetch origin $PR_SOURCE_BRANCH
-          COMMITS=$(git log origin/$PR_SOURCE_BRANCH --oneline)
-          echo "Commits in feature branch $PR_SOURCE_BRANCH: $COMMITS"
-
-          # Prepare changelog entry for PROD
-          echo -e "\n---\n## [${TAG_NAME}] - $DATE\n### Deployed to: $ENVIRONMENT\n Dated: $DATE\n### Commit Message: $COMMITS\n\n---\n" >> CHANGELOG_Prod.md
+          # Prepare changelog entry for PROD with the commit message
+          echo -e "\n---\n## [${TAG_NAME}] - $DATE\n### Deployed to: $ENVIRONMENT\n Dated: $DATE\n### Commit Message: $COMMIT_MESSAGE\n\n---\n" >> CHANGELOG_Prod.md
 
           # Commit and push changes
           git add CHANGELOG_Prod.md
