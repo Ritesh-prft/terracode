@@ -9,6 +9,8 @@ on:
       - synchronize  # Trigger when the PR is updated (e.g., new commits pushed)
       - reopened     # Trigger when a PR is reopened
 
+
+
 jobs:
   create_tag_and_deploy:
     if: |
