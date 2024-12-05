@@ -164,26 +164,27 @@ jobs:
           ls
           # Add your deployment commands for the QA environment here.
 
-      - name: Update Changelog for QA Deployment
+      - name: Update Changelog for Qa Deployment
         run: |
           TAG_NAME="${{ env.NEW_TAG }}"
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="qa"
           COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
 
-          # Add a changelog entry for the QA deployment with PR commit message
+          # Get the commit message associated with the tag
+          COMMIT_MESSAGE=$(git log -1 --pretty=%B "$TAG_NAME")
+          echo "Commit Message for tag $TAG_NAME: $COMMIT_MESSAGE"
+
+          # Prepare changelog entry for QA with the commit message
           echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- ${COMMIT_MESSAGE}\n" >> CHANGELOG_Qa.md
 
           # Commit and push changes
           git add CHANGELOG_Qa.md
           git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
 
+          # Fetch and merge remote changes before pushing with --allow-unrelated-histories
           git fetch origin main
-          git checkout main  # Ensure we're on the main branch
-          git merge origin/main --no-edit --allow-unrelated-histories || true
-
-          # Resolve merge conflicts automatically (keep ours for changelog files)
-          echo "Resolving merge conflicts automatically..."
+          git merge origin/main --no-edit --allow-unrelated-histories || true  # Avoid failing due to conflicts
 
           # Check for conflicts and resolve (keeping our local changes in these files)
           if git ls-files -u | grep -q .; then
@@ -195,8 +196,9 @@ jobs:
             git add .github/workflows/tag.yml CHANGELOG_Qa.md
             git commit -m "Resolved merge conflicts for ${TAG_NAME} deployment to ${ENVIRONMENT}"
           fi
-          # Push the resolved changelog to the main branch
-          git push origin main
+
+          # Push the changes
+          git push origin HEAD:main
 
       - name: Checkout the tag for deployment
         run: |
@@ -212,25 +214,27 @@ jobs:
           ls
           # Add your deployment commands for the PROD environment here.
 
-      - name: Update Changelog for PROD Deployment
+      - name: Update Changelog for Prod Deployment
         run: |
           TAG_NAME="${{ env.NEW_TAG }}"
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="prod"
           COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
 
-          # Add a changelog entry for the PROD deployment with PR commit message
-          echo -e "\n---\n## [${TAG_NAME}] - $DATE\n### Deployed to: $ENVIRONMENT\n Dated: $DATE\n### Commit Message: $COMMIT_MESSAGE\n\n---\n" >> CHANGELOG_Prod.md
+          # Get the commit message associated with the tag
+          COMMIT_MESSAGE=$(git log -1 --pretty=%B "$TAG_NAME")
+          echo "Commit Message for tag $TAG_NAME: $COMMIT_MESSAGE"
+
+          # Prepare changelog entry for PROD with the commit message
+          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- ${COMMIT_MESSAGE}\n" >> CHANGELOG_Prod.md
 
           # Commit and push changes
           git add CHANGELOG_Prod.md
           git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
 
+          # Fetch and merge remote changes before pushing with --allow-unrelated-histories
           git fetch origin main
-          git merge origin/main --no-edit || true
-
-          # Resolve merge conflicts automatically (keep ours for changelog files)
-          echo "Resolving merge conflicts automatically..."
+          git merge origin/main --no-edit --allow-unrelated-histories || true  # Avoid failing due to conflicts
 
           # Check for conflicts and resolve (keeping our local changes in these files)
           if git ls-files -u | grep -q .; then
@@ -242,5 +246,6 @@ jobs:
             git add .github/workflows/tag.yml CHANGELOG_Prod.md
             git commit -m "Resolved merge conflicts for ${TAG_NAME} deployment to ${ENVIRONMENT}"
           fi
-          # Push the resolved changelog to the main branch
-          git push origin main
+
+          # Push the changes
+          git push origin HEAD:main
