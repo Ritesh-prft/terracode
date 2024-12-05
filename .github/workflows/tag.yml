@@ -121,34 +121,31 @@ jobs:
           ENVIRONMENT="dev"
           COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
 
-          # Get the commit message associated with the tag
-          COMMIT_MESSAGE=$(git log -1 --pretty=%B "$TAG_NAME")
-          echo "Commit Message for tag $TAG_NAME: $COMMIT_MESSAGE"
-
-          # Prepare changelog entry for DEV with the commit message
+          # Append to the changelog file for Dev deployment
           echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- ${COMMIT_MESSAGE}\n" >> CHANGELOG_Dev.md
 
-          # Commit and push changes
+          # Commit and push changes to the main branch
           git add CHANGELOG_Dev.md
           git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
 
           # Fetch and merge remote changes before pushing with --allow-unrelated-histories
           git fetch origin main
+          git checkout main  # Ensure we're on the main branch
           git merge origin/main --no-edit --allow-unrelated-histories || true  # Avoid failing due to conflicts
 
           # Check for conflicts and resolve (keeping our local changes in these files)
           if git ls-files -u | grep -q .; then
             echo "Merge conflicts detected, resolving..."
-            git checkout --ours .github/workflows/tag.yml  # Keep local changes in workflow
             git checkout --ours CHANGELOG_Dev.md  # Keep local changes in changelog
 
             # Add resolved files and commit the resolution
-            git add .github/workflows/tag.yml CHANGELOG_Dev.md
+            git add CHANGELOG_Dev.md
             git commit -m "Resolved merge conflicts for ${TAG_NAME} deployment to ${ENVIRONMENT}"
           fi
 
-          # Push the changes
+          # Push the changes to the main branch
           git push origin HEAD:main
+
 
       - name: Checkout the tag for deployment
         run: |
