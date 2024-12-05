@@ -36,21 +36,16 @@ jobs:
           # Fetch PR details using GitHub API
           PR_URL="https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}"
           
-          # Extract PR title and the commit message of the first commit in the PR (if PR is linked to a commit)
-          PR_TITLE=$(curl -s $PR_URL | jq -r .title)
-          PR_BODY=$(curl -s $PR_URL | jq -r .body)
-
-          # If you need the commit message of the PR's first commit:
-          # (Note: you can replace 'commits_url' with the correct PR commits endpoint)
+          # Get the latest commit on the PR (the commit associated with the PR)
           PR_COMMITS_URL=$(curl -s $PR_URL | jq -r .commits_url)
-          FIRST_COMMIT_MESSAGE=$(curl -s $PR_COMMITS_URL | jq -r '.[0].commit.message')
+          
+          # Fetch commits related to the PR and extract the latest commit message
+          LATEST_COMMIT_MESSAGE=$(curl -s $PR_COMMITS_URL | jq -r '.[-1].commit.message')
 
-          echo "PR Title: $PR_TITLE"
-          echo "PR Body: $PR_BODY"
-          echo "First Commit Message: $FIRST_COMMIT_MESSAGE"
+          echo "Latest Commit Message: $LATEST_COMMIT_MESSAGE"
 
-          # Prepare changelog entry for DEV
-          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- ${FIRST_COMMIT_MESSAGE}\n" >> CHANGELOG_Dev.md
+          # Prepare changelog entry for DEV with the latest commit message
+          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- ${LATEST_COMMIT_MESSAGE}\n" >> CHANGELOG_Dev.md
 
           # Commit and push changes
           git add CHANGELOG_Dev.md
@@ -73,6 +68,7 @@ jobs:
 
           # Push the changes
           git push origin HEAD:main
+
 
 
   deploy_to_qa:
