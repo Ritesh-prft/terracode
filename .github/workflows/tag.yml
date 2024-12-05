@@ -15,7 +15,7 @@ on:
 
 jobs:
   create_tag:
-    if: github.event.pull_request.merged == true  # Run only if the PR is merged
+    if: github.event.pull_request.state == 'opened'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
