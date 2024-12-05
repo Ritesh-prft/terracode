@@ -158,10 +158,10 @@ jobs:
           echo "Commits in feature branch $PR_SOURCE_BRANCH: $COMMITS"
 
           # Prepare changelog entry for PROD
-          echo -e "\n---\n## [${TAG_NAME}] - $DATE\n### Deployed to: $ENVIRONMENT\n Dated: $DATE\n### Commit Message: $COMMITS\n\n---\n" >> CHANGELOG.md
+          echo -e "\n---\n## [${TAG_NAME}] - $DATE\n### Deployed to: $ENVIRONMENT\n Dated: $DATE\n### Commit Message: $COMMITS\n\n---\n" >> CHANGELOG_Prod.md
 
           # Commit and push changes
-          git add CHANGELOG.md
+          git add CHANGELOG_Prod.md
           git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
 
           # Fetch and merge remote changes before pushing
@@ -171,10 +171,10 @@ jobs:
           # Check for conflicts and resolve (keeping our local changes in these files)
           if git ls-files -u | grep -q .; then
             echo "Merge conflicts detected, resolving..."
-            git checkout --ours CHANGELOG.md  # Keep local changes in changelog
+            git checkout --ours CHANGELOG_Prod.md  # Keep local changes in changelog
 
             # Add resolved file and commit the resolution
-            git add CHANGELOG.md
+            git add CHANGELOG_Prod.md
             git commit -m "Resolved merge conflicts for ${TAG_NAME} deployment to ${ENVIRONMENT}"
           fi
 
