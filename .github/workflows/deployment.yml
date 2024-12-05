@@ -33,16 +33,24 @@ jobs:
           PR_NUMBER=$(echo $TAG_NAME | grep -oP '(?<=v)\d+')
           echo "PR Number: $PR_NUMBER"
 
+          # Fetch PR details using GitHub API
           PR_URL="https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}"
-          PR_SOURCE_BRANCH=$(curl -s $PR_URL | jq -r .head.ref)
-          echo "Feature Branch: $PR_SOURCE_BRANCH"
+          
+          # Extract PR title and the commit message of the first commit in the PR (if PR is linked to a commit)
+          PR_TITLE=$(curl -s $PR_URL | jq -r .title)
+          PR_BODY=$(curl -s $PR_URL | jq -r .body)
 
-          git fetch origin $PR_SOURCE_BRANCH
-          COMMITS=$(git log origin/$PR_SOURCE_BRANCH -n 1 --oneline)
-          echo "Commits in feature branch $PR_SOURCE_BRANCH: $COMMITS"
+          # If you need the commit message of the PR's first commit:
+          # (Note: you can replace 'commits_url' with the correct PR commits endpoint)
+          PR_COMMITS_URL=$(curl -s $PR_URL | jq -r .commits_url)
+          FIRST_COMMIT_MESSAGE=$(curl -s $PR_COMMITS_URL | jq -r '.[0].commit.message')
+
+          echo "PR Title: $PR_TITLE"
+          echo "PR Body: $PR_BODY"
+          echo "First Commit Message: $FIRST_COMMIT_MESSAGE"
 
           # Prepare changelog entry for DEV
-          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n${COMMITS// /- }\n" >> CHANGELOG_Dev.md
+          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- ${FIRST_COMMIT_MESSAGE}\n" >> CHANGELOG_Dev.md
 
           # Commit and push changes
           git add CHANGELOG_Dev.md
@@ -65,6 +73,7 @@ jobs:
 
           # Push the changes
           git push origin HEAD:main
+
 
   deploy_to_qa:
     runs-on: ubuntu-latest
