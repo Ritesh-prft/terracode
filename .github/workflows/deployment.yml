@@ -27,37 +27,37 @@ jobs:
           TAG_NAME="${{ github.ref_name }}"
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="dev"
-  
+
           PR_NUMBER=$(echo $TAG_NAME | grep -oP '(?<=v)\d+')
           echo "PR Number: $PR_NUMBER"
-  
+
           PR_URL="https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}"
           PR_SOURCE_BRANCH=$(curl -s $PR_URL | jq -r .head.ref)
           echo "Feature Branch: $PR_SOURCE_BRANCH"
-  
+
           git fetch origin $PR_SOURCE_BRANCH
           COMMITS=$(git log origin/$PR_SOURCE_BRANCH --oneline)
           echo "Commits in feature branch $PR_SOURCE_BRANCH: $COMMITS"
-  
+
           # Prepare changelog entry for DEV
           echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n${COMMITS// /- }\n" >> CHANGELOG.md
-  
+
           # Commit and push changes
           git add CHANGELOG.md
           git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
-  
+
           # Fetch and merge remote changes before pushing with --allow-unrelated-histories
           git fetch origin main
           git merge origin/main --no-edit --allow-unrelated-histories || true  # Avoid failing due to conflicts
-  
+
           # Resolve conflicts by taking the local version of files (ours strategy)
           git checkout --ours .github/workflows/deployment.yml  # Keep local changes in workflow
           git checkout --ours CHANGELOG.md  # Keep local changes in changelog
-  
+
           # Add resolved files and commit the resolution
           git add .github/workflows/deployment.yml CHANGELOG.md
           git commit -m "Resolved merge conflicts for ${TAG_NAME} deployment to ${ENVIRONMENT}"
-  
+
           # Push the changes
           git push origin HEAD:main
 
@@ -72,6 +72,11 @@ jobs:
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
+
+      - name: Pull latest changes from main (including changelog updates from DEV)
+        run: |
+          git fetch origin main
+          git merge origin/main --no-edit  # This ensures you have the latest changelog before making changes
 
       - name: Deploy to QA
         run: |
@@ -102,7 +107,7 @@ jobs:
             git add CHANGELOG.md
             git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
     
-            # Fetch and merge remote changes before pushing with --allow-unrelated-histories
+            # Fetch and merge remote changes before pushing
             git fetch origin main
             git merge origin/main --no-edit --allow-unrelated-histories || true  # Avoid failing due to conflicts
     
