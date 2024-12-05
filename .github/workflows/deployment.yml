@@ -40,10 +40,10 @@ jobs:
           echo "Commits in feature branch $PR_SOURCE_BRANCH: $COMMITS"
   
           # Prepare changelog entry for DEV
-          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n${COMMITS// /- }\n" >> CHANGELOG.md
+          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n${COMMITS// /- }\n" >> CHANGELOG_Dev.md
   
           # Commit and push changes
-          git add CHANGELOG.md
+          git add CHANGELOG_Dev.md
           git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
   
           # Fetch and merge remote changes before pushing with --allow-unrelated-histories
@@ -52,10 +52,10 @@ jobs:
   
           # Resolve conflicts by taking the local version of files (ours strategy)
           git checkout --ours .github/workflows/deployment.yml  # Keep local changes in workflow
-          git checkout --ours CHANGELOG.md  # Keep local changes in changelog
+          git checkout --ours CHANGELOG_Dev.md  # Keep local changes in changelog
   
           # Add resolved files and commit the resolution
-          git add .github/workflows/deployment.yml CHANGELOG.md
+          git add .github/workflows/deployment.yml CHANGELOG_Dev.md
           git commit -m "Resolved merge conflicts for ${TAG_NAME} deployment to ${ENVIRONMENT}"
   
           # Push the changes
@@ -96,10 +96,10 @@ jobs:
             echo "Commits in feature branch $PR_SOURCE_BRANCH: $COMMITS"
     
             # Prepare changelog entry for QA
-            echo -e "\n---\n## [${TAG_NAME}] - $DATE\n### Deployed to: $ENVIRONMENT\n Dated: $DATE\n### Commit Message: $COMMITS\n\n---\n" >> CHANGELOG.md
+            echo -e "\n---\n## [${TAG_NAME}] - $DATE\n### Deployed to: $ENVIRONMENT\n Dated: $DATE\n### Commit Message: $COMMITS\n\n---\n" >> CHANGELOG_Qa.md
     
             # Commit and push changes
-            git add CHANGELOG.md
+            git add CHANGELOG_Qa.md
             git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
     
             # Fetch and merge remote changes before pushing with --allow-unrelated-histories
@@ -107,10 +107,10 @@ jobs:
             git merge origin/main --no-edit --allow-unrelated-histories || true  # Avoid failing due to conflicts
     
             # Resolve conflicts by taking the local version of files (ours strategy)
-            git checkout --ours CHANGELOG.md  # Keep local changes in changelog
+            git checkout --ours CHANGELOG_Qa.md  # Keep local changes in changelog
     
             # Add resolved file and commit the resolution
-            git add CHANGELOG.md
+            git add CHANGELOG_Qa.md
             git commit -m "Resolved merge conflicts for ${TAG_NAME} deployment to ${ENVIRONMENT}"
     
             # Push the changes
@@ -152,10 +152,10 @@ jobs:
             echo "Commits in feature branch $PR_SOURCE_BRANCH: $COMMITS"
     
             # Prepare changelog entry for QA
-            echo -e "\n---\n## [${TAG_NAME}] - $DATE\n### Deployed to: $ENVIRONMENT\n Dated: $DATE\n### Commit Message: $COMMITS\n\n---\n" >> CHANGELOG.md
+            echo -e "\n---\n## [${TAG_NAME}] - $DATE\n### Deployed to: $ENVIRONMENT\n Dated: $DATE\n### Commit Message: $COMMITS\n\n---\n" >> CHANGELOG_Prod.md
     
             # Commit and push changes
-            git add CHANGELOG.md
+            git add CHANGELOG_Prod.md
             git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
     
             # Fetch and merge remote changes before pushing with --allow-unrelated-histories
@@ -163,10 +163,10 @@ jobs:
             git merge origin/main --no-edit --allow-unrelated-histories || true  # Avoid failing due to conflicts
     
             # Resolve conflicts by taking the local version of files (ours strategy)
-            git checkout --ours CHANGELOG.md  # Keep local changes in changelog
+            git checkout --ours CHANGELOG_Prod.md  # Keep local changes in changelog
     
             # Add resolved file and commit the resolution
-            git add CHANGELOG.md
+            git add CHANGELOG_Prod.md
             git commit -m "Resolved merge conflicts for ${TAG_NAME} deployment to ${ENVIRONMENT}"
     
             # Push the changes
