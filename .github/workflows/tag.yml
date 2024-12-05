@@ -15,7 +15,11 @@ on:
 
 jobs:
   create_tag:
-    # if: github.event.pull_request.state == 'opened'
+    if: |
+      github.event.pull_request.action == 'opened' ||
+      github.event.pull_request.action == 'reopened' ||
+      github.event.pull_request.action == 'synchronize' ||
+      github.event.pull_request.action == 'edited'  # Add more as needed  # Trigger only when PR is opened
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -64,6 +68,13 @@ jobs:
 
           # Set new tag
           NEW_TAG="tag-v${MAJOR}.${MINOR}.${PATCH}"
+
+          # Ensure the tag is unique
+          while git rev-parse "$NEW_TAG" >/dev/null 2>&1; do
+            PATCH=$((PATCH + 1))  # Increment PATCH until a unique tag is found
+            NEW_TAG="tag-v${MAJOR}.${MINOR}.${PATCH}"
+          done
+
           echo "New tag: $NEW_TAG"
           echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
 
@@ -76,6 +87,7 @@ jobs:
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
           git push origin $NEW_TAG
           echo "Created and pushed tag: $NEW_TAG"
+
 
   deploy_to_env:
     needs: create_tag  # Ensure tag creation is completed before deployment
