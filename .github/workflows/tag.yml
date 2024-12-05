@@ -19,7 +19,8 @@ jobs:
       github.event.pull_request.action == 'opened' ||
       github.event.pull_request.action == 'reopened' ||
       github.event.pull_request.action == 'synchronize' ||
-      github.event.pull_request.action == 'edited' 
+      github.event.pull_request.action == 'edited' ||
+      github.event.pull_request.state == 'open'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
