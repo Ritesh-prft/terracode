@@ -61,7 +61,7 @@ jobs:
           # Push the changes
           git push origin HEAD:main
 
-   deploy_to_qa:
+  deploy_to_qa:
     runs-on: ubuntu-latest
     needs: deploy_to_dev  # Ensure QA deployment waits for DEV deployment
     steps:
