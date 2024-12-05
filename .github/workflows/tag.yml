@@ -1,9 +1,11 @@
+
 name: Create and Push Tag for Semantic Versioning
 
 on:
   pull_request:
+    # types: [submitted]  # Trigger when a review is submitted
     branches:
-      - main
+      - main  # Only for PRs targeting the main branch
     types:
       - opened
       - synchronize
@@ -18,7 +20,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           token: ${{ secrets.PAT_TOKEN }}
-          fetch-depth: 0  # Fetch all history to get all commits, not just the latest one
 
       - name: Set up Git for tagging
         run: |
@@ -27,14 +28,17 @@ jobs:
 
       - name: Fetch tags from remote
         run: |
+          # Fetch all tags from the remote
           git fetch --tags
 
       - name: Get latest tag
         id: get_latest_tag
         run: |
+          # List all tags and find the most recent one
           LATEST_TAG=$(git tag --list 'tag-v*' | sort -V | tail -n 1)
 
           if [ -z "$LATEST_TAG" ]; then
+            # If no tag found, default to 'tag-v0.0.0'
             LATEST_TAG="tag-v0.0.0"
           fi
 
@@ -46,7 +50,7 @@ jobs:
         run: |
           VERSION="${{ env.latest_tag }}"
           VERSION_PARTS=(${VERSION//./ })
-          MAJOR="${VERSION_PARTS[0]//tag-v/}"
+          MAJOR="${VERSION_PARTS[0]//tag-v/}"  # Remove leading 'tag-v'
           MINOR="${VERSION_PARTS[1]}"
           PATCH="${VERSION_PARTS[2]}"
 
@@ -54,24 +58,16 @@ jobs:
           echo "MINOR=$MINOR"
           echo "PATCH=$PATCH"
 
+          # Set environment variables for version parts
           echo "MAJOR=$MAJOR" >> $GITHUB_ENV
           echo "MINOR=$MINOR" >> $GITHUB_ENV
           echo "PATCH=$PATCH" >> $GITHUB_ENV
 
-      - name: Get PR commit message
-        id: pr_commit_message
-        run: |
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          PR_URL="https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER"
-          PR_COMMIT_MESSAGE=$(curl -s $PR_URL | jq -r .title)
-          echo "PR Commit Message: $PR_COMMIT_MESSAGE"
-          
-          echo "PR_COMMIT_MESSAGE=$PR_COMMIT_MESSAGE" >> $GITHUB_ENV
-
       - name: Increment version based on commit message
         id: increment_version
         run: |
-          COMMIT_MESSAGE="${{ env.PR_COMMIT_MESSAGE }}"
+          # Check if the commit message contains "MAJOR", "MINOR", or "PATCH"
+          COMMIT_MESSAGE=$(git log -1 --pretty=%B)
           echo "Commit message: $COMMIT_MESSAGE"
 
           if [[ "$COMMIT_MESSAGE" == *MAJOR* ]]; then
@@ -85,14 +81,17 @@ jobs:
             PATCH=$((PATCH + 1))
           fi
 
+          # Update the version components
           echo "Updated Version: tag-v${MAJOR}.${MINOR}.${PATCH}"
 
+          # Set environment variables for updated version
           echo "NEW_TAG=tag-v${MAJOR}.${MINOR}.${PATCH}" >> $GITHUB_ENV
 
       - name: Check if the tag already exists
         id: check_tag
         run: |
           NEW_TAG="${{ env.NEW_TAG }}"
+          # Check if the tag already exists in the remote repository
           TAG_EXISTS=$(git tag -l | grep "$NEW_TAG" || echo "")
           if [[ -n "$TAG_EXISTS" ]]; then
             echo "Tag $NEW_TAG already exists. Incrementing PATCH version."
@@ -104,11 +103,12 @@ jobs:
 
       - name: Create and push the new tag
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}  # Using PAT stored in GitHub secrets
         run: |
           NEW_TAG="${{ env.NEW_TAG }}"
           git tag $NEW_TAG
           
+          # Authenticate using the PAT and push the tag to the remote repository
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
           git push origin $NEW_TAG
           
