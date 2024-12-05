@@ -3,15 +3,11 @@ name: Create Tag and Deploy to Environments
 on:
   pull_request:
     branches:
-      - main  # Trigger when a PR is merged into the main branch
+      - main  # Trigger when a PR is targeting the 'main' branch
     types:
-      - opened
-      - synchronize
-      - reopened
-      - closed
-  push:
-    tags:
-      - 'tag-v*'  # Trigger when a tag is pushed (e.g., "tag-v1.0.0")
+      - opened        # Trigger when the PR is created
+      - synchronize  # Trigger when the PR is updated (e.g., new commits pushed)
+      - reopened     # Trigger when a PR is reopened
 
 jobs:
   create_tag_and_deploy:
@@ -19,7 +15,6 @@ jobs:
       github.event.pull_request.action == 'opened' ||
       github.event.pull_request.action == 'reopened' ||
       github.event.pull_request.action == 'synchronize' ||
-      github.event.pull_request.action == 'edited' ||
       github.event.pull_request.state == 'open'
     runs-on: ubuntu-latest
     steps:
@@ -102,6 +97,12 @@ jobs:
           # Set commit message for later use
           echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_ENV
           echo "Fetched Commit Message: $COMMIT_MESSAGE"
+
+      - name: Checkout the new tag for deployment
+        run: |
+          NEW_TAG="${{ env.NEW_TAG }}"
+          git checkout $NEW_TAG
+          echo "Checked out tag: $NEW_TAG"
 
       - name: Deploy to Dev
         run: |
