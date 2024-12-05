@@ -1,5 +1,3 @@
-name: Create Tag and Deploy to Environments
-
 on:
   pull_request:
     branches:
@@ -115,6 +113,7 @@ jobs:
           ls
           # Add your deployment commands for the Dev environment here.
 
+
       - name: Update Changelog for Dev Deployment
         run: |
           TAG_NAME="${{ env.NEW_TAG }}"
@@ -142,6 +141,13 @@ jobs:
             git add .github/workflows/tag.yml CHANGELOG_Dev.md
             git commit -m "Resolved merge conflicts for ${TAG_NAME} deployment to ${ENVIRONMENT}"
           fi
+
+      - name: Checkout the tag for deployment
+        run: |
+          NEW_TAG="${{ env.NEW_TAG }}"
+          git checkout $NEW_TAG
+          echo "Checked out tag: $NEW_TAG"
+          ls -alh  # List files to verify the tag content
 
       - name: Deploy to QA
         run: |
@@ -181,6 +187,13 @@ jobs:
             git commit -m "Resolved merge conflicts for ${TAG_NAME} deployment to ${ENVIRONMENT}"
           fi
 
+      - name: Checkout the tag for deployment
+        run: |
+          NEW_TAG="${{ env.NEW_TAG }}"
+          git checkout $NEW_TAG
+          echo "Checked out tag: $NEW_TAG"
+          ls -alh  # List files to verify the tag content
+          
       - name: Deploy to PROD
         run: |
           echo "Deploying to PROD environment using tag ${{ env.NEW_TAG }}"
