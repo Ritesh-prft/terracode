@@ -112,40 +112,41 @@ jobs:
           echo "Deploying to Dev environment using tag ${{ github.ref }}"
           # Add your deployment commands for the Dev environment here.
 
-      - name: Get Commit Message for Changelog Update (Dev)
+      - name: Update Changelog for Dev Deployment
         run: |
           TAG_NAME="${{ github.ref_name }}"
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="dev"
 
-          # Get the commit message associated with the tag
-          COMMIT_MESSAGE=$(git log -1 --pretty=%B "$TAG_NAME")
-          echo "Commit Message for tag $TAG_NAME: $COMMIT_MESSAGE"
-
-          # Prepare changelog entry for DEV with the commit message
-          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- ${COMMIT_MESSAGE}\n" >> CHANGELOG_Dev.md
+          # Add a changelog entry for the Dev deployment
+          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deploying version ${TAG_NAME}\n" >> CHANGELOG_Dev.md
 
           # Commit and push changes
           git add CHANGELOG_Dev.md
           git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
-
-          # Fetch and merge remote changes before pushing with --allow-unrelated-histories
+          
+          # Fetch and merge changes from the main branch
           git fetch origin main
-          git merge origin/main --no-edit --allow-unrelated-histories || true  # Avoid failing due to conflicts
 
-          # Check for conflicts and resolve (keeping our local changes in these files)
+          # Merge the latest main branch into the current branch (deployment)
+          git merge origin/main --no-edit --allow-unrelated-histories || true
+
+          # Resolve merge conflicts for specific files
           if git ls-files -u | grep -q .; then
             echo "Merge conflicts detected, resolving..."
-            git checkout --ours .github/workflows/deployment.yml  # Keep local changes in workflow
+
+            # Resolve conflict by keeping our version of specific files
             git checkout --ours CHANGELOG_Dev.md  # Keep local changes in changelog
+            git checkout --ours .github/workflows/tag.yml  # Keep local changes in workflow
 
             # Add resolved files and commit the resolution
-            git add .github/workflows/deployment.yml CHANGELOG_Dev.md
-            git commit -m "Resolved merge conflicts for ${TAG_NAME} deployment to ${ENVIRONMENT}"
+            git add CHANGELOG_Dev.md .github/workflows/tag.yml
+            git commit -m "Resolved merge conflicts for ${TAG_NAME} deployment to dev"
           fi
 
-          # Push the changes
+          # Push changes to the main branch
           git push origin HEAD:main
+
 
   deploy_to_qa:
     runs-on: ubuntu-latest
