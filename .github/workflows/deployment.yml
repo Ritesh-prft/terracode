@@ -49,7 +49,7 @@ jobs:
 
           # Fetch and merge remote changes before pushing
           git fetch origin main
-          git merge origin/main --no-edit
+          git merge origin/main --no-edit --allow-unrelated-histories
 
           # Push changes to the main branch
           git push origin HEAD:main  # Replace 'main' with the correct branch if different
