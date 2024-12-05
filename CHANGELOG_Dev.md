@@ -1448,3 +1448,11 @@ d1c8345- MINOR,- pipeline- updated- for- changelog- management
 ### Changes:
 - Deploying version tag-v9.1.35
 
+
+## [tag-v9.1.36] - 2024-12-05
+### Deployed to:
+- **dev**: 2024-12-05
+### Changes:
+- Deploying version tag-v9.1.36
+- Commit Message:  
+
