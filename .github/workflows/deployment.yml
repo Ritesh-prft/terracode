@@ -134,33 +134,40 @@ jobs:
           echo "Deploying to PROD environment using tag ${{ github.ref }}"
           # Add your deployment commands for the PROD environment here.
 
-      - name: Get Commit Messages for Changelog Update (Prod)
+      - name: Get Commit Messages for Changelog Update (PROD)
         run: |
-          TAG_NAME="${{ github.ref_name }}"
-          DATE=$(date +'%Y-%m-%d')
-          ENVIRONMENT="prod"
-
-          PR_NUMBER=$(echo $TAG_NAME | grep -oP '(?<=v)\d+')
-          echo "PR Number: $PR_NUMBER"
-
-          PR_URL="https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}"
-          PR_SOURCE_BRANCH=$(curl -s $PR_URL | jq -r .head.ref)
-          echo "Feature Branch: $PR_SOURCE_BRANCH"
-
-          git fetch origin $PR_SOURCE_BRANCH
-          COMMITS=$(git log origin/$PR_SOURCE_BRANCH --oneline)
-          echo "Commits in feature branch $PR_SOURCE_BRANCH: $COMMITS"
-
-          # Prepare changelog entry for PROD
-          echo -e "\n---\n## [${TAG_NAME}] - $DATE\n### Deployed to: $ENVIRONMENT\n Dated: $DATE\n### Commit Message: $COMMITS\n\n---\n" >> CHANGELOG.md
-
-          # Commit and push changes
-          git add CHANGELOG.md
-          git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
-
-          # Fetch and merge remote changes before pushing
-          git fetch origin main
-          git merge origin/main --no-edit || true
-
-          # Push changes to the main branch
-          git push origin HEAD:main
+            TAG_NAME="${{ github.ref_name }}"
+            DATE=$(date +'%Y-%m-%d')
+            ENVIRONMENT="prod"
+    
+            PR_NUMBER=$(echo $TAG_NAME | grep -oP '(?<=v)\d+')
+            echo "PR Number: $PR_NUMBER"
+    
+            PR_URL="https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}"
+            PR_SOURCE_BRANCH=$(curl -s $PR_URL | jq -r .head.ref)
+            echo "Feature Branch: $PR_SOURCE_BRANCH"
+    
+            git fetch origin $PR_SOURCE_BRANCH
+            COMMITS=$(git log origin/$PR_SOURCE_BRANCH --oneline)
+            echo "Commits in feature branch $PR_SOURCE_BRANCH: $COMMITS"
+    
+            # Prepare changelog entry for QA
+            echo -e "\n---\n## [${TAG_NAME}] - $DATE\n### Deployed to: $ENVIRONMENT\n Dated: $DATE\n### Commit Message: $COMMITS\n\n---\n" >> CHANGELOG.md
+    
+            # Commit and push changes
+            git add CHANGELOG.md
+            git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
+    
+            # Fetch and merge remote changes before pushing with --allow-unrelated-histories
+            git fetch origin main
+            git merge origin/main --no-edit --allow-unrelated-histories || true  # Avoid failing due to conflicts
+    
+            # Resolve conflicts by taking the local version of files (ours strategy)
+            git checkout --ours CHANGELOG.md  # Keep local changes in changelog
+    
+            # Add resolved file and commit the resolution
+            git add CHANGELOG.md
+            git commit -m "Resolved merge conflicts for ${TAG_NAME} deployment to ${ENVIRONMENT}"
+    
+            # Push the changes
+            git push origin HEAD:main
