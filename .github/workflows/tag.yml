@@ -142,6 +142,8 @@ jobs:
             git add .github/workflows/tag.yml CHANGELOG_Dev.md
             git commit -m "Resolved merge conflicts for ${TAG_NAME} deployment to ${ENVIRONMENT}"
           fi
+          # Push the resolved changelog to the main branch
+          git push origin main
 
       - name: Checkout the tag for deployment
         run: |
@@ -187,6 +189,8 @@ jobs:
             git add .github/workflows/tag.yml CHANGELOG_Qa.md
             git commit -m "Resolved merge conflicts for ${TAG_NAME} deployment to ${ENVIRONMENT}"
           fi
+          # Push the resolved changelog to the main branch
+          git push origin main
 
       - name: Checkout the tag for deployment
         run: |
@@ -232,3 +236,5 @@ jobs:
             git add .github/workflows/tag.yml CHANGELOG_Prod.md
             git commit -m "Resolved merge conflicts for ${TAG_NAME} deployment to ${ENVIRONMENT}"
           fi
+          # Push the resolved changelog to the main branch
+          git push origin main
