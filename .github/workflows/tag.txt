@@ -1,7 +1,9 @@
+
 name: Create and Push Tag for Semantic Versioning
 
 on:
   pull_request:
+    # types: [submitted]  # Trigger when a review is submitted
     branches:
       - main  # Only for PRs targeting the main branch
     types:
@@ -61,23 +63,11 @@ jobs:
           echo "MINOR=$MINOR" >> $GITHUB_ENV
           echo "PATCH=$PATCH" >> $GITHUB_ENV
 
-      - name: Get PR commit message
-        id: pr_commit_message
-        run: |
-          # Get the PR's merge commit message (the message of the last commit in the PR)
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          PR_URL="https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER"
-          PR_COMMIT_MESSAGE=$(curl -s $PR_URL | jq -r .title)
-          echo "PR Commit Message: $PR_COMMIT_MESSAGE"
-
-          # Set the commit message for later use
-          echo "PR_COMMIT_MESSAGE=$PR_COMMIT_MESSAGE" >> $GITHUB_ENV
-
       - name: Increment version based on commit message
         id: increment_version
         run: |
           # Check if the commit message contains "MAJOR", "MINOR", or "PATCH"
-          COMMIT_MESSAGE="${{ env.PR_COMMIT_MESSAGE }}"
+          COMMIT_MESSAGE=$(git log -1 --pretty=%B)
           echo "Commit message: $COMMIT_MESSAGE"
 
           if [[ "$COMMIT_MESSAGE" == *MAJOR* ]]; then
