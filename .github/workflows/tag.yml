@@ -129,19 +129,24 @@ jobs:
           git fetch origin main
           git merge origin/main --no-edit --allow-unrelated-histories || true
 
-          if git ls-files -u | grep -q .; then
-            echo "Merge conflicts detected, resolving..."
-            git checkout --ours CHANGELOG_Dev.md
-            git checkout --ours .github/workflows/tag.yml
-            git add CHANGELOG_Dev.md .github/workflows/tag.yml
-            git commit -m "Resolved merge conflicts for ${TAG_NAME} deployment to dev"
-          fi
+          # Resolve merge conflicts automatically (keep ours for changelog files)
+          echo "Resolving merge conflicts automatically..."
 
+          # Checkout our version of changelog files
+          git checkout --ours CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md
+          git add CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md
+
+          # Commit resolved conflicts
+          git commit -m "Automatically resolved merge conflicts for ${TAG_NAME} deployment to dev"
+
+          # Push changes
           git push origin HEAD:main
 
       - name: Deploy to QA
         run: |
           echo "Deploying to QA environment using tag ${{ env.NEW_TAG }}"
+          dir
+          ls
           # Add your deployment commands for the QA environment here.
 
       - name: Update Changelog for QA Deployment
@@ -161,19 +166,24 @@ jobs:
           git fetch origin main
           git merge origin/main --no-edit --allow-unrelated-histories || true
 
-          if git ls-files -u | grep -q .; then
-            echo "Merge conflicts detected, resolving..."
-            git checkout --ours .github/workflows/deployment.yml
-            git checkout --ours CHANGELOG_Qa.md
-            git add .github/workflows/deployment.yml CHANGELOG_Qa.md
-            git commit -m "Resolved merge conflicts for ${TAG_NAME} deployment to ${ENVIRONMENT}"
-          fi
+          # Resolve merge conflicts automatically (keep ours for changelog files)
+          echo "Resolving merge conflicts automatically..."
 
+          # Checkout our version of changelog files
+          git checkout --ours CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md
+          git add CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md
+
+          # Commit resolved conflicts
+          git commit -m "Automatically resolved merge conflicts for ${TAG_NAME} deployment to qa"
+
+          # Push changes
           git push origin HEAD:main
 
       - name: Deploy to PROD
         run: |
           echo "Deploying to PROD environment using tag ${{ env.NEW_TAG }}"
+          dir
+          ls
           # Add your deployment commands for the PROD environment here.
 
       - name: Update Changelog for PROD Deployment
@@ -184,4 +194,24 @@ jobs:
           COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
 
           # Add a changelog entry for the PROD deployment with PR commit message
-          echo -e "\n---\n## [${TAG_NAME}] - $
+          echo -e "\n---\n## [${TAG_NAME}] - $DATE\n### Deployed to: $ENVIRONMENT\n Dated: $DATE\n### Commit Message: $COMMIT_MESSAGE\n\n---\n" >> CHANGELOG_Prod.md
+
+          # Commit and push changes
+          git add CHANGELOG_Prod.md
+          git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
+
+          git fetch origin main
+          git merge origin/main --no-edit || true
+
+          # Resolve merge conflicts automatically (keep ours for changelog files)
+          echo "Resolving merge conflicts automatically..."
+
+          # Checkout our version of changelog files
+          git checkout --ours CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md
+          git add CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md
+
+          # Commit resolved conflicts
+          git commit -m "Automatically resolved merge conflicts for ${TAG_NAME} deployment to prod"
+
+          # Push changes
+          git push origin HEAD:main
