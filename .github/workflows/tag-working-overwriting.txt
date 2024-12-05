@@ -7,8 +7,6 @@ on:
       - synchronize  # Trigger when the PR is updated (e.g., new commits pushed)
       - reopened     # Trigger when a PR is reopened
 
-
-
 jobs:
   create_tag_and_deploy:
     if: |
@@ -102,17 +100,14 @@ jobs:
       - name: Checkout the tag for deployment
         run: |
           NEW_TAG="${{ env.NEW_TAG }}"
-          git checkout $NEW_TAG
+          git checkout --detach $NEW_TAG
           echo "Checked out tag: $NEW_TAG"
           ls -alh  # List files to verify the tag content
 
       - name: Deploy to Dev
         run: |
           echo "Deploying to Dev environment using tag ${{ env.NEW_TAG }}"
-          dir
-          ls
           # Add your deployment commands for the Dev environment here.
-
 
       - name: Update Changelog for Dev Deployment
         run: |
@@ -127,122 +122,65 @@ jobs:
           # Commit and push changes to the main branch
           git add CHANGELOG_Dev.md
           git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
-
-          # Fetch and merge remote changes before pushing with --allow-unrelated-histories
           git fetch origin main
           git checkout main  # Ensure we're on the main branch
           git merge origin/main --no-edit --allow-unrelated-histories || true  # Avoid failing due to conflicts
-
-          # Check for conflicts and resolve (keeping our local changes in these files)
-          if git ls-files -u | grep -q .; then
-            echo "Merge conflicts detected, resolving..."
-            git checkout --ours CHANGELOG_Dev.md  # Keep local changes in changelog
-
-            # Add resolved files and commit the resolution
-            git add CHANGELOG_Dev.md
-            git commit -m "Resolved merge conflicts for ${TAG_NAME} deployment to ${ENVIRONMENT}"
-          fi
-
-          # Push the changes to the main branch
           git push origin HEAD:main
 
-
-      - name: Checkout the tag for deployment
+      - name: Checkout the tag for QA deployment
         run: |
           NEW_TAG="${{ env.NEW_TAG }}"
-          git checkout $NEW_TAG
+          git checkout --detach $NEW_TAG
           echo "Checked out tag: $NEW_TAG"
-          ls -alh  # List files to verify the tag content
 
       - name: Deploy to QA
         run: |
           echo "Deploying to QA environment using tag ${{ env.NEW_TAG }}"
-          dir
-          ls
           # Add your deployment commands for the QA environment here.
 
-      - name: Update Changelog for Qa Deployment
+      - name: Update Changelog for QA Deployment
         run: |
           TAG_NAME="${{ env.NEW_TAG }}"
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="qa"
           COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
 
-          # Get the commit message associated with the tag
-          COMMIT_MESSAGE=$(git log -1 --pretty=%B "$TAG_NAME")
-          echo "Commit Message for tag $TAG_NAME: $COMMIT_MESSAGE"
+          # Append to the changelog file for QA deployment
+          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- ${COMMIT_MESSAGE}\n" >> CHANGELOG_QA.md
 
-          # Prepare changelog entry for QA with the commit message
-          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- ${COMMIT_MESSAGE}\n" >> CHANGELOG_Qa.md
-
-          # Commit and push changes
-          git add CHANGELOG_Qa.md
+          # Commit and push changes to the main branch
+          git add CHANGELOG_QA.md
           git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
-
-          # Fetch and merge remote changes before pushing with --allow-unrelated-histories
           git fetch origin main
+          git checkout main  # Ensure we're on the main branch
           git merge origin/main --no-edit --allow-unrelated-histories || true  # Avoid failing due to conflicts
-
-          # Check for conflicts and resolve (keeping our local changes in these files)
-          if git ls-files -u | grep -q .; then
-            echo "Merge conflicts detected, resolving..."
-            git checkout --ours .github/workflows/tag.yml  # Keep local changes in workflow
-            git checkout --ours CHANGELOG_Qa.md  # Keep local changes in changelog
-
-            # Add resolved files and commit the resolution
-            git add .github/workflows/tag.yml CHANGELOG_Qa.md
-            git commit -m "Resolved merge conflicts for ${TAG_NAME} deployment to ${ENVIRONMENT}"
-          fi
-
-          # Push the changes
           git push origin HEAD:main
 
-      - name: Checkout the tag for deployment
+      - name: Checkout the tag for PROD deployment
         run: |
           NEW_TAG="${{ env.NEW_TAG }}"
-          git checkout $NEW_TAG
+          git checkout --detach $NEW_TAG
           echo "Checked out tag: $NEW_TAG"
-          ls -alh  # List files to verify the tag content
 
       - name: Deploy to PROD
         run: |
           echo "Deploying to PROD environment using tag ${{ env.NEW_TAG }}"
-          dir
-          ls
           # Add your deployment commands for the PROD environment here.
 
-      - name: Update Changelog for Prod Deployment
+      - name: Update Changelog for PROD Deployment
         run: |
           TAG_NAME="${{ env.NEW_TAG }}"
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="prod"
           COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
 
-          # Get the commit message associated with the tag
-          COMMIT_MESSAGE=$(git log -1 --pretty=%B "$TAG_NAME")
-          echo "Commit Message for tag $TAG_NAME: $COMMIT_MESSAGE"
-
-          # Prepare changelog entry for PROD with the commit message
+          # Append to the changelog file for PROD deployment
           echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- ${COMMIT_MESSAGE}\n" >> CHANGELOG_Prod.md
 
-          # Commit and push changes
+          # Commit and push changes to the main branch
           git add CHANGELOG_Prod.md
           git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
-
-          # Fetch and merge remote changes before pushing with --allow-unrelated-histories
           git fetch origin main
+          git checkout main  # Ensure we're on the main branch
           git merge origin/main --no-edit --allow-unrelated-histories || true  # Avoid failing due to conflicts
-
-          # Check for conflicts and resolve (keeping our local changes in these files)
-          if git ls-files -u | grep -q .; then
-            echo "Merge conflicts detected, resolving..."
-            git checkout --ours .github/workflows/tag.yml  # Keep local changes in workflow
-            git checkout --ours CHANGELOG_Prod.md  # Keep local changes in changelog
-
-            # Add resolved files and commit the resolution
-            git add .github/workflows/tag.yml CHANGELOG_Prod.md
-            git commit -m "Resolved merge conflicts for ${TAG_NAME} deployment to ${ENVIRONMENT}"
-          fi
-
-          # Push the changes
           git push origin HEAD:main
