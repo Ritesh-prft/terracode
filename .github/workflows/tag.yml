@@ -99,14 +99,14 @@ jobs:
           echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_ENV
           echo "Fetched Commit Message: $COMMIT_MESSAGE"
 
-      - name: Stash untracked changelog files
-        run: |
-          git stash push -m "Stashing untracked changelog files" --include-untracked
-
       - name: Checkout main branch
         run: |
           git checkout main
           git pull origin main  # Ensure we're up-to-date with the latest main
+
+      - name: Stash untracked files (if any)
+        run: |
+          git stash --include-untracked
 
       - name: Deploy to Dev using tag
         run: |
@@ -148,6 +148,11 @@ jobs:
           # Push changes to the main branch
           git push origin main
 
+      - name: Restore stashed files
+        run: |
+          git stash pop
+
+          
       - name: Deploy to QA using tag
         run: |
           echo "Deploying to QA environment using tag ${{ env.NEW_TAG }}"
