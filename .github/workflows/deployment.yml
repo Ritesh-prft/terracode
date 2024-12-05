@@ -3,7 +3,7 @@ name: Deploy to Environments
 on:
   push:
     tags:
-      - 'tag-v*'  # Trigger on a tag push like "v1.0.0"
+      - 'tag-v*'  # Trigger when a tag is pushed (e.g., "v1.0.0")
 
 jobs:
   deploy_to_dev:
@@ -47,12 +47,23 @@ jobs:
           git add CHANGELOG.md
           git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
 
-          # Fetch and merge remote changes before pushing
+          # Fetch and merge remote changes before pushing with --allow-unrelated-histories
           git fetch origin main
-          git merge origin/main --no-edit --allow-unrelated-histories
+          git merge origin/main --no-edit --allow-unrelated-histories || true  # Avoid failing due to conflicts
+
+          # Resolve conflicts (choose local version for both files)
+          git checkout --ours .github/workflows/deployment.yml  # Choose our (local) version for workflow file
+          git checkout --ours CHANGELOG.md  # Choose our (local) version for changelog file
+
+          # Add resolved files
+          git add .github/workflows/deployment.yml CHANGELOG.md
+
+          # Commit resolved changes
+          git commit -m "Resolved merge conflicts and updated changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
 
           # Push changes to the main branch
-          git push origin HEAD:main  # Replace 'main' with the correct branch if different
+          git push origin HEAD:main
+
 
   deploy_to_qa:
     runs-on: ubuntu-latest
