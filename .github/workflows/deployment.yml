@@ -73,15 +73,21 @@ jobs:
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
 
-      - name: Pull latest changes from main (including changelog updates from DEV)
-        run: |
-          git fetch origin main
-          git merge origin/main --no-edit  # This ensures you have the latest changelog before making changes
+      
 
       - name: Deploy to QA
         run: |
           echo "Deploying to QA environment using tag ${{ github.ref }}"
           # Add your deployment commands for the QA environment here.
+
+      - name: Checkout main branch
+        run: |
+          git checkout main  # Ensure we are on the main branch
+
+      - name: Pull latest changes from main (including changelog updates from DEV)
+        run: |
+          git fetch origin main
+          git merge origin/main --no-edit  # This ensures you have the latest changelog before making changes
 
       - name: Get Commit Messages for Changelog Update (QA)
         run: |
