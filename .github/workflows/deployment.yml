@@ -12,48 +12,42 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v3
 
+        
       - name: Set up Git
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
+
+      - name: Deploy to Dev
+        run: |
+          echo "Deploying to Dev environment using tag ${{ github.ref }}"
+          # Add your deployment commands for Dev environment here
 
       - name: Get Commit Messages for Changelog Update
         run: |
           TAG_NAME="${{ github.ref_name }}"
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="dev"
-
-          # Get the commit messages from the feature branch associated with the tag
+          
+          # Get commit messages from the feature branch associated with the tag
           PR_NUMBER=$(echo $TAG_NAME | grep -oP '(?<=v)\d+')
           echo "PR Number: $PR_NUMBER"
-
-          # Fetch PR details using GitHub API
+          
           PR_URL="https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}"
           PR_SOURCE_BRANCH=$(curl -s $PR_URL | jq -r .head.ref)
           echo "Feature Branch: $PR_SOURCE_BRANCH"
-
-          # Fetch commits from the feature branch
+          
           git fetch origin $PR_SOURCE_BRANCH
           COMMITS=$(git log origin/$PR_SOURCE_BRANCH --oneline)
           echo "Commits in feature branch $PR_SOURCE_BRANCH: $COMMITS"
-
-          # Prepare changelog entry for DEV
-          echo -e "## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **$ENVIRONMENT**: $DATE\n$COMMITS\n\n---\n" >> CHANGELOG.md
           
-          # Checkout the main branch to ensure we're updating the right branch
-          git fetch --all
-          git checkout main
+          # Prepare changelog entry for DEV
+          echo -e "\n---\n## [${TAG_NAME}] - $DATE\n### Deployed to:- $ENVIRONMENT\n Dated $DATE\n### Commit Message:- $COMMITS\n\n---\n" >> CHANGELOG.md
 
-          # Stage the changelog and commit changes
+          # Commit and push changes
           git add CHANGELOG.md
           git commit -m "Update changelog for $TAG_NAME deployment to $ENVIRONMENT"
           git push origin main
-          echo "Changelog updated for $TAG_NAME deployment to $ENVIRONMENT"
-
-
-
-
-
 
   deploy_to_qa:
     runs-on: ubuntu-latest
@@ -62,39 +56,41 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Set up Git
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+
       - name: Deploy to QA
         run: |
           echo "Deploying to QA environment using tag ${{ github.ref }}"
           # Add your deployment commands for QA environment here
 
-      - name: Get Changes from Commit Message and Update Changelog for QA
+      - name: Get Commit Messages for Changelog Update
         run: |
-          TAG_NAME="${{ github.ref }}"
+          TAG_NAME="${{ github.ref_name }}"
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="qa"
 
-          # Get the commit hash associated with the tag
-          COMMIT_HASH=$(git rev-list -n 1 "$TAG_NAME")
+          # Get commit messages from the feature branch associated with the tag
+          PR_NUMBER=$(echo $TAG_NAME | grep -oP '(?<=v)\d+')
+          echo "PR Number: $PR_NUMBER"
 
-          # Use git show to get the commit message for the specific commit (not merge commit)
-          COMMIT_MESSAGE=$(git show -s --pretty=%B "$COMMIT_HASH")
-          echo "Commit message: $COMMIT_MESSAGE"
+          PR_URL="https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}"
+          PR_SOURCE_BRANCH=$(curl -s $PR_URL | jq -r .head.ref)
+          echo "Feature Branch: $PR_SOURCE_BRANCH"
 
-          # If you want to capture only the major part of the commit message (like the "MAJOR" label):
-          CHANGES=$(echo "$COMMIT_MESSAGE" | grep -Eo 'MAJOR,.*|.*')  # Simple regex to match the changes
-          
+          git fetch origin $PR_SOURCE_BRANCH
+          COMMITS=$(git log origin/$PR_SOURCE_BRANCH --oneline)
+          echo "Commits in feature branch $PR_SOURCE_BRANCH: $COMMITS"
+
           # Prepare changelog entry for QA
-          echo -e "## [${TAG_NAME//refs\/tags\//}] - $DATE\n### Deployed to:\n- **$ENVIRONMENT**: $DATE\n$CHANGES\n\n---\n" >> CHANGELOG.md
-          
-          # Checkout the main branch to ensure we're updating the right branch
-          git fetch --all
-          git checkout main
+          echo -e "\n---\n## [${TAG_NAME}] - $DATE\n### Deployed to:- $ENVIRONMENT\n Dated $DATE\n### Commit Message:- $COMMITS\n\n---\n" >> CHANGELOG.md
 
-          # Stage the changelog and commit changes
+          # Commit and push changes
           git add CHANGELOG.md
           git commit -m "Update changelog for $TAG_NAME deployment to $ENVIRONMENT"
           git push origin main
-          echo "Changelog updated for $TAG_NAME deployment to $ENVIRONMENT"
 
   deploy_to_prod:
     runs-on: ubuntu-latest
@@ -103,36 +99,38 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Set up Git
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+
       - name: Deploy to PROD
         run: |
           echo "Deploying to PROD environment using tag ${{ github.ref }}"
           # Add your deployment commands for PROD environment here
 
-      - name: Get Changes from Commit Message and Update Changelog for PROD
+      - name: Get Commit Messages for Changelog Update
         run: |
-          TAG_NAME="${{ github.ref }}"
+          TAG_NAME="${{ github.ref_name }}"
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="prod"
 
-          # Get the commit hash associated with the tag
-          COMMIT_HASH=$(git rev-list -n 1 "$TAG_NAME")
+          # Get commit messages from the feature branch associated with the tag
+          PR_NUMBER=$(echo $TAG_NAME | grep -oP '(?<=v)\d+')
+          echo "PR Number: $PR_NUMBER"
 
-          # Use git show to get the commit message for the specific commit (not merge commit)
-          COMMIT_MESSAGE=$(git show -s --pretty=%B "$COMMIT_HASH")
-          echo "Commit message: $COMMIT_MESSAGE"
+          PR_URL="https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}"
+          PR_SOURCE_BRANCH=$(curl -s $PR_URL | jq -r .head.ref)
+          echo "Feature Branch: $PR_SOURCE_BRANCH"
 
-          # If you want to capture only the major part of the commit message (like the "MAJOR" label):
-          CHANGES=$(echo "$COMMIT_MESSAGE" | grep -Eo 'MAJOR,.*|.*')  # Simple regex to match the changes
-          
+          git fetch origin $PR_SOURCE_BRANCH
+          COMMITS=$(git log origin/$PR_SOURCE_BRANCH --oneline)
+          echo "Commits in feature branch $PR_SOURCE_BRANCH: $COMMITS"
+
           # Prepare changelog entry for PROD
-          echo -e "## [${TAG_NAME//refs\/tags\//}] - $DATE\n### Deployed to:\n- **$ENVIRONMENT**: $DATE\n$CHANGES\n\n---\n" >> CHANGELOG.md
-          
-          # Checkout the main branch to ensure we're updating the right branch
-          git fetch --all
-          git checkout main
+          echo -e "\n---\n## [${TAG_NAME}] - $DATE\n### Deployed to:- $ENVIRONMENT\n Dated $DATE\n### Commit Message:- $COMMITS\n\n---\n" >> CHANGELOG.md
 
-          # Stage the changelog and commit changes
+          # Commit and push changes
           git add CHANGELOG.md
           git commit -m "Update changelog for $TAG_NAME deployment to $ENVIRONMENT"
           git push origin main
-          echo "Changelog updated for $TAG_NAME deployment to $ENVIRONMENT"
