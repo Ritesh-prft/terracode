@@ -18,10 +18,10 @@ jobs:
       github.event.pull_request.state == 'open'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout code from PR branch
         uses: actions/checkout@v3
         with:
-          token: ${{ secrets.PAT_TOKEN }}
+          ref: ${{ github.head_ref }}  # Checkout the feature branch (PR source branch)
 
       - name: Set up Git for tagging
         run: |
@@ -75,7 +75,7 @@ jobs:
           echo "New tag: $NEW_TAG"
           echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
 
-      - name: Create and push tag
+      - name: Create and push tag from feature branch
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
@@ -98,11 +98,12 @@ jobs:
           echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_ENV
           echo "Fetched Commit Message: $COMMIT_MESSAGE"
 
-      - name: Checkout the new tag for deployment
+      - name: Checkout the tag for deployment
         run: |
           NEW_TAG="${{ env.NEW_TAG }}"
           git checkout $NEW_TAG
           echo "Checked out tag: $NEW_TAG"
+          ls -alh  # List files to verify the tag content
 
       - name: Deploy to Dev
         run: |
@@ -183,20 +184,4 @@ jobs:
           COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
 
           # Add a changelog entry for the PROD deployment with PR commit message
-          echo -e "\n---\n## [${TAG_NAME}] - $DATE\n### Deployed to: $ENVIRONMENT\n Dated: $DATE\n### Commit Message: $COMMIT_MESSAGE\n\n---\n" >> CHANGELOG_Prod.md
-
-          # Commit and push changes
-          git add CHANGELOG_Prod.md
-          git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
-
-          git fetch origin main
-          git merge origin/main --no-edit || true
-
-          if git ls-files -u | grep -q .; then
-            echo "Merge conflicts detected, resolving..."
-            git checkout --ours CHANGELOG_Prod.md
-            git add CHANGELOG_Prod.md
-            git commit -m "Resolved merge conflicts for ${TAG_NAME} deployment to ${ENVIRONMENT}"
-          fi
-
-          git push origin HEAD:main
+          echo -e "\n---\n## [${TAG_NAME}] - $
