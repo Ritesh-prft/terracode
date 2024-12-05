@@ -24,6 +24,7 @@ jobs:
           echo "Deploying to Dev environment using tag ${{ github.ref }}"
           # Add your deployment commands for the Dev environment here.
 
+
       - name: Get Commit Messages for Changelog Update (Dev)
         run: |
           TAG_NAME="${{ github.ref_name }}"
