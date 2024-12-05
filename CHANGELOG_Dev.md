@@ -1488,3 +1488,11 @@ d1c8345- MINOR,- pipeline- updated- for- changelog- management
 - Deploying version tag-v9.1.40
 - Commit Message: checking commits-6 
 
+
+## [tag-v9.1.41] - 2024-12-05
+### Deployed to:
+- **dev**: 2024-12-05
+### Changes:
+- Deploying version tag-v9.1.41
+- Commit Message: checking commits-666 
+
