@@ -1420,3 +1420,10 @@ d1c8345- MINOR,- pipeline- updated- for- changelog- management
 ### Changes:
 -  PATCH, added git tagging pipelin
 
+
+## [tag-v9.1.21] - 2024-12-05
+### Deployed to:
+- **dev**: 2024-12-05
+### Changes:
+-  PATCH, added git tagging pipelin
+
