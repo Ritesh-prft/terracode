@@ -124,6 +124,7 @@ jobs:
           # Add a changelog entry for the Dev deployment with PR commit message
           echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deploying version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Dev.md
 
+
           # Commit and push changes
           git add CHANGELOG_Dev.md
           git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
@@ -193,7 +194,7 @@ jobs:
           git checkout $NEW_TAG
           echo "Checked out tag: $NEW_TAG"
           ls -alh  # List files to verify the tag content
-          
+
       - name: Deploy to PROD
         run: |
           echo "Deploying to PROD environment using tag ${{ env.NEW_TAG }}"
