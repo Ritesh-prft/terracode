@@ -3,7 +3,7 @@ name: Deploy to Environments
 on:
   push:
     tags:
-      - 'tag-v*'  # Trigger when a tag is pushed (e.g., "v1.0.0")
+      - 'tag-v*'  # Trigger when  a tag is pushed (e.g., "v1.0.0")
 
 jobs:
     deploy_to_dev:
