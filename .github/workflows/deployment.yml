@@ -51,11 +51,10 @@ jobs:
           git merge origin/main --no-edit --allow-unrelated-histories || true  # Avoid failing due to conflicts
   
           # Resolve conflicts by taking the local version of files (ours strategy)
-          git checkout --ours .github/workflows/deployment.yml  # Keep local changes in workflow
           git checkout --ours CHANGELOG_Dev.md  # Keep local changes in changelog
   
-          # Add resolved files and commit the resolution
-          git add .github/workflows/deployment.yml CHANGELOG_Dev.md
+          # Add resolved file and commit the resolution
+          git add CHANGELOG_Dev.md
           git commit -m "Resolved merge conflicts for ${TAG_NAME} deployment to ${ENVIRONMENT}"
   
           # Push the changes
@@ -72,6 +71,15 @@ jobs:
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
+
+      - name: Checkout main branch  # Ensure we're on the main branch
+        run: |
+          git checkout main  # Switch to the main branch (default branch)
+
+      - name: Pull latest changes from main
+        run: |
+          git fetch origin main  # Fetch the latest changes from the remote main branch
+          git reset --hard origin/main  # Reset the working directory to match the remote main branch
 
       - name: Deploy to QA
         run: |
@@ -116,7 +124,6 @@ jobs:
             # Push the changes
             git push origin HEAD:main
 
-
   deploy_to_prod:
     runs-on: ubuntu-latest
     needs: deploy_to_qa  # Ensure PROD deployment waits for QA deployment
@@ -151,7 +158,7 @@ jobs:
             COMMITS=$(git log origin/$PR_SOURCE_BRANCH --oneline)
             echo "Commits in feature branch $PR_SOURCE_BRANCH: $COMMITS"
     
-            # Prepare changelog entry for QA
+            # Prepare changelog entry for PROD
             echo -e "\n---\n## [${TAG_NAME}] - $DATE\n### Deployed to: $ENVIRONMENT\n Dated: $DATE\n### Commit Message: $COMMITS\n\n---\n" >> CHANGELOG_Prod.md
     
             # Commit and push changes
