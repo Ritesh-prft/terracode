@@ -46,6 +46,12 @@ jobs:
           # Commit and push changes
           git add CHANGELOG.md
           git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
+
+          # Fetch and merge remote changes before pushing
+          git fetch origin main
+          git merge origin/main --no-edit
+
+          # Push changes to the main branch
           git push origin HEAD:main  # Replace 'main' with the correct branch if different
 
   deploy_to_qa:
@@ -89,6 +95,12 @@ jobs:
           # Commit and push changes
           git add CHANGELOG.md
           git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
+
+          # Fetch and merge remote changes before pushing
+          git fetch origin main
+          git merge origin/main --no-edit
+
+          # Push changes to the main branch
           git push origin HEAD:main  # Replace 'main' with the correct branch if different
 
   deploy_to_prod:
@@ -132,4 +144,10 @@ jobs:
           # Commit and push changes
           git add CHANGELOG.md
           git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
+
+          # Fetch and merge remote changes before pushing
+          git fetch origin main
+          git merge origin/main --no-edit
+
+          # Push changes to the main branch
           git push origin HEAD:main  # Replace 'main' with the correct branch if different
