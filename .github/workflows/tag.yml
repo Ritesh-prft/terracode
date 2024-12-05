@@ -9,8 +9,6 @@ on:
       - synchronize  # Trigger when the PR is updated (e.g., new commits pushed)
       - reopened     # Trigger when a PR is reopened
 
-
-
 jobs:
   create_tag_and_deploy:
     if: |
@@ -115,7 +113,6 @@ jobs:
           ls
           # Add your deployment commands for the Dev environment here.
 
-
       - name: Update Changelog for Dev Deployment
         run: |
           TAG_NAME="${{ env.NEW_TAG }}"
@@ -144,7 +141,7 @@ jobs:
             git commit -m "Resolved merge conflicts for ${TAG_NAME} deployment to ${ENVIRONMENT}"
           fi
 
-      - name: Deploy to QA
+      - name: Deploy to QA (No merge from main)
         run: |
           echo "Deploying to QA environment using tag ${{ env.NEW_TAG }}"
           dir
@@ -165,24 +162,7 @@ jobs:
           git add CHANGELOG_Qa.md
           git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
 
-          git fetch origin main
-          git merge origin/main --no-edit --allow-unrelated-histories || true
-
-          # Resolve merge conflicts automatically (keep ours for changelog files)
-          echo "Resolving merge conflicts automatically..."
-
-          # Check for conflicts and resolve (keeping our local changes in these files)
-          if git ls-files -u | grep -q .; then
-            echo "Merge conflicts detected, resolving..."
-            git checkout --ours .github/workflows/tag.yml  # Keep local changes in workflow
-            git checkout --ours CHANGELOG_Qa.md  # Keep local changes in changelog
-
-            # Add resolved files and commit the resolution
-            git add .github/workflows/tag.yml CHANGELOG_Qa.md
-            git commit -m "Resolved merge conflicts for ${TAG_NAME} deployment to ${ENVIRONMENT}"
-          fi
-
-      - name: Deploy to PROD
+      - name: Deploy to PROD (No merge from main)
         run: |
           echo "Deploying to PROD environment using tag ${{ env.NEW_TAG }}"
           dir
@@ -202,20 +182,3 @@ jobs:
           # Commit and push changes
           git add CHANGELOG_Prod.md
           git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
-
-          git fetch origin main
-          git merge origin/main --no-edit || true
-
-          # Resolve merge conflicts automatically (keep ours for changelog files)
-          echo "Resolving merge conflicts automatically..."
-
-          # Check for conflicts and resolve (keeping our local changes in these files)
-          if git ls-files -u | grep -q .; then
-            echo "Merge conflicts detected, resolving..."
-            git checkout --ours .github/workflows/tag.yml  # Keep local changes in workflow
-            git checkout --ours CHANGELOG_Prod.md  # Keep local changes in changelog
-
-            # Add resolved files and commit the resolution
-            git add .github/workflows/tag.yml CHANGELOG_Prod.md
-            git commit -m "Resolved merge conflicts for ${TAG_NAME} deployment to ${ENVIRONMENT}"
-          fi
