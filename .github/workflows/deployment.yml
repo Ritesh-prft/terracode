@@ -31,16 +31,20 @@ jobs:
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="dev"
 
-          PR_NUMBER=$(echo $TAG_NAME | grep -oP '(?<=v)\d+')
+          # Fetch the PR number associated with the tag from GitHub API
+          PR_URL="https://api.github.com/repos/${{ github.repository }}/pulls?state=all&head=${{ github.actor }}:${TAG_NAME}"
+
+          PR_NUMBER=$(curl -s $PR_URL | jq -r '.[0].number')  # Get the first PR number from the response
+
+          if [ "$PR_NUMBER" == "null" ]; then
+            echo "No PR found for this tag."
+            exit 1
+          fi
+
           echo "PR Number: $PR_NUMBER"
 
-          # Fetch PR details using GitHub API
-          PR_URL="https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}"
-          
-          # Get the latest commit on the PR (the commit associated with the PR)
-          PR_COMMITS_URL=$(curl -s $PR_URL | jq -r .commits_url)
-          
-          # Fetch commits related to the PR and extract the latest commit message
+          # Fetch commits related to the PR
+          PR_COMMITS_URL="https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}/commits"
           LATEST_COMMIT_MESSAGE=$(curl -s $PR_COMMITS_URL | jq -r '.[-1].commit.message')
 
           echo "Latest Commit Message: $LATEST_COMMIT_MESSAGE"
@@ -69,6 +73,7 @@ jobs:
 
           # Push the changes
           git push origin HEAD:main
+
 
 
 
