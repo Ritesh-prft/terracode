@@ -40,7 +40,7 @@ jobs:
           echo "Commits in feature branch $PR_SOURCE_BRANCH: $COMMITS"
   
           # Prepare changelog entry for DEV
-          echo -e "\n---\n## [${TAG_NAME}] - $DATE\n### Deployed to: $ENVIRONMENT\n Dated: $DATE\n### Commit Message: $COMMITS\n\n---\n" >> CHANGELOG.md
+          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n${COMMITS// /- }\n" >> CHANGELOG.md
   
           # Commit and push changes
           git add CHANGELOG.md
