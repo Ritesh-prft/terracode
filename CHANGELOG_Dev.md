@@ -1413,3 +1413,10 @@ f7b6a43- te
 ### Changes:
 d1c8345- MINOR,- pipeline- updated- for- changelog- management
 
+
+## [tag-v9.1.20] - 2024-12-05
+### Deployed to:
+- **dev**: 2024-12-05
+### Changes:
+-  PATCH, added git tagging pipelin
+
