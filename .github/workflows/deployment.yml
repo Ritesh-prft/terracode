@@ -51,11 +51,11 @@ jobs:
           git merge origin/main --no-edit --allow-unrelated-histories || true  # Avoid failing due to conflicts
   
           # Resolve conflicts by taking the local version of files (ours strategy)
-          # git checkout --ours .github/workflows/deployment.yml  # Keep local changes in workflow
+          git checkout --ours .github/workflows/deployment.yml  # Keep local changes in workflow
           git checkout --ours CHANGELOG_Dev.md  # Keep local changes in changelog
   
           # Add resolved files and commit the resolution
-          git add CHANGELOG_Dev.md
+          git add .github/workflows/deployment.yml CHANGELOG_Dev.md
           git commit -m "Resolved merge conflicts for ${TAG_NAME} deployment to ${ENVIRONMENT}"
   
           # Push the changes
