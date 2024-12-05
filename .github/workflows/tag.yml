@@ -91,7 +91,7 @@ jobs:
 
 
   deploy_to_env:
-    needs: create_tag  # Ensure tag creation is completed before deployment
+    # needs: create_tag  # Ensure tag creation is completed before deployment
     runs-on: ubuntu-latest
     strategy:
       matrix:
