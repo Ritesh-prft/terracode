@@ -177,6 +177,7 @@ jobs:
           git commit -m "Automatically resolved merge conflicts for ${TAG_NAME} deployment to qa"
 
           # Push changes
+          
           git push origin HEAD:main
 
       - name: Deploy to PROD
