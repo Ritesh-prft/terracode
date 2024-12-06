@@ -172,13 +172,9 @@ jobs:
             "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
             | jq -r '.title + " " + .body')
 
-          # Sanitize the commit message: Remove newlines and extra spaces
-          COMMIT_MESSAGE=$(echo "$COMMIT_MESSAGE" | tr -d '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-
-          # Set commit message for later use, ensuring it’s valid for the environment variable
+          # Set commit message for later use
           echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_ENV
           echo "Fetched Commit Message: $COMMIT_MESSAGE"
-
 
       - name: Checkout the tag for deployment
         run: |
