@@ -22,3 +22,11 @@
 - Deploying version tag-v10.0.15
 - Commit Message: PATCH updated pipeline fir for testing change FINALLy 
 
+
+## [tag-v11.0.0] - 2024-12-06
+### Deployed to:
+- **dev**: 2024-12-06
+### Changes:
+- Deployed version tag-v11.0.0
+- Commit Message: Feat/tagging commit Hi
+
