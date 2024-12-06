@@ -38,16 +38,20 @@ jobs:
           # Read the PR description from the file
           PR_DESCRIPTION=$(cat pr_description.txt)
 
-          # Trim leading/trailing spaces and newlines
+          # Trim leading/trailing spaces and newlines from the entire PR description
           PR_DESCRIPTION=$(echo "$PR_DESCRIPTION" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
           # Debug output to see the PR_DESCRIPTION with preserved newlines
           echo "PR Description:"
           echo "$PR_DESCRIPTION"
 
-          # Check if any line that starts with ':' has content (even spaces are allowed)
-          if echo "$PR_DESCRIPTION" | grep -qP '^[[:space:]]*:.*'; then
-            echo "Error: Line starting with ':' is empty or missing content"
+          # Check if each line starting with ':' has something (not empty or just spaces) after it
+          # This regex matches lines with ':' but ensures that there is some content after it (even spaces)
+          invalid_lines=$(echo "$PR_DESCRIPTION" | grep -n '^[[:space:]]*:.*$' | grep -v '^[[:space:]]*:[[:space:]]*$')
+
+          if [[ -n "$invalid_lines" ]]; then
+            echo "Error: One or more lines starting with ':' have no content after it"
+            echo "$invalid_lines"
             exit 1
           fi
 
