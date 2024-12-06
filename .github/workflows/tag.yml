@@ -23,13 +23,22 @@ jobs:
             "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
             | jq -r '.body')
 
+          # Output the PR description to the console for debugging
           echo "PR Description: $PR_DESCRIPTION"
-          echo "DESCRIPTION=$PR_DESCRIPTION" >> $GITHUB_ENV
+
+          # Remove any special characters or newlines that could break the environment variable
+          CLEAN_DESCRIPTION=$(echo "$PR_DESCRIPTION" | tr -d '\n' | sed 's/\r//g')
+          
+          # Output the cleaned description for debugging
+          echo "Cleaned PR Description: $CLEAN_DESCRIPTION"
+
+          # Set the cleaned description to the environment variable
+          echo "CLEAN_DESCRIPTION=$CLEAN_DESCRIPTION" >> $GITHUB_ENV
 
       - name: Validate PR Description
         run: |
-          # Get the PR description from the environment
-          PR_DESCRIPTION="${{ env.DESCRIPTION }}"
+          # Get the cleaned PR description from the environment
+          PR_DESCRIPTION="${{ env.CLEAN_DESCRIPTION }}"
 
           # Check if all required sections are present and not empty
           if [[ ! "$PR_DESCRIPTION" =~ "### Description of changes" ]] || [[ ! "$PR_DESCRIPTION" =~ ": .*" ]]; then
@@ -54,6 +63,7 @@ jobs:
 
           echo "PR Description is valid!"
   create_tag_and_deploy:
+    needs: validate_pr_description
     if: |
       github.event.pull_request.action == 'opened' ||
       github.event.pull_request.action == 'reopened' ||
