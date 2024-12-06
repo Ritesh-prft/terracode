@@ -280,10 +280,10 @@ jobs:
           PR_DESCRIPTION_CLEANED=$(echo "$PR_DESCRIPTION" | sed 's/^[[:space:]]*:[[:space:]]*//g' | sed 's/^[[:space:]]*//g')
           PR_DESCRIPTION_CLEANED=$(echo "$PR_DESCRIPTION_CLEANED" | sed '/^###/d')  # Remove header sections like '### Description of changes ###'
           
-          # Split the description into multiple lines by newline characters (for more readable formatting)
-          PR_DESCRIPTION_FORMATTED=$(echo "$PR_DESCRIPTION_CLEANED" | sed 's/$/\n/' | tr -s '\n' ' ')
+          # Split the description into separate lines, removing unnecessary white space and formatting it clearly
+          PR_DESCRIPTION_FORMATTED=$(echo "$PR_DESCRIPTION_CLEANED" | sed 's/\n/\n- /g' | sed 's/^/  /')
 
-          # Add to changelog, ensuring the description is more readable
+          # Ensure it’s readable in the changelog by adding bullet points
           echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n- PR Description:\n$PR_DESCRIPTION_FORMATTED" >> CHANGELOG_Dev.md
 
           # Commit and push changes
@@ -305,6 +305,7 @@ jobs:
 
           # Push the changes
           git push origin HEAD:main
+
 
 
 
