@@ -128,14 +128,13 @@ jobs:
           git add CHANGELOG_Dev.md
           git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
 
-          # Fetch and merge remote changes before pushing with --allow-unrelated-histories
           git fetch origin main
           git merge origin/main --no-edit --allow-unrelated-histories || true
 
-          # Resolve conflicts automatically, ensuring changelog entries are kept
+          # Resolve merge conflicts automatically (keep ours for changelog files)
           echo "Resolving merge conflicts automatically..."
 
-          # Checkout our version of changelog files (keep our changes)
+          # Checkout our version of changelog files
           git checkout --ours CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md
           git add CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md
 
@@ -151,7 +150,6 @@ jobs:
 
           # Push changes
           git push origin HEAD:main
-
 
       - name: Checkout the tag for deployment
         run: |
