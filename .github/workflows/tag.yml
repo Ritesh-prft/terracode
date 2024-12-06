@@ -84,6 +84,7 @@ jobs:
           # fi
 
           # Check for 'Description of changes' section with content
+          # Check for 'Description of changes' section with content
           echo "Checking for 'Description of changes' section"
           if ! echo "$PR_DESCRIPTION" | grep -Pzoq "### Description of changes ###\s*:\s*\S"; then
             echo "Error: 'Description of changes' section is missing or empty"
@@ -92,7 +93,7 @@ jobs:
 
           # Check for 'Files Changed' section with content
           echo "Checking for 'Files Changed' section"
-          if ! echo "$PR_DESCRIPTION" | grep -Pzoq "### Files Changed ###\s*:\s*\S"; then
+          if ! echo "$PR_DESCRIPTION" | grep -Pzoq "### Files Changed ###\s*:\s*(?!\s*$)\S"; then
             echo "Error: 'Files Changed' section is missing or empty"
             exit 1
           fi
@@ -110,6 +111,7 @@ jobs:
             echo "Error: 'Task/Ticket/Issue' section is missing or empty"
             exit 1
           fi
+
 
           echo "PR Description is valid!"
 
