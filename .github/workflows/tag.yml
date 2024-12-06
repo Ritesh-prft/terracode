@@ -121,8 +121,17 @@ jobs:
           ENVIRONMENT="dev"
           COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
 
+          # View the content of the changelog before appending
+          echo "Content of CHANGELOG_Dev.md before appending:"
+          cat CHANGELOG_Dev.md
+
           # Add a changelog entry for the Dev deployment with PR commit message
           echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deploying version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Dev.md
+
+          # View the content of the changelog after appending
+          echo "Content of CHANGELOG_Dev.md after appending:"
+          cat CHANGELOG_Dev.md
+
 
           # Verify that the changelog entry was appended
           echo "Changelog for Dev Deployment after append:"
