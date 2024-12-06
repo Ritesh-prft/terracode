@@ -10,6 +10,30 @@ on:
 
 
 jobs:
+  validate_pr_description:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if PR template is filled out
+        run: |
+          PR_DESCRIPTION="${{ github.event.pull_request.body }}"
+          
+          # Check for required fields: description, files changed, reason for change, task/ticket/issue
+          if [[ -z "$PR_DESCRIPTION" || ! "$PR_DESCRIPTION" =~ "### Description of changes" || ! "$PR_DESCRIPTION" =~ "### Files Changed" || ! "$PR_DESCRIPTION" =~ "### Reason for Change" || ! "$PR_DESCRIPTION" =~ "### Task/Ticket/Issue" ]]; then
+            echo "PR description is missing required fields. Please make sure the following sections are filled out properly:"
+            echo "- Description of changes"
+            echo "- Files Changed"
+            echo "- Reason for Change"
+            echo "- Task/Ticket/Issue"
+            exit 1
+          fi
+
+          # Additional check to ensure the fields contain meaningful content (not just "HI" or empty text)
+          if [[ "$PR_DESCRIPTION" =~ "HI" || "$PR_DESCRIPTION" =~ "empty" || "$PR_DESCRIPTION" =~ "N/A" || "$PR_DESCRIPTION" =~ "placeholder" ]]; then
+            echo "PR description contains placeholder text. Please provide meaningful details for all fields."
+            exit 1
+          fi
+
+          echo "PR description validated successfully!"
   create_tag_and_deploy:
     if: |
       github.event.pull_request.action == 'opened' ||
@@ -18,14 +42,6 @@ jobs:
       github.event.pull_request.state == 'open'
     runs-on: ubuntu-latest
     steps:
-      - name: Check if PR template is filled out
-        run: |
-          PR_DESCRIPTION="${{ github.event.pull_request.body }}"
-          
-          if [[ -z "$PR_DESCRIPTION" || "$PR_DESCRIPTION" =~ "### Description of changes" || "$PR_DESCRIPTION" =~ "### Files Changed" || "$PR_DESCRIPTION" =~ "### Reason for Change" || "$PR_DESCRIPTION" =~ "### Task/Ticket/Issue" ]]; then
-            echo "PR Description is missing required fields (e.g. description, files changed, task). Please update the PR description."
-            exit 1
-          fi
       - name: Checkout code from PR branch
         uses: actions/checkout@v3
         with:
