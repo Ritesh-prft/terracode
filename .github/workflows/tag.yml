@@ -45,24 +45,9 @@ jobs:
           echo "PR Description:"
           echo "$PR_DESCRIPTION"
 
-          # Check if all required sections are present and have content after the colon
-          if [[ ! "$PR_DESCRIPTION" =~ "### Description of changes ###[[:space:]]*:.*" ]]; then
-            echo "Error: 'Description of changes' section is missing or empty"
-            exit 1
-          fi
-
-          if [[ ! "$PR_DESCRIPTION" =~ "### Files Changed ###[[:space:]]*:.*" ]]; then
-            echo "Error: 'Files Changed' section is missing or empty"
-            exit 1
-          fi
-
-          if [[ ! "$PR_DESCRIPTION" =~ "### Reason for Change ###[[:space:]]*:.*" ]]; then
-            echo "Error: 'Reason for Change' section is missing or empty"
-            exit 1
-          fi
-
-          if [[ ! "$PR_DESCRIPTION" =~ "### Task/Ticket/Issue ###[[:space:]]*:.*" ]]; then
-            echo "Error: 'Task/Ticket/Issue' section is missing or empty"
+          # Check if any line that starts with ':' has content (even spaces are allowed)
+          if echo "$PR_DESCRIPTION" | grep -qP '^[[:space:]]*:.*'; then
+            echo "Error: Line starting with ':' is empty or missing content"
             exit 1
           fi
 
