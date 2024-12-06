@@ -110,6 +110,7 @@ jobs:
             echo "Error: 'Task/Ticket/Issue' section is missing or empty"
             exit 1
           fi
+
           echo "PR Description is valid!"
 
 
