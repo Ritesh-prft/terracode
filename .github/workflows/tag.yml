@@ -49,6 +49,12 @@ jobs:
           echo "Trimmed PR Description:"
           echo "$PR_DESCRIPTION"  # Debugging output to inspect after trimming
 
+          # Split into lines and print each one separately to debug line content
+          echo "Printing each line separately for debugging:"
+          echo "$PR_DESCRIPTION" | while IFS= read -r line; do
+            echo "Line: '$line'"
+          done
+
           # Check for 'Description of changes' section and make sure there is content after the colon
           echo "Checking for 'Description of changes' section"
           if [[ ! "$PR_DESCRIPTION" =~ "### Description of changes ###[:space:]*:.*" ]]; then
