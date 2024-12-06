@@ -14,6 +14,10 @@ jobs:
   validate_pr_description:
     runs-on: ubuntu-latest
     steps:
+      jobs:
+  validate_pr_description:
+    runs-on: ubuntu-latest
+    steps:
       - name: Fetch PR description
         id: pr-description
         run: |
@@ -38,7 +42,7 @@ jobs:
           # Read the PR description from the file
           PR_DESCRIPTION=$(cat pr_description.txt)
 
-          # Trim leading/trailing spaces and newlines (allow for flexible spaces around sections)
+          # Trim leading/trailing spaces and newlines
           PR_DESCRIPTION=$(echo "$PR_DESCRIPTION" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
           # Debug output to see the PR_DESCRIPTION with preserved newlines
@@ -46,22 +50,26 @@ jobs:
           echo "$PR_DESCRIPTION"
 
           # Check if all required sections are present and have content after the colon
-          # Improved regex with flexible space handling and non-empty content after colon
+          # Debug each section check
+          echo "Checking for 'Description of changes' section"
           if [[ ! "$PR_DESCRIPTION" =~ "### Description of changes ###[:space:]*:[:space:]+.*" ]]; then
             echo "Error: 'Description of changes' section is missing or empty"
             exit 1
           fi
 
+          echo "Checking for 'Files Changed' section"
           if [[ ! "$PR_DESCRIPTION" =~ "### Files Changed ###[:space:]*:[:space:]+.*" ]]; then
             echo "Error: 'Files Changed' section is missing or empty"
             exit 1
           fi
 
+          echo "Checking for 'Reason for Change' section"
           if [[ ! "$PR_DESCRIPTION" =~ "### Reason for Change ###[:space:]*:[:space:]+.*" ]]; then
             echo "Error: 'Reason for Change' section is missing or empty"
             exit 1
           fi
 
+          echo "Checking for 'Task/Ticket/Issue' section"
           if [[ ! "$PR_DESCRIPTION" =~ "### Task/Ticket/Issue ###[:space:]*:[:space:]+.*" ]]; then
             echo "Error: 'Task/Ticket/Issue' section is missing or empty"
             exit 1
