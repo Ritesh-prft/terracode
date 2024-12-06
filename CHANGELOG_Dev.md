@@ -54,3 +54,12 @@
 - Deployed version tag-v21.0.0
 - Commit Message: MAJOR added PR validation, removed 2nd pipeline
 
+
+## [tag-v25.0.0] - 2024-12-06
+### Deployed to:
+- **dev**: 2024-12-06
+### Changes:
+- Deployed version tag-v25.0.0
+- Commit Message: 
+- PR Description: fixed changelog logs workflow yml file want more logs in changelog no ticket
+
