@@ -46,8 +46,8 @@ jobs:
           echo "$PR_DESCRIPTION"
 
           # Check if each line starting with ':' has something (not empty or just spaces) after it
-          # This regex matches lines with ':' but ensures that there is some content after it (even spaces)
-          invalid_lines=$(echo "$PR_DESCRIPTION" | grep -n '^[[:space:]]*:.*$' | grep -v '^[[:space:]]*:[[:space:]]*$')
+          # Improved regex to make sure there's something (even spaces or characters) after ':'
+          invalid_lines=$(echo "$PR_DESCRIPTION" | grep -n '^[[:space:]]*:.*[^[:space:]]' | grep -v '^[[:space:]]*:[[:space:]]*$')
 
           if [[ -n "$invalid_lines" ]]; then
             echo "Error: One or more lines starting with ':' have no content after it"
