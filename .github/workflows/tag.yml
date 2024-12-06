@@ -57,28 +57,28 @@ jobs:
 
           # Check for 'Description of changes' section with content
           echo "Checking for 'Description of changes' section"
-          if ! echo "$PR_DESCRIPTION" | grep -q -P "### Description of changes ###.*\n.*:"; then
+          if ! echo "$PR_DESCRIPTION" | grep -q -P "### Description of changes ###\s*:\s*.*"; then
             echo "Error: 'Description of changes' section is missing or empty"
             exit 1
           fi
 
           # Check for 'Files Changed' section with content
           echo "Checking for 'Files Changed' section"
-          if ! echo "$PR_DESCRIPTION" | grep -q -P "### Files Changed ###.*\n.*:"; then
+          if ! echo "$PR_DESCRIPTION" | grep -q -P "### Files Changed ###\s*:\s*.*"; then
             echo "Error: 'Files Changed' section is missing or empty"
             exit 1
           fi
 
           # Check for 'Reason for Change' section with content
           echo "Checking for 'Reason for Change' section"
-          if ! echo "$PR_DESCRIPTION" | grep -q -P "### Reason for Change ###.*\n.*:"; then
+          if ! echo "$PR_DESCRIPTION" | grep -q -P "### Reason for Change ###\s*:\s*.*"; then
             echo "Error: 'Reason for Change' section is missing or empty"
             exit 1
           fi
 
           # Check for 'Task/Ticket/Issue' section with content
           echo "Checking for 'Task/Ticket/Issue' section"
-          if ! echo "$PR_DESCRIPTION" | grep -q -P "### Task/Ticket/Issue ###.*\n.*:"; then
+          if ! echo "$PR_DESCRIPTION" | grep -q -P "### Task/Ticket/Issue ###\s*:\s*.*"; then
             echo "Error: 'Task/Ticket/Issue' section is missing or empty"
             exit 1
           fi
