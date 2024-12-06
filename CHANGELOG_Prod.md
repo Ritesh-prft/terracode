@@ -101,3 +101,11 @@
 - Deployed version tag-v31.0.0
 - Commit Message: 
 
+
+## [tag-v32.0.0] - 2024-12-06
+### Deployed to:
+- **prod**: 2024-12-06
+### Changes:
+- Deployed version tag-v32.0.0
+- Commit Message: MAJOR added PR validation, removed 2nd pipeline 11111111111111 ### Description of changes ###: fixed changelog logs### Files Changed ###: workflow yml file### Reason for Change ###: want more logs in changelog### Task/Ticket/Issue ###: no ticket
+
