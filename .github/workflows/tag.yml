@@ -26,25 +26,24 @@ jobs:
           # Output the PR description to the console for debugging
           echo "PR Description: $PR_DESCRIPTION"
 
-          # Remove any special characters or newlines that could break the environment variable
-          CLEAN_DESCRIPTION=$(echo "$PR_DESCRIPTION" | tr -d '\n' | sed 's/\r//g')
-          
+          # Preserve newlines, no removal
+          CLEAN_DESCRIPTION="$PR_DESCRIPTION"
+
           # Output the cleaned description for debugging
           echo "Cleaned PR Description: $CLEAN_DESCRIPTION"
 
           # Set the cleaned description to the environment variable
           echo "CLEAN_DESCRIPTION=$CLEAN_DESCRIPTION" >> $GITHUB_ENV
 
+      # Validate PR description
       - name: Validate PR Description
         run: |
           # Get the cleaned PR description from the environment
           PR_DESCRIPTION="${{ env.CLEAN_DESCRIPTION }}"
 
-          # To handle line breaks explicitly, let's use printf which preserves newlines
-          PR_DESCRIPTION=$(echo "$PR_DESCRIPTION" | printf "%s\n" "$REPLY")
-
-          # Debug output to see the PR_DESCRIPTION
-          echo "PR Description: $PR_DESCRIPTION"
+          # Debug output to see the PR_DESCRIPTION with preserved newlines
+          echo "PR Description:"
+          echo "$PR_DESCRIPTION"
 
           # Check if all required sections are present and have content after the colon
           if [[ ! "$PR_DESCRIPTION" =~ "### Description of changes ###:[[:space:]]*[^[:space:]]" ]]; then
