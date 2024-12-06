@@ -61,3 +61,11 @@
 - Deployed version tag-v26.0.0
 - Commit Message: 
 
+
+## [tag-v27.0.0] - 2024-12-06
+### Deployed to:
+- **qa**: 2024-12-06
+### Changes:
+- Deployed version tag-v27.0.0
+- Commit Message: 
+
