@@ -188,9 +188,13 @@ jobs:
             "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
             | jq -r '.body')
 
-          # Set the PR description for later use
-          echo "PR_DESCRIPTION=$PR_DESCRIPTION" >> $GITHUB_ENV
-          echo "Fetched PR Description: $PR_DESCRIPTION"
+          # Clean up the PR Description:
+          # Remove any leading or trailing whitespaces, newlines, and the leading colon from sections
+          PR_DESCRIPTION_CLEANED=$(echo "$PR_DESCRIPTION" | sed 's/^[[:space:]]*:[[:space:]]*//g' | sed 's/^[[:space:]]*//g')
+
+          # Set the cleaned PR description for later use
+          echo "PR_DESCRIPTION=$PR_DESCRIPTION_CLEANED" >> $GITHUB_ENV
+          echo "Fetched and cleaned PR Description: $PR_DESCRIPTION_CLEANED"
           
       - name: Checkout the tag for deployment
         run: |
@@ -255,7 +259,7 @@ jobs:
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="dev"
           COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
-          PR_DESCRIPTION="${{ env.PR_DESCRIPTION }}"  # Fetch PR description from environment variable
+          PR_DESCRIPTION="${{ env.PR_DESCRIPTION }}"  # Fetch cleaned PR description from environment variable
 
           # Ensure we're on the main branch to update the changelog file
           git checkout main
@@ -283,6 +287,7 @@ jobs:
 
           # Push the changes
           git push origin HEAD:main
+
 
 
 
