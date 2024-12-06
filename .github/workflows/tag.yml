@@ -191,11 +191,20 @@ jobs:
           # Clean the PR Description:
           # Remove headers like '### Description of changes ###', leading spaces, and any unnecessary colons
           PR_DESCRIPTION_CLEANED=$(echo "$PR_DESCRIPTION" | sed 's/^[[:space:]]*:[[:space:]]*//g' | sed 's/^[[:space:]]*//g')
-          PR_DESCRIPTION_CLEANED=$(echo "$PR_DESCRIPTION_CLEANED" | sed '/^###/d')  # Remove any lines starting with '###'
+          
+          # Remove lines starting with '###' (these are section headers like '### Description of changes ###')
+          PR_DESCRIPTION_CLEANED=$(echo "$PR_DESCRIPTION_CLEANED" | sed '/^###/d')
+
+          # Remove any unnecessary newlines that could cause problems when passing to env
+          PR_DESCRIPTION_CLEANED=$(echo "$PR_DESCRIPTION_CLEANED" | tr -s '\n' ' ')
+
+          # Remove any residual leading or trailing spaces that could interfere with formatting
+          PR_DESCRIPTION_CLEANED=$(echo "$PR_DESCRIPTION_CLEANED" | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
 
           # Save the cleaned PR description to the environment for later use
           echo "PR_DESCRIPTION=$PR_DESCRIPTION_CLEANED" >> $GITHUB_ENV
           echo "Fetched and cleaned PR Description: $PR_DESCRIPTION_CLEANED"
+
 
           
       - name: Checkout the tag for deployment
@@ -289,6 +298,7 @@ jobs:
 
           # Push the changes
           git push origin HEAD:main
+
 
 
 
