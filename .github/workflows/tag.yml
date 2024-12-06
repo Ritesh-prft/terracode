@@ -151,7 +151,6 @@ jobs:
           # Push changes
           git push origin HEAD:main
 
-
       - name: Checkout the tag for deployment
         run: |
           NEW_TAG="${{ env.NEW_TAG }}"
