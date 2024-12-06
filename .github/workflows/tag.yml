@@ -40,6 +40,9 @@ jobs:
           # Get the cleaned PR description from the environment
           PR_DESCRIPTION="${{ env.CLEAN_DESCRIPTION }}"
 
+          # To handle line breaks explicitly, let's use printf which preserves newlines
+          PR_DESCRIPTION=$(echo "$PR_DESCRIPTION" | printf "%s\n" "$REPLY")
+
           # Debug output to see the PR_DESCRIPTION
           echo "PR Description: $PR_DESCRIPTION"
 
