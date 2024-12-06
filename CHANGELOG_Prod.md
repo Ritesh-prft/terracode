@@ -125,3 +125,11 @@
 - Deployed version tag-v34.0.0
 - Commit Message: MAJOR added PR validation, removed 2nd pipeline 11111111111111 ### Description of changes ###: fixed changelog logs### Files Changed ###: workflow yml file### Reason for Change ###: want more logs in changelog### Task/Ticket/Issue ###: no ticket
 
+
+## [tag-v35.0.0] - 2024-12-06
+### Deployed to:
+- **prod**: 2024-12-06
+### Changes:
+- Deployed version tag-v35.0.0
+- Commit Message: MAJOR added PR validation, removed 2nd pipeline 11111111111111 ### Description of changes ###: this is to add log details to the changelog file for each deployment so that everyone know about deployment progress.### Files Changed ###: 1. workflow yml file , tag.yml, deployment.yml  ### Reason for Change ###: want more logs in changelog### Task/Ticket/Issue ###: CNR17842
+
