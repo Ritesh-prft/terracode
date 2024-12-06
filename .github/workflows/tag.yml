@@ -279,12 +279,12 @@ jobs:
           # Clean up and format the PR description
           PR_DESCRIPTION_CLEANED=$(echo "$PR_DESCRIPTION" | sed 's/^[[:space:]]*:[[:space:]]*//g' | sed 's/^[[:space:]]*//g')
           PR_DESCRIPTION_CLEANED=$(echo "$PR_DESCRIPTION_CLEANED" | sed '/^###/d')  # Remove header sections like '### Description of changes ###'
-          
+
           # Debugging: Check what the cleaned PR description looks like
           echo "Cleaned PR Description: $PR_DESCRIPTION_CLEANED"
-          
+
           # Split the description into separate lines, removing unnecessary white space and formatting it clearly
-          PR_DESCRIPTION_FORMATTED=$(echo "$PR_DESCRIPTION_CLEANED" | sed 's/\n/\n- /g' | sed 's/^/  /')
+          PR_DESCRIPTION_FORMATTED=$(echo "$PR_DESCRIPTION_CLEANED" | tr '\n' ' ' | sed 's/\s\+/\n- /g' | sed 's/^/  /')
 
           # Debugging: Check what the formatted PR description looks like
           echo "Formatted PR Description: $PR_DESCRIPTION_FORMATTED"
@@ -311,6 +311,7 @@ jobs:
 
           # Push the changes
           git push origin HEAD:main
+
 
 
 
