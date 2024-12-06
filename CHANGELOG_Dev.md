@@ -14,3 +14,11 @@
 - Deploying version tag-v10.0.14
 - Commit Message: PATCH updated pipeline fir for testing change 6666 
 
+
+## [tag-v10.0.15] - 2024-12-06
+### Deployed to:
+- **dev**: 2024-12-06
+### Changes:
+- Deploying version tag-v10.0.15
+- Commit Message: PATCH updated pipeline fir for testing change FINALLy 
+
