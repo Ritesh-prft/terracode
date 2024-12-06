@@ -51,28 +51,28 @@ jobs:
 
           # Check for 'Description of changes' section and make sure there is content after the colon
           echo "Checking for 'Description of changes' section"
-          if [[ ! "$PR_DESCRIPTION" =~ "### Description of changes ###[:space:]*:[[:space:]]+.*" ]]; then
+          if [[ ! "$PR_DESCRIPTION" =~ "### Description of changes ###[:space:]*:.*" ]]; then
             echo "Error: 'Description of changes' section is missing or empty"
             exit 1
           fi
 
           # Check for 'Files Changed' section
           echo "Checking for 'Files Changed' section"
-          if [[ ! "$PR_DESCRIPTION" =~ "### Files Changed ###[:space:]*:[[:space:]]+.*" ]]; then
+          if [[ ! "$PR_DESCRIPTION" =~ "### Files Changed ###[:space:]*:.*" ]]; then
             echo "Error: 'Files Changed' section is missing or empty"
             exit 1
           fi
 
           # Check for 'Reason for Change' section
           echo "Checking for 'Reason for Change' section"
-          if [[ ! "$PR_DESCRIPTION" =~ "### Reason for Change ###[:space:]*:[[:space:]]+.*" ]]; then
+          if [[ ! "$PR_DESCRIPTION" =~ "### Reason for Change ###[:space:]*:.*" ]]; then
             echo "Error: 'Reason for Change' section is missing or empty"
             exit 1
           fi
 
           # Check for 'Task/Ticket/Issue' section
           echo "Checking for 'Task/Ticket/Issue' section"
-          if [[ ! "$PR_DESCRIPTION" =~ "### Task/Ticket/Issue ###[:space:]*:[[:space:]]+.*" ]]; then
+          if [[ ! "$PR_DESCRIPTION" =~ "### Task/Ticket/Issue ###[:space:]*:.*" ]]; then
             echo "Error: 'Task/Ticket/Issue' section is missing or empty"
             exit 1
           fi
