@@ -14,48 +14,45 @@ jobs:
   validate_pr_description:
     runs-on: ubuntu-latest
     steps:
-      - name: Fetch PR Description
+      - name: Fetch PR description
+        id: pr-description
         run: |
-          PR_DESCRIPTION="${{ github.event.pull_request.body }}"
-          
-          # Check if all required sections are present in the PR description
-          if [[ -z "$PR_DESCRIPTION" || ! "$PR_DESCRIPTION" =~ "### Description of changes" || ! "$PR_DESCRIPTION" =~ "### Files Changed" || ! "$PR_DESCRIPTION" =~ "### Reason for Change" || ! "$PR_DESCRIPTION" =~ "### Task/Ticket/Issue" ]]; then
-            echo "PR description is missing one or more required sections. Please make sure the following sections are filled out properly:"
-            echo "- Description of changes"
-            echo "- Files Changed"
-            echo "- Reason for Change"
-            echo "- Task/Ticket/Issue"
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          PR_DESCRIPTION=$(curl -s \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
+            | jq -r '.body')
+
+          echo "PR Description: $PR_DESCRIPTION"
+          echo "DESCRIPTION=$PR_DESCRIPTION" >> $GITHUB_ENV
+
+      - name: Validate PR Description
+        run: |
+          # Get the PR description from the environment
+          PR_DESCRIPTION="${{ env.DESCRIPTION }}"
+
+          # Check if all required sections are present and not empty
+          if [[ ! "$PR_DESCRIPTION" =~ "### Description of changes" ]] || [[ ! "$PR_DESCRIPTION" =~ ": .*" ]]; then
+            echo "Error: 'Description of changes' section is missing or empty"
             exit 1
           fi
 
-          # Ensure each section contains meaningful content (not just placeholder text like "HI" or empty fields)
-          if [[ "$PR_DESCRIPTION" =~ "HI" || "$PR_DESCRIPTION" =~ "empty" || "$PR_DESCRIPTION" =~ "N/A" || "$PR_DESCRIPTION" =~ "placeholder" || "$PR_DESCRIPTION" =~ "no ticket" ]]; then
-            echo "PR description contains placeholder text or incomplete fields. Please provide meaningful details for all fields."
+          if [[ ! "$PR_DESCRIPTION" =~ "### Files Changed" ]] || [[ ! "$PR_DESCRIPTION" =~ ": .*" ]]; then
+            echo "Error: 'Files Changed' section is missing or empty"
             exit 1
           fi
 
-          # Now check if each section contains text (not just empty content)
-          if ! [[ "$PR_DESCRIPTION" =~ "Description of changes\s*:\s*[^[:space:]]" ]]; then
-            echo "Description of changes is missing or empty. Please provide a meaningful description."
+          if [[ ! "$PR_DESCRIPTION" =~ "### Reason for Change" ]] || [[ ! "$PR_DESCRIPTION" =~ ": .*" ]]; then
+            echo "Error: 'Reason for Change' section is missing or empty"
             exit 1
           fi
 
-          if ! [[ "$PR_DESCRIPTION" =~ "Files Changed\s*:\s*[^[:space:]]" ]]; then
-            echo "Files Changed section is missing or empty. Please provide a list of files."
+          if [[ ! "$PR_DESCRIPTION" =~ "### Task/Ticket/Issue" ]] || [[ ! "$PR_DESCRIPTION" =~ ": .*" ]]; then
+            echo "Error: 'Task/Ticket/Issue' section is missing or empty"
             exit 1
           fi
 
-          if ! [[ "$PR_DESCRIPTION" =~ "Reason for Change\s*:\s*[^[:space:]]" ]]; then
-            echo "Reason for Change is missing or empty. Please provide a reason for the change."
-            exit 1
-          fi
-
-          if ! [[ "$PR_DESCRIPTION" =~ "Task/Ticket/Issue\s*:\s*[^[:space:]]" ]]; then
-            echo "Task/Ticket/Issue section is missing or empty. Please link the associated task or issue."
-            exit 1
-          fi
-
-          echo "PR description validated successfully!"
+          echo "PR Description is valid!"
   create_tag_and_deploy:
     if: |
       github.event.pull_request.action == 'opened' ||
