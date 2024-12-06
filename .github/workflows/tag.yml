@@ -85,32 +85,29 @@ jobs:
 
           # Check for 'Description of changes' section with content
           # Check for 'Description of changes' section with content
-          echo "Checking for 'Description of changes' section"
-          if ! echo "$PR_DESCRIPTION" | grep -Pzoq "### Description of changes ###\s*:\s*\S"; then
-            echo "Error: 'Description of changes' section is missing or empty"
-            exit 1
-          fi
+          # Extract lines for each section and check if the content after the colon is empty
+          check_section() {
+              section_name="$1"
+              line=$(echo "$PR_DESCRIPTION" | grep -A 1 "### $section_name ###" | tail -n 1)
+              
+              # Check if the line is empty or just spaces after the colon
+              if [[ "$line" =~ ^\s*:?\s*$ ]]; then
+                  echo "Error: '$section_name' section is missing or empty."
+                  exit 1
+              fi
+          }
 
-          # Check for 'Files Changed' section with content
-          echo "Checking for 'Files Changed' section"
-          if ! echo "$PR_DESCRIPTION" | grep -Pzoq "### Files Changed ###\s*:\s*(?!\s*$)\S"; then
-            echo "Error: 'Files Changed' section is missing or empty"
-            exit 1
-          fi
+          # PR Description Validation
+          echo "Checking PR Description..."
 
-          # Check for 'Reason for Change' section with content
-          echo "Checking for 'Reason for Change' section"
-          if ! echo "$PR_DESCRIPTION" | grep -Pzoq "### Reason for Change ###\s*:\s*\S"; then
-            echo "Error: 'Reason for Change' section is missing or empty"
-            exit 1
-          fi
+          # Validate each section
+          check_section "Description of changes"
+          check_section "Files Changed"
+          check_section "Reason for Change"
+          check_section "Task/Ticket/Issue"
 
-          # Check for 'Task/Ticket/Issue' section with content
-          echo "Checking for 'Task/Ticket/Issue' section"
-          if ! echo "$PR_DESCRIPTION" | grep -Pzoq "### Task/Ticket/Issue ###\s*:\s*\S"; then
-            echo "Error: 'Task/Ticket/Issue' section is missing or empty"
-            exit 1
-          fi
+          echo "PR Description is valid!"
+
 
 
           echo "PR Description is valid!"
