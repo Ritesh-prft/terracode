@@ -55,34 +55,61 @@ jobs:
             echo "Line: '$line'"
           done
 
+          # # Check for 'Description of changes' section with content
+          # echo "Checking for 'Description of changes' section"
+          # if ! echo "$PR_DESCRIPTION" | grep -Pzoq "### Description of changes ###\s*\n*:\s+.*"; then
+          #   echo "Error: 'Description of changes' section is missing or empty"
+          #   exit 1
+          # fi
+
+          # # Check for 'Files Changed' section with content
+          # echo "Checking for 'Files Changed' section"
+          # if ! echo "$PR_DESCRIPTION" | grep -Pzoq "### Files Changed ###\s*\n*:\s+.*"; then
+          #   echo "Error: 'Files Changed' section is missing or empty"
+          #   exit 1
+          # fi
+
+          # # Check for 'Reason for Change' section with content
+          # echo "Checking for 'Reason for Change' section"
+          # if ! echo "$PR_DESCRIPTION" | grep -Pzoq "### Reason for Change ###\s*\n*:\s+.*"; then
+          #   echo "Error: 'Reason for Change' section is missing or empty"
+          #   exit 1
+          # fi
+
+          # # Check for 'Task/Ticket/Issue' section with content
+          # echo "Checking for 'Task/Ticket/Issue' section"
+          # if ! echo "$PR_DESCRIPTION" | grep -Pzoq "### Task/Ticket/Issue ###\s*\n*:\s+.*"; then
+          #   echo "Error: 'Task/Ticket/Issue' section is missing or empty"
+          #   exit 1
+          # fi
+
           # Check for 'Description of changes' section with content
           echo "Checking for 'Description of changes' section"
-          if ! echo "$PR_DESCRIPTION" | grep -Pzoq "### Description of changes ###\s*\n*:\s+.*"; then
+          if ! echo "$PR_DESCRIPTION" | grep -Pzoq "### Description of changes ###\s*:\s*\S"; then
             echo "Error: 'Description of changes' section is missing or empty"
             exit 1
           fi
 
           # Check for 'Files Changed' section with content
           echo "Checking for 'Files Changed' section"
-          if ! echo "$PR_DESCRIPTION" | grep -Pzoq "### Files Changed ###\s*\n*:\s+.*"; then
+          if ! echo "$PR_DESCRIPTION" | grep -Pzoq "### Files Changed ###\s*:\s*\S"; then
             echo "Error: 'Files Changed' section is missing or empty"
             exit 1
           fi
 
           # Check for 'Reason for Change' section with content
           echo "Checking for 'Reason for Change' section"
-          if ! echo "$PR_DESCRIPTION" | grep -Pzoq "### Reason for Change ###\s*\n*:\s+.*"; then
+          if ! echo "$PR_DESCRIPTION" | grep -Pzoq "### Reason for Change ###\s*:\s*\S"; then
             echo "Error: 'Reason for Change' section is missing or empty"
             exit 1
           fi
 
           # Check for 'Task/Ticket/Issue' section with content
           echo "Checking for 'Task/Ticket/Issue' section"
-          if ! echo "$PR_DESCRIPTION" | grep -Pzoq "### Task/Ticket/Issue ###\s*\n*:\s+.*"; then
+          if ! echo "$PR_DESCRIPTION" | grep -Pzoq "### Task/Ticket/Issue ###\s*:\s*\S"; then
             echo "Error: 'Task/Ticket/Issue' section is missing or empty"
             exit 1
           fi
-
           echo "PR Description is valid!"
 
 
