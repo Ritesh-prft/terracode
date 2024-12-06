@@ -157,3 +157,11 @@
 - Deployed version tag-v38.0.0
 - Commit Message: MAJOR added PR validation, removed 2nd pipeline 11111111111111 ### Description of changes ###: this is to add log details to the changelog file for each deployment so that everyone know about deployment progress.### Files Changed ###:### Reason for Change ###: want more logs in changelog### Task/Ticket/Issue ###:12345
 
+
+## [tag-v39.0.0] - 2024-12-06
+### Deployed to:
+- **qa**: 2024-12-06
+### Changes:
+- Deployed version tag-v39.0.0
+- Commit Message: MAJOR added PR validation, removed 2nd pipeline 11111111111111 ### Description of changes ###: this is to add log details to the changelog file for each deployment so that everyone know about deployment progress.### Files Changed ###:### Reason for Change ###: want more logs in changelog### Task/Ticket/Issue ###: 1234
+
