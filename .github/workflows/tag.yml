@@ -38,7 +38,7 @@ jobs:
           # Read the PR description from the file
           PR_DESCRIPTION=$(cat pr_description.txt)
 
-          # Trim leading/trailing spaces and newlines
+          # Trim leading/trailing spaces and newlines (allow for flexible spaces around sections)
           PR_DESCRIPTION=$(echo "$PR_DESCRIPTION" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
           # Debug output to see the PR_DESCRIPTION with preserved newlines
@@ -46,28 +46,28 @@ jobs:
           echo "$PR_DESCRIPTION"
 
           # Check if all required sections are present and have content after the colon
-          if [[ ! "$PR_DESCRIPTION" =~ "### Description of changes ###[[:space:]]*:.*" ]]; then
+          # Improved regex with flexible space handling and non-empty content after colon
+          if [[ ! "$PR_DESCRIPTION" =~ "### Description of changes ###[:space:]*:[:space:]+.*" ]]; then
             echo "Error: 'Description of changes' section is missing or empty"
             exit 1
           fi
 
-          if [[ ! "$PR_DESCRIPTION" =~ "### Files Changed ###[[:space:]]*:.*" ]]; then
+          if [[ ! "$PR_DESCRIPTION" =~ "### Files Changed ###[:space:]*:[:space:]+.*" ]]; then
             echo "Error: 'Files Changed' section is missing or empty"
             exit 1
           fi
 
-          if [[ ! "$PR_DESCRIPTION" =~ "### Reason for Change ###[[:space:]]*:.*" ]]; then
+          if [[ ! "$PR_DESCRIPTION" =~ "### Reason for Change ###[:space:]*:[:space:]+.*" ]]; then
             echo "Error: 'Reason for Change' section is missing or empty"
             exit 1
           fi
 
-          if [[ ! "$PR_DESCRIPTION" =~ "### Task/Ticket/Issue ###[[:space:]]*:.*" ]]; then
+          if [[ ! "$PR_DESCRIPTION" =~ "### Task/Ticket/Issue ###[:space:]*:[:space:]+.*" ]]; then
             echo "Error: 'Task/Ticket/Issue' section is missing or empty"
             exit 1
           fi
 
           echo "PR Description is valid!"
-
 
 
   create_tag_and_deploy:
