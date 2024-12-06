@@ -248,11 +248,8 @@ jobs:
           git checkout main
           git pull origin main
 
-          # Add a separator line before the new changelog entry
-          echo -e "\n#####\n" >> CHANGELOG_Dev.md  # Adds a separator line
-
           # Add a changelog entry for the Dev deployment with PR commit message
-          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Dev.md
+          echo -e "\n#####\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Dev.md
 
           # Commit and push changes
           git add CHANGELOG_Dev.md
