@@ -37,3 +37,11 @@
 - Deployed version tag-v20.0.0
 - Commit Message: MAJOR added PR validation, removed 2nd pipeline ### Description of changes ###: added validation for PR### Files Changed ###: workflow file updated### Reason for Change ###: validation### Task/Ticket/Issue ###: no
 
+
+## [tag-v21.0.0] - 2024-12-06
+### Deployed to:
+- **qa**: 2024-12-06
+### Changes:
+- Deployed version tag-v21.0.0
+- Commit Message: MAJOR added PR validation, removed 2nd pipeline
+
