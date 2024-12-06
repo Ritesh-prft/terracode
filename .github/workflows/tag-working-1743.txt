@@ -163,39 +163,19 @@ jobs:
           git push origin $NEW_TAG
           echo "Created and pushed tag: $NEW_TAG"
 
-      # - name: Fetch PR commit message using GitHub API
-      #   id: pr_commit_message
-      #   run: |
-      #     PR_NUMBER="${{ github.event.pull_request.number }}"
-      #     COMMIT_MESSAGE=$(curl -s \
-      #       -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
-      #       "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
-      #       | jq -r '.title + " " + .body')
-
-      #     # Sanitize the commit message: Remove newlines and extra spaces
-      #     COMMIT_MESSAGE=$(echo "$COMMIT_MESSAGE" | tr -d '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-
-      #     # Set commit message for later use, ensuring it’s valid for the environment variable
-      #     echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_ENV
-      #     echo "Fetched Commit Message: $COMMIT_MESSAGE"
-
       - name: Fetch PR commit message using GitHub API
         id: pr_commit_message
         run: |
           PR_NUMBER="${{ github.event.pull_request.number }}"
-          # Fetch only the commit message (not the full PR body)
           COMMIT_MESSAGE=$(curl -s \
             -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
             "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
-            | jq -r '.title')
+            | jq -r '.title + " " + .body')
 
-          # Sanitize the commit message: Remove newlines and extra spaces
-          COMMIT_MESSAGE=$(echo "$COMMIT_MESSAGE" | tr -d '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-
-          # Set commit message for later use, ensuring it’s valid for the environment variable
+          # Set commit message for later use
           echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_ENV
           echo "Fetched Commit Message: $COMMIT_MESSAGE"
-          
+
       - name: Checkout the tag for deployment
         run: |
           NEW_TAG="${{ env.NEW_TAG }}"
@@ -210,48 +190,6 @@ jobs:
           ls
           # Add your deployment commands for the Dev environment here.
 
-
-      # - name: Update Changelog for Dev Deployment
-      #   run: |
-      #     TAG_NAME="${{ env.NEW_TAG }}"
-      #     DATE=$(date +'%Y-%m-%d')
-      #     ENVIRONMENT="dev"
-      #     COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
-
-      #     # Ensure we're on the main branch to update the changelog file
-      #     git checkout main
-      #     git pull origin main
-
-      #     # View the content of the changelog before appending
-      #     echo "Content of CHANGELOG_Dev.md before appending:"
-      #     cat CHANGELOG_Dev.md
-
-      #     # Add a changelog entry for the Dev deployment with PR commit message
-      #     echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Dev.md
-
-      #     # View the content of the changelog after appending
-      #     echo "Content of CHANGELOG_Dev.md after appending:"
-      #     cat CHANGELOG_Dev.md
-
-      #     # Commit and push changes
-      #     git add CHANGELOG_Dev.md
-      #     git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
-
-      #     # Fetch and merge remote changes before pushing
-      #     git fetch origin main
-      #     git merge origin/main --no-edit --allow-unrelated-histories || true
-
-      #     # Handle conflicts manually if necessary
-      #     if git ls-files -u | grep -q .; then
-      #       echo "Merge conflicts detected, resolving..."
-      #       git checkout --ours .github/workflows/tag.yml  # Keep local changes in workflow
-      #       git checkout --ours CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md  # Keep local changes in changelog
-      #       git add CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md .github/workflows/tag.yml
-      #       git commit -m "Resolved conflicts for changelog and workflows"
-      #     fi
-
-      #     # Push the changes
-      #     git push origin HEAD:main
 
       - name: Update Changelog for Dev Deployment
         run: |
@@ -268,7 +206,7 @@ jobs:
           echo "Content of CHANGELOG_Dev.md before appending:"
           cat CHANGELOG_Dev.md
 
-          # Add a changelog entry for the Dev deployment with commit message (not full PR body)
+          # Add a changelog entry for the Dev deployment with PR commit message
           echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Dev.md
 
           # View the content of the changelog after appending
@@ -294,6 +232,8 @@ jobs:
 
           # Push the changes
           git push origin HEAD:main
+
+
 
 
 
