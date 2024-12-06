@@ -26,16 +26,13 @@ jobs:
           # Output the PR description to the console for debugging
           echo "PR Description: $PR_DESCRIPTION"
 
-          # Clean the description (Preserving newlines)
-          CLEAN_DESCRIPTION="$PR_DESCRIPTION"
+          # Save the PR description to a file
+          echo "$PR_DESCRIPTION" > pr_description.txt
 
-          # Save the cleaned description to a file
-          echo "$CLEAN_DESCRIPTION" > pr_description.txt
+          # Output the saved description for debugging
+          echo "PR Description saved to pr_description.txt"
 
-          # Output the cleaned description for debugging
-          echo "Cleaned PR Description saved to pr_description.txt"
-
-      # Validate PR description
+      # Step 2: Validate PR description
       - name: Validate PR Description
         run: |
           # Read the PR description from the file
