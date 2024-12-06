@@ -14,10 +14,6 @@ jobs:
   validate_pr_description:
     runs-on: ubuntu-latest
     steps:
-      jobs:
-  validate_pr_description:
-    runs-on: ubuntu-latest
-    steps:
       - name: Fetch PR description
         id: pr-description
         run: |
