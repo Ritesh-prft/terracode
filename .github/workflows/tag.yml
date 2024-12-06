@@ -140,8 +140,8 @@ jobs:
           if git ls-files -u | grep -q .; then
             echo "Merge conflicts detected, resolving..."
             git checkout --ours .github/workflows/tag.yml  # Keep local changes in workflow
-            git checkout --ours CHANGELOG_Qa.md CHANGELOG_Prod.md  # Keep local changes in changelog
-            git add CHANGELOG_Qa.md CHANGELOG_Prod.md
+            git checkout --ours CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md  # Keep local changes in changelog
+            git add CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md .github/workflows/tag.yml 
             git commit -m "Resolved conflicts for changelog and workflows"
 
           fi
