@@ -30,3 +30,11 @@
 - Deployed version tag-v11.0.0
 - Commit Message: Feat/tagging commit Hi
 
+
+## [tag-v12.0.0] - 2024-12-06
+### Deployed to:
+- **dev**: 2024-12-06
+### Changes:
+- Deployed version tag-v12.0.0
+- Commit Message: Feat/tagging commit Hi
+
