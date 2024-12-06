@@ -40,23 +40,26 @@ jobs:
           # Get the cleaned PR description from the environment
           PR_DESCRIPTION="${{ env.CLEAN_DESCRIPTION }}"
 
-          # Check if all required sections are present and not empty
-          if [[ ! "$PR_DESCRIPTION" =~ "### Description of changes" ]] || [[ ! "$PR_DESCRIPTION" =~ ": .*" ]]; then
+          # Debug output to see the PR_DESCRIPTION
+          echo "PR Description: $PR_DESCRIPTION"
+
+          # Check if all required sections are present and not empty using regex with spaces/newlines
+          if [[ ! "$PR_DESCRIPTION" =~ "### Description of changes" ]] || [[ ! "$PR_DESCRIPTION" =~ ":[[:space:]]*.*" ]]; then
             echo "Error: 'Description of changes' section is missing or empty"
             exit 1
           fi
 
-          if [[ ! "$PR_DESCRIPTION" =~ "### Files Changed" ]] || [[ ! "$PR_DESCRIPTION" =~ ": .*" ]]; then
+          if [[ ! "$PR_DESCRIPTION" =~ "### Files Changed" ]] || [[ ! "$PR_DESCRIPTION" =~ ":[[:space:]]*.*" ]]; then
             echo "Error: 'Files Changed' section is missing or empty"
             exit 1
           fi
 
-          if [[ ! "$PR_DESCRIPTION" =~ "### Reason for Change" ]] || [[ ! "$PR_DESCRIPTION" =~ ": .*" ]]; then
+          if [[ ! "$PR_DESCRIPTION" =~ "### Reason for Change" ]] || [[ ! "$PR_DESCRIPTION" =~ ":[[:space:]]*.*" ]]; then
             echo "Error: 'Reason for Change' section is missing or empty"
             exit 1
           fi
 
-          if [[ ! "$PR_DESCRIPTION" =~ "### Task/Ticket/Issue" ]] || [[ ! "$PR_DESCRIPTION" =~ ": .*" ]]; then
+          if [[ ! "$PR_DESCRIPTION" =~ "### Task/Ticket/Issue" ]] || [[ ! "$PR_DESCRIPTION" =~ ":[[:space:]]*.*" ]]; then
             echo "Error: 'Task/Ticket/Issue' section is missing or empty"
             exit 1
           fi
