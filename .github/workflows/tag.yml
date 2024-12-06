@@ -6,10 +6,56 @@ on:
       - opened        # Trigger when the PR is created
       - synchronize  # Trigger when the PR is updated (e.g., new commits pushed)
       - reopened     # Trigger when a PR is reopened
+      - edited      # Trigger when a PR is edited
 
 
 
 jobs:
+  validate_pr_description:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch PR Description
+        run: |
+          PR_DESCRIPTION="${{ github.event.pull_request.body }}"
+          
+          # Check if all required sections are present in the PR description
+          if [[ -z "$PR_DESCRIPTION" || ! "$PR_DESCRIPTION" =~ "### Description of changes" || ! "$PR_DESCRIPTION" =~ "### Files Changed" || ! "$PR_DESCRIPTION" =~ "### Reason for Change" || ! "$PR_DESCRIPTION" =~ "### Task/Ticket/Issue" ]]; then
+            echo "PR description is missing one or more required sections. Please make sure the following sections are filled out properly:"
+            echo "- Description of changes"
+            echo "- Files Changed"
+            echo "- Reason for Change"
+            echo "- Task/Ticket/Issue"
+            exit 1
+          fi
+
+          # Ensure each section contains meaningful content (not just placeholder text like "HI" or empty fields)
+          if [[ "$PR_DESCRIPTION" =~ "HI" || "$PR_DESCRIPTION" =~ "empty" || "$PR_DESCRIPTION" =~ "N/A" || "$PR_DESCRIPTION" =~ "placeholder" || "$PR_DESCRIPTION" =~ "no ticket" ]]; then
+            echo "PR description contains placeholder text or incomplete fields. Please provide meaningful details for all fields."
+            exit 1
+          fi
+
+          # Now check if each section contains text (not just empty content)
+          if ! [[ "$PR_DESCRIPTION" =~ "Description of changes\s*:\s*[^[:space:]]" ]]; then
+            echo "Description of changes is missing or empty. Please provide a meaningful description."
+            exit 1
+          fi
+
+          if ! [[ "$PR_DESCRIPTION" =~ "Files Changed\s*:\s*[^[:space:]]" ]]; then
+            echo "Files Changed section is missing or empty. Please provide a list of files."
+            exit 1
+          fi
+
+          if ! [[ "$PR_DESCRIPTION" =~ "Reason for Change\s*:\s*[^[:space:]]" ]]; then
+            echo "Reason for Change is missing or empty. Please provide a reason for the change."
+            exit 1
+          fi
+
+          if ! [[ "$PR_DESCRIPTION" =~ "Task/Ticket/Issue\s*:\s*[^[:space:]]" ]]; then
+            echo "Task/Ticket/Issue section is missing or empty. Please link the associated task or issue."
+            exit 1
+          fi
+
+          echo "PR description validated successfully!"
   create_tag_and_deploy:
     if: |
       github.event.pull_request.action == 'opened' ||
@@ -130,7 +176,7 @@ jobs:
           cat CHANGELOG_Dev.md
 
           # Add a changelog entry for the Dev deployment with PR commit message
-          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deploying version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Dev.md
+          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Dev.md
 
           # View the content of the changelog after appending
           echo "Content of CHANGELOG_Dev.md after appending:"
@@ -181,30 +227,28 @@ jobs:
           ENVIRONMENT="qa"
           COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
 
-          # Get the commit message associated with the tag
-          COMMIT_MESSAGE=$(git log -1 --pretty=%B "$TAG_NAME")
-          echo "Commit Message for tag $TAG_NAME: $COMMIT_MESSAGE"
+          # Ensure we're on the main branch to update the changelog file
+          git checkout main
+          git pull origin main
 
-          # Prepare changelog entry for QA with the commit message
-          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- ${COMMIT_MESSAGE}\n" >> CHANGELOG_Qa.md
+          # Add a changelog entry for the Qa deployment with PR commit message
+          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Qa.md
 
           # Commit and push changes
           git add CHANGELOG_Qa.md
           git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
 
-          # Fetch and merge remote changes before pushing with --allow-unrelated-histories
+          # Fetch and merge remote changes before pushing
           git fetch origin main
-          git merge origin/main --no-edit --allow-unrelated-histories || true  # Avoid failing due to conflicts
+          git merge origin/main --no-edit --allow-unrelated-histories || true
 
-          # Check for conflicts and resolve (keeping our local changes in these files)
+          # Handle conflicts manually if necessary
           if git ls-files -u | grep -q .; then
             echo "Merge conflicts detected, resolving..."
             git checkout --ours .github/workflows/tag.yml  # Keep local changes in workflow
-            git checkout --ours CHANGELOG_Qa.md  # Keep local changes in changelog
-
-            # Add resolved files and commit the resolution
-            git add .github/workflows/tag.yml CHANGELOG_Qa.md
-            git commit -m "Resolved merge conflicts for ${TAG_NAME} deployment to ${ENVIRONMENT}"
+            git checkout --ours CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md  # Keep local changes in changelog
+            git add CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md .github/workflows/tag.yml
+            git commit -m "Resolved conflicts for changelog and workflows"
           fi
 
           # Push the changes
@@ -231,30 +275,28 @@ jobs:
           ENVIRONMENT="prod"
           COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
 
-          # Get the commit message associated with the tag
-          COMMIT_MESSAGE=$(git log -1 --pretty=%B "$TAG_NAME")
-          echo "Commit Message for tag $TAG_NAME: $COMMIT_MESSAGE"
+          # Ensure we're on the main branch to update the changelog file
+          git checkout main
+          git pull origin main
 
-          # Prepare changelog entry for PROD with the commit message
-          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- ${COMMIT_MESSAGE}\n" >> CHANGELOG_Prod.md
+          # Add a changelog entry for the Prod deployment with PR commit message
+          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Prod.md
 
           # Commit and push changes
           git add CHANGELOG_Prod.md
           git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
 
-          # Fetch and merge remote changes before pushing with --allow-unrelated-histories
+          # Fetch and merge remote changes before pushing
           git fetch origin main
-          git merge origin/main --no-edit --allow-unrelated-histories || true  # Avoid failing due to conflicts
+          git merge origin/main --no-edit --allow-unrelated-histories || true
 
-          # Check for conflicts and resolve (keeping our local changes in these files)
+          # Handle conflicts manually if necessary
           if git ls-files -u | grep -q .; then
             echo "Merge conflicts detected, resolving..."
             git checkout --ours .github/workflows/tag.yml  # Keep local changes in workflow
-            git checkout --ours CHANGELOG_Prod.md  # Keep local changes in changelog
-
-            # Add resolved files and commit the resolution
-            git add .github/workflows/tag.yml CHANGELOG_Prod.md
-            git commit -m "Resolved merge conflicts for ${TAG_NAME} deployment to ${ENVIRONMENT}"
+            git checkout --ours CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md  # Keep local changes in changelog
+            git add CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md .github/workflows/tag.yml
+            git commit -m "Resolved conflicts for changelog and workflows"
           fi
 
           # Push the changes
