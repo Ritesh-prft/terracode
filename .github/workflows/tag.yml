@@ -24,46 +24,53 @@ jobs:
             | jq -r '.body')
 
           # Output the PR description to the console for debugging
-          echo "PR Description: $PR_DESCRIPTION"
+          echo "PR Description:"
+          echo "$PR_DESCRIPTION"  # Debugging output
 
           # Save the PR description to a file
           echo "$PR_DESCRIPTION" > pr_description.txt
-
+          
           # Output the saved description for debugging
           echo "PR Description saved to pr_description.txt"
 
-      # Step 2: Validate PR description
       - name: Validate PR Description
         run: |
           # Read the PR description from the file
           PR_DESCRIPTION=$(cat pr_description.txt)
 
+          # Debug output to see the raw PR_DESCRIPTION
+          echo "Raw PR Description:"
+          echo "$PR_DESCRIPTION"  # Debugging output to inspect
+
           # Trim leading/trailing spaces and newlines
           PR_DESCRIPTION=$(echo "$PR_DESCRIPTION" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
-          # Debug output to see the PR_DESCRIPTION with preserved newlines
-          echo "PR Description:"
-          echo "$PR_DESCRIPTION"
+          # Debug output to see the trimmed PR_DESCRIPTION
+          echo "Trimmed PR Description:"
+          echo "$PR_DESCRIPTION"  # Debugging output to inspect after trimming
 
-          # Check if all required sections are present and have content after the colon
+          # Check for 'Description of changes' section and make sure there is content after the colon
           echo "Checking for 'Description of changes' section"
           if [[ ! "$PR_DESCRIPTION" =~ "### Description of changes ###[:space:]*:[[:space:]]+.*" ]]; then
             echo "Error: 'Description of changes' section is missing or empty"
             exit 1
           fi
 
+          # Check for 'Files Changed' section
           echo "Checking for 'Files Changed' section"
           if [[ ! "$PR_DESCRIPTION" =~ "### Files Changed ###[:space:]*:[[:space:]]+.*" ]]; then
             echo "Error: 'Files Changed' section is missing or empty"
             exit 1
           fi
 
+          # Check for 'Reason for Change' section
           echo "Checking for 'Reason for Change' section"
           if [[ ! "$PR_DESCRIPTION" =~ "### Reason for Change ###[:space:]*:[[:space:]]+.*" ]]; then
             echo "Error: 'Reason for Change' section is missing or empty"
             exit 1
           fi
 
+          # Check for 'Task/Ticket/Issue' section
           echo "Checking for 'Task/Ticket/Issue' section"
           if [[ ! "$PR_DESCRIPTION" =~ "### Task/Ticket/Issue ###[:space:]*:[[:space:]]+.*" ]]; then
             echo "Error: 'Task/Ticket/Issue' section is missing or empty"
