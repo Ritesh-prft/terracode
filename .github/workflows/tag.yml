@@ -121,6 +121,10 @@ jobs:
           ENVIRONMENT="dev"
           COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
 
+          # Ensure we're on the main branch to update the changelog file
+          git checkout main
+          git pull origin main
+
           # View the content of the changelog before appending
           echo "Content of CHANGELOG_Dev.md before appending:"
           cat CHANGELOG_Dev.md
@@ -130,11 +134,6 @@ jobs:
 
           # View the content of the changelog after appending
           echo "Content of CHANGELOG_Dev.md after appending:"
-          cat CHANGELOG_Dev.md
-
-
-          # Verify that the changelog entry was appended
-          echo "Changelog for Dev Deployment after append:"
           cat CHANGELOG_Dev.md
 
           # Commit and push changes
@@ -150,13 +149,13 @@ jobs:
             echo "Merge conflicts detected, resolving..."
             git checkout --ours .github/workflows/tag.yml  # Keep local changes in workflow
             git checkout --ours CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md  # Keep local changes in changelog
-            git add CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md .github/workflows/tag.yml 
+            git add CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md .github/workflows/tag.yml
             git commit -m "Resolved conflicts for changelog and workflows"
-
           fi
 
           # Push the changes
           git push origin HEAD:main
+
 
 
 
