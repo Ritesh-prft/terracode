@@ -283,14 +283,14 @@ jobs:
           # Debugging: Check what the cleaned PR description looks like
           echo "Cleaned PR Description: $PR_DESCRIPTION_CLEANED"
 
-          # Split the description into separate lines, removing unnecessary white space and formatting it clearly
-          PR_DESCRIPTION_FORMATTED=$(echo "$PR_DESCRIPTION_CLEANED" | tr '\n' ' ' | sed 's/\s\+/\n- /g' | sed 's/^/  /')
+          # Split the description into separate lines but preserve logical grouping
+          PR_DESCRIPTION_FORMATTED=$(echo "$PR_DESCRIPTION_CLEANED" | tr '\n' ' ' | sed 's/\s\+/ /g' | sed 's/\([a-zA-Z]\)\([A-Z]\)/\1 \2/g')
 
           # Debugging: Check what the formatted PR description looks like
           echo "Formatted PR Description: $PR_DESCRIPTION_FORMATTED"
 
-          # Ensure it’s readable in the changelog by adding bullet points
-          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n- PR Description:\n$PR_DESCRIPTION_FORMATTED" >> CHANGELOG_Dev.md
+          # Format the final output for the changelog entry
+          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n- PR Description:\n  - ${PR_DESCRIPTION_FORMATTED}" >> CHANGELOG_Dev.md
 
           # Commit and push changes
           git add CHANGELOG_Dev.md
@@ -311,6 +311,7 @@ jobs:
 
           # Push the changes
           git push origin HEAD:main
+
 
 
 
