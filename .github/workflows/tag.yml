@@ -26,20 +26,20 @@ jobs:
           # Output the PR description to the console for debugging
           echo "PR Description: $PR_DESCRIPTION"
 
-          # Preserve newlines, no removal
+          # Clean the description (Preserving newlines)
           CLEAN_DESCRIPTION="$PR_DESCRIPTION"
 
-          # Output the cleaned description for debugging
-          echo "Cleaned PR Description: $CLEAN_DESCRIPTION"
+          # Save the cleaned description to a file
+          echo "$CLEAN_DESCRIPTION" > pr_description.txt
 
-          # Set the cleaned description to the environment variable
-          echo "CLEAN_DESCRIPTION=$CLEAN_DESCRIPTION" >> $GITHUB_ENV
+          # Output the cleaned description for debugging
+          echo "Cleaned PR Description saved to pr_description.txt"
 
       # Validate PR description
       - name: Validate PR Description
         run: |
-          # Get the cleaned PR description from the environment
-          PR_DESCRIPTION="${{ env.CLEAN_DESCRIPTION }}"
+          # Read the PR description from the file
+          PR_DESCRIPTION=$(cat pr_description.txt)
 
           # Debug output to see the PR_DESCRIPTION with preserved newlines
           echo "PR Description:"
