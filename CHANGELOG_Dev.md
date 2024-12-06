@@ -102,3 +102,12 @@ fixed changelog logs workflow yml file want more logs in changelog no ticket
 - Commit Message: 
 - PR Description:
   fixed changelog logs workflow yml file want more logs in changelog no ticket
+
+## [tag-v29.0.0] - 2024-12-06
+### Deployed to:
+- **dev**: 2024-12-06
+### Changes:
+- Deployed version tag-v29.0.0
+- Commit Message: 
+- PR Description:
+  fixed changelog logs workflow yml file want more logs in changelog no ticket
