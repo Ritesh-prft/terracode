@@ -163,47 +163,47 @@ jobs:
           git push origin $NEW_TAG
           echo "Created and pushed tag: $NEW_TAG"
 
-      # - name: Fetch PR commit message using GitHub API
-      #   id: pr_commit_message
-      #   run: |
-      #     PR_NUMBER="${{ github.event.pull_request.number }}"
-      #     COMMIT_MESSAGE=$(curl -s \
-      #       -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
-      #       "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
-      #       | jq -r '.title + " " + .body')
-
-      #     # Sanitize the commit message: Remove newlines and extra spaces
-      #     COMMIT_MESSAGE=$(echo "$COMMIT_MESSAGE" | tr -d '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-
-      #     # Set commit message for later use, ensuring it’s valid for the environment variable
-      #     echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_ENV
-      #     echo "Fetched Commit Message: $COMMIT_MESSAGE"
-
-      - name: Fetch PR description using GitHub API
-        id: pr_description
+      - name: Fetch PR commit message using GitHub API
+        id: pr_commit_message
         run: |
           PR_NUMBER="${{ github.event.pull_request.number }}"
-          PR_DESCRIPTION=$(curl -s \
+          COMMIT_MESSAGE=$(curl -s \
             -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
             "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
-            | jq -r '.body')
+            | jq -r '.title + " " + .body')
 
-          # Clean the PR Description:
-          # Remove headers like '### Description of changes ###', leading spaces, and any unnecessary colons
-          PR_DESCRIPTION_CLEANED=$(echo "$PR_DESCRIPTION" | sed 's/^[[:space:]]*:[[:space:]]*//g' | sed 's/^[[:space:]]*//g')
+          # Sanitize the commit message: Remove newlines and extra spaces
+          COMMIT_MESSAGE=$(echo "$COMMIT_MESSAGE" | tr -d '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+
+          # Set commit message for later use, ensuring it’s valid for the environment variable
+          echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_ENV
+          echo "Fetched Commit Message: $COMMIT_MESSAGE"
+
+      # - name: Fetch PR description using GitHub API
+      #   id: pr_description
+      #   run: |
+      #     PR_NUMBER="${{ github.event.pull_request.number }}"
+      #     PR_DESCRIPTION=$(curl -s \
+      #       -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
+      #       "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
+      #       | jq -r '.body')
+
+      #     # Clean the PR Description:
+      #     # Remove headers like '### Description of changes ###', leading spaces, and any unnecessary colons
+      #     PR_DESCRIPTION_CLEANED=$(echo "$PR_DESCRIPTION" | sed 's/^[[:space:]]*:[[:space:]]*//g' | sed 's/^[[:space:]]*//g')
           
-          # Remove lines starting with '###' (these are section headers like '### Description of changes ###')
-          PR_DESCRIPTION_CLEANED=$(echo "$PR_DESCRIPTION_CLEANED" | sed '/^###/d')
+      #     # Remove lines starting with '###' (these are section headers like '### Description of changes ###')
+      #     PR_DESCRIPTION_CLEANED=$(echo "$PR_DESCRIPTION_CLEANED" | sed '/^###/d')
 
-          # Remove any unnecessary newlines that could cause problems when passing to env
-          PR_DESCRIPTION_CLEANED=$(echo "$PR_DESCRIPTION_CLEANED" | tr -s '\n' ' ')
+      #     # Remove any unnecessary newlines that could cause problems when passing to env
+      #     PR_DESCRIPTION_CLEANED=$(echo "$PR_DESCRIPTION_CLEANED" | tr -s '\n' ' ')
 
-          # Remove any residual leading or trailing spaces that could interfere with formatting
-          PR_DESCRIPTION_CLEANED=$(echo "$PR_DESCRIPTION_CLEANED" | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
+      #     # Remove any residual leading or trailing spaces that could interfere with formatting
+      #     PR_DESCRIPTION_CLEANED=$(echo "$PR_DESCRIPTION_CLEANED" | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
 
-          # Save the cleaned PR description to the environment for later use
-          echo "PR_DESCRIPTION=$PR_DESCRIPTION_CLEANED" >> $GITHUB_ENV
-          echo "Fetched and cleaned PR Description: $PR_DESCRIPTION_CLEANED"
+      #     # Save the cleaned PR description to the environment for later use
+      #     echo "PR_DESCRIPTION=$PR_DESCRIPTION_CLEANED" >> $GITHUB_ENV
+      #     echo "Fetched and cleaned PR Description: $PR_DESCRIPTION_CLEANED"
 
 
           
@@ -222,75 +222,27 @@ jobs:
           # Add your deployment commands for the Dev environment here.
 
 
-      # - name: Update Changelog for Dev Deployment
-      #   run: |
-      #     TAG_NAME="${{ env.NEW_TAG }}"
-      #     DATE=$(date +'%Y-%m-%d')
-      #     ENVIRONMENT="dev"
-      #     COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
-
-      #     # Ensure we're on the main branch to update the changelog file
-      #     git checkout main
-      #     git pull origin main
-
-      #     # View the content of the changelog before appending
-      #     echo "Content of CHANGELOG_Dev.md before appending:"
-      #     cat CHANGELOG_Dev.md
-
-      #     # Add a changelog entry for the Dev deployment with PR commit message
-      #     echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Dev.md
-
-      #     # View the content of the changelog after appending
-      #     echo "Content of CHANGELOG_Dev.md after appending:"
-      #     cat CHANGELOG_Dev.md
-
-      #     # Commit and push changes
-      #     git add CHANGELOG_Dev.md
-      #     git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
-
-      #     # Fetch and merge remote changes before pushing
-      #     git fetch origin main
-      #     git merge origin/main --no-edit --allow-unrelated-histories || true
-
-      #     # Handle conflicts manually if necessary
-      #     if git ls-files -u | grep -q .; then
-      #       echo "Merge conflicts detected, resolving..."
-      #       git checkout --ours .github/workflows/tag.yml  # Keep local changes in workflow
-      #       git checkout --ours CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md  # Keep local changes in changelog
-      #       git add CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md .github/workflows/tag.yml
-      #       git commit -m "Resolved conflicts for changelog and workflows"
-      #     fi
-
-      #     # Push the changes
-      #     git push origin HEAD:main
-
       - name: Update Changelog for Dev Deployment
         run: |
           TAG_NAME="${{ env.NEW_TAG }}"
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="dev"
           COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
-          PR_DESCRIPTION="${{ env.PR_DESCRIPTION }}"  # Use cleaned PR description from environment variable
 
           # Ensure we're on the main branch to update the changelog file
           git checkout main
           git pull origin main
 
-          # Clean up and format the PR description
-          PR_DESCRIPTION_CLEANED=$(echo "$PR_DESCRIPTION" | sed 's/^[[:space:]]*:[[:space:]]*//g' | sed 's/^[[:space:]]*//g')
-          PR_DESCRIPTION_CLEANED=$(echo "$PR_DESCRIPTION_CLEANED" | sed '/^###/d')  # Remove header sections like '### Description of changes ###'
+          # View the content of the changelog before appending
+          echo "Content of CHANGELOG_Dev.md before appending:"
+          cat CHANGELOG_Dev.md
 
-          # Debugging: Check what the cleaned PR description looks like
-          echo "Cleaned PR Description: $PR_DESCRIPTION_CLEANED"
+          # Add a changelog entry for the Dev deployment with PR commit message
+          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Dev.md
 
-          # Split the description into separate lines but preserve logical grouping
-          PR_DESCRIPTION_FORMATTED=$(echo "$PR_DESCRIPTION_CLEANED" | tr '\n' ' ' | sed 's/\s\+/ /g' | sed 's/\([a-zA-Z]\)\([A-Z]\)/\1 \2/g')
-
-          # Debugging: Check what the formatted PR description looks like
-          echo "Formatted PR Description: $PR_DESCRIPTION_FORMATTED"
-
-          # Format the final output for the changelog entry
-          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n- PR Description:\n  - ${PR_DESCRIPTION_FORMATTED}" >> CHANGELOG_Dev.md
+          # View the content of the changelog after appending
+          echo "Content of CHANGELOG_Dev.md after appending:"
+          cat CHANGELOG_Dev.md
 
           # Commit and push changes
           git add CHANGELOG_Dev.md
@@ -311,9 +263,6 @@ jobs:
 
           # Push the changes
           git push origin HEAD:main
-
-
-
 
 
       - name: Checkout the tag for deployment
