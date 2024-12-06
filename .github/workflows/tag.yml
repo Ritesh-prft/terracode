@@ -277,7 +277,15 @@ jobs:
           git pull origin main
 
           # Add a changelog entry for the Dev deployment with PR commit message and description
-          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n- PR Description: $PR_DESCRIPTION\n" >> CHANGELOG_Dev.md
+          PR_DESCRIPTION_CLEANED=$(echo "$PR_DESCRIPTION" | sed 's/^[[:space:]]*:[[:space:]]*//g' | sed 's/^[[:space:]]*//g')
+          PR_DESCRIPTION_CLEANED=$(echo "$PR_DESCRIPTION_CLEANED" | sed '/^###/d')
+          PR_DESCRIPTION_CLEANED=$(echo "$PR_DESCRIPTION_CLEANED" | tr -s '\n' ' ')
+
+          # Optionally, add some formatting or make the lines clearer in the changelog
+          PR_DESCRIPTION_FORMATTED=$(echo "$PR_DESCRIPTION_CLEANED" | tr ' ' '\n')
+
+          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n- PR Description: $PR_DESCRIPTION_FORMATTED\n" >> CHANGELOG_Dev.md
+          # echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n- PR Description: $PR_DESCRIPTION\n" >> CHANGELOG_Dev.md
 
           # Commit and push changes
           git add CHANGELOG_Dev.md
