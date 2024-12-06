@@ -38,6 +38,9 @@ jobs:
           # Read the PR description from the file
           PR_DESCRIPTION=$(cat pr_description.txt)
 
+          # Trim leading/trailing spaces and newlines
+          PR_DESCRIPTION=$(echo "$PR_DESCRIPTION" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+
           # Debug output to see the PR_DESCRIPTION with preserved newlines
           echo "PR Description:"
           echo "$PR_DESCRIPTION"
