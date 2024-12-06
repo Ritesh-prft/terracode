@@ -179,22 +179,18 @@ jobs:
       #     echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_ENV
       #     echo "Fetched Commit Message: $COMMIT_MESSAGE"
 
-      - name: Fetch PR commit message using GitHub API
-        id: pr_commit_message
+      - name: Fetch PR description using GitHub API
+        id: pr_description
         run: |
           PR_NUMBER="${{ github.event.pull_request.number }}"
-          # Fetch only the commit message (not the full PR body)
-          COMMIT_MESSAGE=$(curl -s \
+          PR_DESCRIPTION=$(curl -s \
             -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
             "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
-            | jq -r '.title')
+            | jq -r '.body')
 
-          # Sanitize the commit message: Remove newlines and extra spaces
-          COMMIT_MESSAGE=$(echo "$COMMIT_MESSAGE" | tr -d '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-
-          # Set commit message for later use, ensuring it’s valid for the environment variable
-          echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_ENV
-          echo "Fetched Commit Message: $COMMIT_MESSAGE"
+          # Set the PR description for later use
+          echo "PR_DESCRIPTION=$PR_DESCRIPTION" >> $GITHUB_ENV
+          echo "Fetched PR Description: $PR_DESCRIPTION"
           
       - name: Checkout the tag for deployment
         run: |
@@ -259,21 +255,14 @@ jobs:
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="dev"
           COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
+          PR_DESCRIPTION="${{ env.PR_DESCRIPTION }}"  # Fetch PR description from environment variable
 
           # Ensure we're on the main branch to update the changelog file
           git checkout main
           git pull origin main
 
-          # View the content of the changelog before appending
-          echo "Content of CHANGELOG_Dev.md before appending:"
-          cat CHANGELOG_Dev.md
-
-          # Add a changelog entry for the Dev deployment with commit message (not full PR body)
-          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Dev.md
-
-          # View the content of the changelog after appending
-          echo "Content of CHANGELOG_Dev.md after appending:"
-          cat CHANGELOG_Dev.md
+          # Add a changelog entry for the Dev deployment with PR commit message and description
+          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n- PR Description: $PR_DESCRIPTION\n" >> CHANGELOG_Dev.md
 
           # Commit and push changes
           git add CHANGELOG_Dev.md
