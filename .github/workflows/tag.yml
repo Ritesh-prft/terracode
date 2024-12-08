@@ -2,15 +2,9 @@ on:
   workflow_dispatch:
     inputs:
       tag_to_deploy:
-        description: 'Select the tag to deploy'
+        description: 'Enter the tag to deploy (e.g., tag-v1.0.0)'
         required: true
-        type: choice
-        options:
-          - 'tag-v1.0.0'
-          - 'tag-v1.1.0'
-          - 'tag-v2.0.0'
-          - 'tag-v3.0.0'
-        default: 'tag-v1.0.0'
+        type: string
   pull_request:
     branches:
       - main  # Trigger when a PR is targeting the 'main' branch
