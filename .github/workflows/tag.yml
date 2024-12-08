@@ -21,7 +21,12 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' }}
     steps:
-      - name: Fetch PR description if not manually provided
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - name: Fetch PR description
         id: pr-description
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
