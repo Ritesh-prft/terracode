@@ -1,6 +1,22 @@
 on:
   workflow_dispatch:
     inputs:
+      description_of_changes:
+        description: 'Enter Description of changes'
+        required: true
+        type: string
+      files_changed:
+        description: 'Enter Files Changed'
+        required: true
+        type: string
+      reason_for_change:
+        description: 'Enter Reason for Change'
+        required: true
+        type: string
+      task_ticket_issue:
+        description: 'Enter Task/Ticket/Issue'
+        required: true
+        type: string
       tag_to_deploy:
         description: 'Enter the tag to deploy (e.g., tag-v1.0.0)'
         required: true
@@ -19,26 +35,32 @@ on:
 jobs:
   validate_pr_description:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name != 'workflow_dispatch' }}
+    if: ${{ github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     steps:
-      - name: Fetch PR description
+      - name: Fetch PR description if not manually provided
         id: pr-description
         run: |
           PR_NUMBER=${{ github.event.pull_request.number }}
-          PR_DESCRIPTION=$(curl -s \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
-            | jq -r '.body')
-
-          # Output the PR description to the console for debugging
-          echo "PR Description:"
-          echo "$PR_DESCRIPTION"  # Debugging output
-
-          # Save the PR description to a file
-          echo "$PR_DESCRIPTION" > pr_description.txt
           
-          # Output the saved description for debugging
-          echo "PR Description saved to pr_description.txt"
+          # Check if inputs are provided for manual trigger
+          if [[ -z "${{ github.event.inputs.description_of_changes }}" && -z "${{ github.event.inputs.files_changed }}" && -z "${{ github.event.inputs.reason_for_change }}" && -z "${{ github.event.inputs.task_ticket_issue }}" ]]; then
+            echo "Fetching PR description from PR"
+            PR_DESCRIPTION=$(curl -s \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
+              | jq -r '.body')
+          else
+            echo "Using manual inputs"
+            PR_DESCRIPTION="${{ github.event.inputs.description_of_changes }}"
+
+            if [[ -z "${{ github.event.inputs.files_changed }}" || -z "${{ github.event.inputs.reason_for_change }}" || -z "${{ github.event.inputs.task_ticket_issue }}" ]]; then
+              echo "Warning: Some manual inputs are missing. Please provide all required inputs."
+              exit 1
+            fi
+          fi
+
+          echo "PR Description: $PR_DESCRIPTION"
+          echo "$PR_DESCRIPTION" > pr_description.txt
 
       - name: Validate PR Description
         run: |
@@ -90,7 +112,7 @@ jobs:
 
 
   create_tag_and_deploy:
-    needs: ${{ github.event_name == 'pull_request' && 'validate_pr_description' || '' }}
+    needs: validate_pr_description
     if: |
       github.event.pull_request.action == 'opened' ||
       github.event.pull_request.action == 'reopened' ||
