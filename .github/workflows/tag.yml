@@ -66,7 +66,6 @@ jobs:
               # Output the saved description for debugging
               echo "PR Description saved to pr_description.txt"
             fi
-          fi
           else
             # If triggered by a PR, fetch the PR description
             PR_NUMBER=${{ github.event.pull_request.number }}
@@ -84,6 +83,8 @@ jobs:
             
             # Output the saved description for debugging
             echo "PR Description saved to pr_description.txt"
+          fi
+
 
       - name: Print manual inputs (for debugging)
         run: |
