@@ -37,10 +37,7 @@ jobs:
           
           # If triggered by a PR, fetch the PR description
           PR_NUMBER=${{ github.event.pull_request.number }}
-          PR_DESCRIPTION=$(curl -s \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
-            | jq -r '.body')
+          PR_DESCRIPTION=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}" | jq -r '.body')
 
           # Output the PR description to the console for debugging
           echo "PR Description:"
