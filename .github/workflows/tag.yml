@@ -124,21 +124,23 @@ jobs:
             echo "Commit SHA for tag $TAG_TO_DEPLOY: $COMMIT_SHA"
               
             # Step 2: Use the GitHub API to find the PR associated with the commit SHA
-            PR_NUMBER=$(curl -s \
+            RESPONSE=$(curl -s \
               -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               "https://api.github.com/repos/${{ github.repository }}/pulls?state=all&per_page=100&page=1" \
               | jq -r ".[] | select(.head.sha == \"$COMMIT_SHA\") | .number")
+            
+            echo "API Response for PR number: $RESPONSE"  # Debugging line to print the raw response
 
-            if [[ -z "$PR_NUMBER" ]]; then
+            if [[ -z "$RESPONSE" ]]; then
               echo "Error: No PR found for the given tag."
               exit 1
             fi
-            echo "Found PR #$PR_NUMBER for tag $TAG_TO_DEPLOY"
+            echo "Found PR #$RESPONSE for tag $TAG_TO_DEPLOY"
               
             # Fetch the PR description using the PR number
             PR_DESCRIPTION=$(curl -s \
               -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER" \
+              "https://api.github.com/repos/${{ github.repository }}/pulls/$RESPONSE" \
               | jq -r '.body')
 
             echo "PR Description fetched for the tag: $PR_DESCRIPTION"
@@ -150,6 +152,7 @@ jobs:
           else
             echo "No tag provided, skipping PR fetch."
           fi
+
 
 
 
