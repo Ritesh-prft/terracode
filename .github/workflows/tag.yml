@@ -19,6 +19,7 @@ on:
 jobs:
   validate_pr_description:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'workflow_dispatch' }}
     steps:
       - name: Fetch PR description
         id: pr-description
