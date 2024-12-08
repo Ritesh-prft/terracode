@@ -631,6 +631,7 @@ jobs:
           # Add a changelog entry for the prod deployment with PR commit message
           echo -e "\n#####\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Prod.md
 
+
           # Commit and push changes
           git add CHANGELOG_Prod.md
           git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
