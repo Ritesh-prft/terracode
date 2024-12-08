@@ -40,7 +40,6 @@ jobs:
       - name: Fetch PR description if not manually provided
         id: pr-description
         run: |
-          # Check if the workflow is triggered manually
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "Using manual inputs"
 
@@ -50,8 +49,11 @@ jobs:
             REASON_FOR_CHANGE="${{ github.event.inputs.reason_for_change }}"
             TASK_TICKET_ISSUE="${{ github.event.inputs.task_ticket_issue }}"
 
-            echo "PR Description: $DESCRIPTION_OF_CHANGES"
-            
+            echo "Manual Description of Changes: $DESCRIPTION_OF_CHANGES"
+            echo "Manual Files Changed: $FILES_CHANGED"
+            echo "Manual Reason for Change: $REASON_FOR_CHANGE"
+            echo "Manual Task/Ticket/Issue: $TASK_TICKET_ISSUE"
+
             # Ensure all required manual inputs are provided
             if [[ -z "$DESCRIPTION_OF_CHANGES" || -z "$FILES_CHANGED" || -z "$REASON_FOR_CHANGE" || -z "$TASK_TICKET_ISSUE" ]]; then
               echo "Error: All required fields (Description of changes, Files Changed, Reason for Change, Task/Ticket/Issue) must be provided for manual trigger."
@@ -68,6 +70,12 @@ jobs:
 
             echo "PR Description: $PR_DESCRIPTION"
           fi
+
+          # If using manual trigger, assign values to PR_DESCRIPTION
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            PR_DESCRIPTION="### Description of changes\n$DESCRIPTION_OF_CHANGES\n### Files Changed\n$FILES_CHANGED\n### Reason for Change\n$REASON_FOR_CHANGE\n### Task/Ticket/Issue\n$TASK_TICKET_ISSUE"
+          fi
+
           echo "$PR_DESCRIPTION" > pr_description.txt
       - name: Print manual inputs (for debugging)
         run: |
