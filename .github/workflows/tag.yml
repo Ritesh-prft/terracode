@@ -125,7 +125,7 @@ jobs:
       github.event.pull_request.action == 'reopened' ||
       github.event.pull_request.action == 'synchronize' ||
       github.event.pull_request.state == 'open'||
-      github.event_name == 'workflow_dispatch'  # Include manual trigger
+      github.event_name == 'workflow_dispatch' 
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code from PR branch
