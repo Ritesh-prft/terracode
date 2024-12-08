@@ -108,15 +108,14 @@ jobs:
       - name: Fetch all tags
         run: git fetch --tags
 
-
       - name: Fetch PR description
         id: pr-description
         run: |
           echo "Using manual inputs"
-            
+          
           # Capture manual inputs
           TAG_TO_DEPLOY="${{ github.event.inputs.tag_to_deploy }}"
-            
+          
           if [[ -n "$TAG_TO_DEPLOY" ]]; then
             echo "Fetching PR description associated with the tag: $TAG_TO_DEPLOY"
 
@@ -144,7 +143,6 @@ jobs:
 
             echo "PR Description fetched for the tag: $PR_DESCRIPTION"
             # Output the PR description to the console for debugging
-              
             echo "$PR_DESCRIPTION"  # Debugging output
 
             # Save the PR description to a file
@@ -152,6 +150,7 @@ jobs:
               
             # Output the saved description for debugging
             echo "PR Description saved to pr_description.txt"
+          fi  # Close the if statement here
 
       - name: Validate PR Description
         run: |
@@ -196,6 +195,7 @@ jobs:
           check_section "Task/Ticket/Issue"
 
           echo "PR Description is valid!"
+
 ############################################################
   create_tag_and_deploy:
     needs: validate_created_pr
