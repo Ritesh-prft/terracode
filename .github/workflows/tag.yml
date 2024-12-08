@@ -17,9 +17,9 @@ on:
 
 
 jobs:
-  validate_pr_description:
+  validate_created_pr:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.event_name == 'pull_request'}}
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v3
@@ -34,66 +34,127 @@ jobs:
       - name: Fetch PR description
         id: pr-description
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "Using manual inputs"
-            
-            # Capture manual inputs
-            TAG_TO_DEPLOY="${{ github.event.inputs.tag_to_deploy }}"
-            
-            if [[ -n "$TAG_TO_DEPLOY" ]]; then
-              echo "Fetching PR description associated with the tag: $TAG_TO_DEPLOY"
+          
+          # If triggered by a PR, fetch the PR description
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          PR_DESCRIPTION=$(curl -s \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
+            | jq -r '.body')
 
-              # Step 1: Get the commit SHA for the tag
-              COMMIT_SHA=$(git rev-list -n 1 "$TAG_TO_DEPLOY")
-              echo "Commit SHA for tag $TAG_TO_DEPLOY: $COMMIT_SHA"
+          # Output the PR description to the console for debugging
+          echo "PR Description:"
+          echo "$PR_DESCRIPTION"  # Debugging output
+
+          # Save the PR description to a file
+          echo "$PR_DESCRIPTION" > pr_description.txt
+            
+          # Output the saved description for debugging
+          echo "PR Description saved to pr_description.txt"
+          
+
+      - name: Validate PR Description
+        run: |
+          # Read the PR description from the file
+          PR_DESCRIPTION=$(cat pr_description.txt)
+
+          # Debug output to see the raw PR_DESCRIPTION
+          echo "Raw PR Description:"
+          echo "$PR_DESCRIPTION"  # Debugging output to inspect
+
+          # Trim leading/trailing spaces and newlines
+          PR_DESCRIPTION=$(echo "$PR_DESCRIPTION" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+
+          # Debug output to see the trimmed PR_DESCRIPTION
+          echo "Trimmed PR Description:"
+          echo "$PR_DESCRIPTION"  # Debugging output to inspect after trimming
+
+          # Split into lines and print each one separately to debug line content
+          echo "Printing each line separately for debugging:"
+          echo "$PR_DESCRIPTION" | while IFS= read -r line; do
+            echo "Line: '$line'"
+          done
+
+          check_section() {
+              section_name="$1"
+              line=$(echo "$PR_DESCRIPTION" | grep -A 1 "### $section_name ###" | tail -n 1)
               
-              # Step 2: Use the GitHub API to find the PR associated with the commit SHA
-              PR_NUMBER=$(curl -s \
-                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-                "https://api.github.com/repos/${{ github.repository }}/pulls?state=all&head=${COMMIT_SHA}" \
-                | jq -r '.[0].number')
-
-              if [[ -z "$PR_NUMBER" ]]; then
-                echo "Error: No PR found for the given tag."
-                exit 1
+              # Check if the line is empty or just spaces after the colon
+              if [[ "$line" =~ ^\s*:?\s*$ ]]; then
+                  echo "Error: '$section_name' section is missing or empty."
+                  exit 1
               fi
-              echo "Found PR #$PR_NUMBER for tag $TAG_TO_DEPLOY"
-              
-              # Fetch the PR description using the PR number
-              PR_DESCRIPTION=$(curl -s \
-                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-                "https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER" \
-                | jq -r '.body')
+          }
 
-              echo "PR Description fetched for the tag: $PR_DESCRIPTION"
-              # Output the PR description to the console for debugging
-              
-              echo "$PR_DESCRIPTION"  # Debugging output
+          # PR Description Validation
+          echo "Checking PR Description..."
 
-              # Save the PR description to a file
-              echo "$PR_DESCRIPTION" > pr_description.txt
+          # Validate each section
+          check_section "Description of changes"
+          check_section "Files Changed"
+          check_section "Reason for Change"
+          check_section "Task/Ticket/Issue"
+
+          echo "PR Description is valid!"
+
+###########################################################
+  validate_featched_pr:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          fetch-depth: 0  # Ensure that the entire history and all tags are fetched
+
+      - name: Fetch all tags
+        run: git fetch --tags
+
+
+      - name: Fetch PR description
+        id: pr-description
+        run: |
+          echo "Using manual inputs"
+            
+          # Capture manual inputs
+          TAG_TO_DEPLOY="${{ github.event.inputs.tag_to_deploy }}"
+            
+          if [[ -n "$TAG_TO_DEPLOY" ]]; then
+            echo "Fetching PR description associated with the tag: $TAG_TO_DEPLOY"
+
+            # Step 1: Get the commit SHA for the tag
+            COMMIT_SHA=$(git rev-list -n 1 "$TAG_TO_DEPLOY")
+            echo "Commit SHA for tag $TAG_TO_DEPLOY: $COMMIT_SHA"
               
-              # Output the saved description for debugging
-              echo "PR Description saved to pr_description.txt"
+            # Step 2: Use the GitHub API to find the PR associated with the commit SHA
+            PR_NUMBER=$(curl -s \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/repos/${{ github.repository }}/pulls?state=all&head=${COMMIT_SHA}" \
+              | jq -r '.[0].number')
+
+            if [[ -z "$PR_NUMBER" ]]; then
+              echo "Error: No PR found for the given tag."
+              exit 1
             fi
-          else
-            # If triggered by a PR, fetch the PR description
-            PR_NUMBER=${{ github.event.pull_request.number }}
+            echo "Found PR #$PR_NUMBER for tag $TAG_TO_DEPLOY"
+              
+            # Fetch the PR description using the PR number
             PR_DESCRIPTION=$(curl -s \
               -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
+              "https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER" \
               | jq -r '.body')
 
+            echo "PR Description fetched for the tag: $PR_DESCRIPTION"
             # Output the PR description to the console for debugging
-            echo "PR Description:"
+              
             echo "$PR_DESCRIPTION"  # Debugging output
 
             # Save the PR description to a file
             echo "$PR_DESCRIPTION" > pr_description.txt
-            
+              
             # Output the saved description for debugging
             echo "PR Description saved to pr_description.txt"
-          fi
 
       - name: Validate PR Description
         run: |
