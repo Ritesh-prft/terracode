@@ -1,4 +1,16 @@
 on:
+  workflow_dispatch:
+    inputs:
+      tag_to_deploy:
+        description: 'Select the tag to deploy'
+        required: true
+        type: choice
+        options:
+          - 'tag-v1.0.0'
+          - 'tag-v1.1.0'
+          - 'tag-v2.0.0'
+          - 'tag-v3.0.0'
+        default: 'tag-v1.0.0'
   pull_request:
     branches:
       - main  # Trigger when a PR is targeting the 'main' branch
@@ -7,17 +19,7 @@ on:
       - synchronize  # Trigger when the PR is updated (e.g., new commits pushed)
       - reopened     # Trigger when a PR is reopened
       - edited      # Trigger when a PR is edited
-  workflow_dispatch:
-    inputs:
-      publish:
-        description: 'Choose where you want to publish the build'
-        required: true
-        default: ''
-        type: choice
-        options:
-          - GooglePlay
-          - AppTester
-          - Both
+  
 
 
 jobs:
@@ -65,37 +67,6 @@ jobs:
             echo "Line: '$line'"
           done
 
-          # # Check for 'Description of changes' section with content
-          # echo "Checking for 'Description of changes' section"
-          # if ! echo "$PR_DESCRIPTION" | grep -Pzoq "### Description of changes ###\s*\n*:\s+.*"; then
-          #   echo "Error: 'Description of changes' section is missing or empty"
-          #   exit 1
-          # fi
-
-          # # Check for 'Files Changed' section with content
-          # echo "Checking for 'Files Changed' section"
-          # if ! echo "$PR_DESCRIPTION" | grep -Pzoq "### Files Changed ###\s*\n*:\s+.*"; then
-          #   echo "Error: 'Files Changed' section is missing or empty"
-          #   exit 1
-          # fi
-
-          # # Check for 'Reason for Change' section with content
-          # echo "Checking for 'Reason for Change' section"
-          # if ! echo "$PR_DESCRIPTION" | grep -Pzoq "### Reason for Change ###\s*\n*:\s+.*"; then
-          #   echo "Error: 'Reason for Change' section is missing or empty"
-          #   exit 1
-          # fi
-
-          # # Check for 'Task/Ticket/Issue' section with content
-          # echo "Checking for 'Task/Ticket/Issue' section"
-          # if ! echo "$PR_DESCRIPTION" | grep -Pzoq "### Task/Ticket/Issue ###\s*\n*:\s+.*"; then
-          #   echo "Error: 'Task/Ticket/Issue' section is missing or empty"
-          #   exit 1
-          # fi
-
-          # Check for 'Description of changes' section with content
-          # Check for 'Description of changes' section with content
-          # Extract lines for each section and check if the content after the colon is empty
           check_section() {
               section_name="$1"
               line=$(echo "$PR_DESCRIPTION" | grep -A 1 "### $section_name ###" | tail -n 1)
@@ -201,47 +172,6 @@ jobs:
           echo "Tag to deploy: $TAG_TO_DEPLOY"
           echo "TAG_TO_DEPLOY=$TAG_TO_DEPLOY" >> $GITHUB_ENV
 
-
-
-          # # Get the latest tag in the repo
-          # LATEST_TAG=$(git tag --list 'tag-v*' | sort -V | tail -n 1)
-
-          # if [ -z "$LATEST_TAG" ]; then
-          #   LATEST_TAG="tag-v0.0.0"
-          # fi
-
-          # # Parse version components (e.g., tag-v1.0.0 -> MAJOR=1, MINOR=0, PATCH=0)
-          # VERSION="${LATEST_TAG//tag-v/}"
-          # VERSION_PARTS=(${VERSION//./ })
-          # MAJOR="${VERSION_PARTS[0]}"
-          # MINOR="${VERSION_PARTS[1]}"
-          # PATCH="${VERSION_PARTS[2]}"
-
-          # # Check commit message for version increment and modify accordingly
-          # COMMIT_MESSAGE=$(git log -1 --pretty=%B)
-          
-          # if [[ "$COMMIT_MESSAGE" == *MAJOR* ]]; then
-          #   MAJOR=$((MAJOR + 1))
-          #   MINOR=0
-          #   PATCH=0
-          # elif [[ "$COMMIT_MESSAGE" == *MINOR* ]]; then
-          #   MINOR=$((MINOR + 1))
-          #   PATCH=0
-          # elif [[ "$COMMIT_MESSAGE" == *PATCH* ]]; then
-          #   PATCH=$((PATCH + 1))
-          # fi
-
-          # # Set new tag
-          # NEW_TAG="tag-v${MAJOR}.${MINOR}.${PATCH}"
-
-          # # Ensure the tag is unique (increment PATCH if necessary)
-          # while git rev-parse "$NEW_TAG" >/dev/null 2>&1; do
-          #   PATCH=$((PATCH + 1))
-          #   NEW_TAG="tag-v${MAJOR}.${MINOR}.${PATCH}"
-          # done
-
-          # echo "New tag: $NEW_TAG"
-          # echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
 
       - name: Create and push tag from feature branch
         env:
