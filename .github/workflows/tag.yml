@@ -11,7 +11,8 @@ on:
     inputs:
       tag_to_deploy:
         description: 'Tag to deploy'
-        required: true
+        required: false
+        default: ''
 
 
 jobs:
@@ -145,6 +146,9 @@ jobs:
       - name: Get latest tag and determine version increment
         id: get_version
         run: |
+          # Debug: Print input for the tag to deploy
+          echo "Manual tag input: ${{ github.event.inputs.tag_to_deploy }}"
+
           # Check if manual tag is provided
           if [ -n "${{ github.event.inputs.tag_to_deploy }}" ]; then
             TAG_TO_DEPLOY="${{ github.event.inputs.tag_to_deploy }}"
@@ -185,9 +189,13 @@ jobs:
               PATCH=$((PATCH + 1))
               NEW_TAG="tag-v${MAJOR}.${MINOR}.${PATCH}"
             done
+
+            TAG_TO_DEPLOY=$NEW_TAG
           fi
+
           echo "Tag to deploy: $TAG_TO_DEPLOY"
           echo "TAG_TO_DEPLOY=$TAG_TO_DEPLOY" >> $GITHUB_ENV
+
 
 
           # # Get the latest tag in the repo
