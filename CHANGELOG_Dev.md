@@ -386,3 +386,12 @@ fixed changelog logs workflow yml file want more logs in changelog no ticket
 - Deployed version 
 - Commit Message: MAJOR added PR validation, removed 2nd pipeline 11111111111111 ### Description of changes ###:111111### Files Changed ###:111111111### Reason for Change ###:111111111### Task/Ticket/Issue ###:11111111
 
+
+#####
+## [tag-v43.0.0] - 2024-12-08
+### Deployed to:
+- **dev**: 2024-12-08
+### Changes:
+- Deployed version tag-v43.0.0
+- Commit Message: MAJOR added PR validation, removed 2nd pipeline 11111111111111 ### Description of changes ###:111111### Files Changed ###:111111111### Reason for Change ###:111111111### Task/Ticket/Issue ###:11111111
+
