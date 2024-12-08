@@ -37,10 +37,7 @@ jobs:
           
           # If triggered by a PR, fetch the PR description
           PR_NUMBER=${{ github.event.pull_request.number }}
-          PR_DESCRIPTION=$(curl -s \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
-            | jq -r '.body')
+          PR_DESCRIPTION=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}" | jq -r '.body')
 
           # Output the PR description to the console for debugging
           echo "PR Description:"
@@ -111,15 +108,14 @@ jobs:
       - name: Fetch all tags
         run: git fetch --tags
 
-
       - name: Fetch PR description
         id: pr-description
         run: |
           echo "Using manual inputs"
-            
+          
           # Capture manual inputs
           TAG_TO_DEPLOY="${{ github.event.inputs.tag_to_deploy }}"
-            
+          
           if [[ -n "$TAG_TO_DEPLOY" ]]; then
             echo "Fetching PR description associated with the tag: $TAG_TO_DEPLOY"
 
@@ -128,33 +124,38 @@ jobs:
             echo "Commit SHA for tag $TAG_TO_DEPLOY: $COMMIT_SHA"
               
             # Step 2: Use the GitHub API to find the PR associated with the commit SHA
-            PR_NUMBER=$(curl -s \
+            RESPONSE=$(curl -s \
               -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/${{ github.repository }}/pulls?state=all&head=${COMMIT_SHA}" \
-              | jq -r '.[0].number')
+              "https://api.github.com/repos/${{ github.repository }}/pulls?state=all&per_page=100&page=1" \
+              | jq -r ".[] | select(.head.sha == \"$COMMIT_SHA\" or .merge_commit_sha == \"$COMMIT_SHA\") | .number")
 
-            if [[ -z "$PR_NUMBER" ]]; then
+            echo "API Response for PR number: $RESPONSE"  # Debugging line to print the raw response
+
+            if [[ -z "$RESPONSE" ]]; then
               echo "Error: No PR found for the given tag."
               exit 1
             fi
-            echo "Found PR #$PR_NUMBER for tag $TAG_TO_DEPLOY"
+            echo "Found PR #$RESPONSE for tag $TAG_TO_DEPLOY"
               
             # Fetch the PR description using the PR number
             PR_DESCRIPTION=$(curl -s \
               -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER" \
+              "https://api.github.com/repos/${{ github.repository }}/pulls/$RESPONSE" \
               | jq -r '.body')
 
             echo "PR Description fetched for the tag: $PR_DESCRIPTION"
-            # Output the PR description to the console for debugging
-              
-            echo "$PR_DESCRIPTION"  # Debugging output
-
+            
             # Save the PR description to a file
             echo "$PR_DESCRIPTION" > pr_description.txt
-              
-            # Output the saved description for debugging
             echo "PR Description saved to pr_description.txt"
+          
+          else
+            echo "No tag provided, skipping PR fetch."
+          fi
+
+
+
+
 
       - name: Validate PR Description
         run: |
@@ -199,6 +200,10 @@ jobs:
           check_section "Task/Ticket/Issue"
 
           echo "PR Description is valid!"
+
+
+
+
 ############################################################
   create_tag_and_deploy:
     needs: validate_created_pr
@@ -466,6 +471,9 @@ jobs:
         id: maunal_pr_commit_message
         run: |
           TAG_TO_DEPLOY="${{ github.event.inputs.tag_to_deploy }}"
+          
+          # Ensure the tag variable is set correctly
+          echo "Deploying Tag: $TAG_TO_DEPLOY"
 
           # Step 1: Get the commit SHA for the tag
           COMMIT_SHA=$(git rev-list -n 1 "$TAG_TO_DEPLOY")
@@ -476,6 +484,8 @@ jobs:
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             "https://api.github.com/repos/${{ github.repository }}/pulls?state=all&head=${COMMIT_SHA}" \
             | jq -r '.[0].number')
+          
+          # Fetch PR details
           COMMIT_MESSAGE=$(curl -s \
             -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
             "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
@@ -505,7 +515,7 @@ jobs:
 
       - name: Update Changelog for Dev Deployment
         run: |
-          TAG_NAME="${{ env.NEW_TAG }}"
+          TAG_NAME="${{ github.event.inputs.tag_to_deploy }}"
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="dev"
           COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
@@ -513,6 +523,9 @@ jobs:
           # Ensure we're on the main branch to update the changelog file
           git checkout main
           git pull origin main
+
+          # Debugging: Print the value of TAG_NAME to ensure it is correct
+          echo "Updating changelog for tag: $TAG_NAME"
 
           # Add a changelog entry for the Dev deployment with PR commit message
           echo -e "\n#####\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Dev.md
@@ -528,10 +541,9 @@ jobs:
           # Handle conflicts manually if necessary
           if git ls-files -u | grep -q .; then
             echo "Merge conflicts detected, resolving..."
-            git checkout --ours .github/workflows/tag.yml  # Keep local changes in workflow
             git checkout --ours CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md  # Keep local changes in changelog
-            git add CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md .github/workflows/tag.yml
-            git commit -m "Resolved conflicts for changelog and workflows"
+            git add CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md
+            git commit -m "Resolved conflicts for changelog files"
           fi
 
           # Push the changes
@@ -554,7 +566,7 @@ jobs:
 
       - name: Update Changelog for Qa Deployment
         run: |
-          TAG_NAME="${{ env.NEW_TAG }}"
+          TAG_NAME="${{ github.event.inputs.tag_to_deploy }}"
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="qa"
           COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
@@ -563,8 +575,11 @@ jobs:
           git checkout main
           git pull origin main
 
-          # Add a changelog entry for the Qa deployment with PR commit message
-          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Qa.md
+          # Debugging: Print the value of TAG_NAME to ensure it is correct
+          echo "Updating changelog for tag: $TAG_NAME"
+
+          # Add a changelog entry for the QA deployment with PR commit message
+          echo -e "\n#####\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Qa.md
 
           # Commit and push changes
           git add CHANGELOG_Qa.md
@@ -577,10 +592,9 @@ jobs:
           # Handle conflicts manually if necessary
           if git ls-files -u | grep -q .; then
             echo "Merge conflicts detected, resolving..."
-            git checkout --ours .github/workflows/tag.yml  # Keep local changes in workflow
             git checkout --ours CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md  # Keep local changes in changelog
-            git add CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md .github/workflows/tag.yml
-            git commit -m "Resolved conflicts for changelog and workflows"
+            git add CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md
+            git commit -m "Resolved conflicts for changelog files"
           fi
 
           # Push the changes
@@ -602,7 +616,7 @@ jobs:
 
       - name: Update Changelog for Prod Deployment
         run: |
-          TAG_NAME="${{ env.NEW_TAG }}"
+          TAG_NAME="${{ github.event.inputs.tag_to_deploy }}"
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="prod"
           COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
@@ -611,8 +625,11 @@ jobs:
           git checkout main
           git pull origin main
 
-          # Add a changelog entry for the Prod deployment with PR commit message
-          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Prod.md
+          # Debugging: Print the value of TAG_NAME to ensure it is correct
+          echo "Updating changelog for tag: $TAG_NAME"
+
+          # Add a changelog entry for the prod deployment with PR commit message
+          echo -e "\n#####\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Prod.md
 
           # Commit and push changes
           git add CHANGELOG_Prod.md
@@ -625,10 +642,9 @@ jobs:
           # Handle conflicts manually if necessary
           if git ls-files -u | grep -q .; then
             echo "Merge conflicts detected, resolving..."
-            git checkout --ours .github/workflows/tag.yml  # Keep local changes in workflow
             git checkout --ours CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md  # Keep local changes in changelog
-            git add CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md .github/workflows/tag.yml
-            git commit -m "Resolved conflicts for changelog and workflows"
+            git add CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md
+            git commit -m "Resolved conflicts for changelog files"
           fi
 
           # Push the changes
