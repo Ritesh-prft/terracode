@@ -397,3 +397,11 @@
 - Deployed version 
 - Commit Message: MAJOR updated file to test validation ### Description of changes ###: MAJOR updated file to test validation### Files Changed ###: MAJOR updated file to test validation### Reason for Change ###: MAJOR updated file to test validation### Task/Ticket/Issue ###: MAJOR updated file to test validation
 
+
+## [tag-v45.0.0] - 2024-12-08
+### Deployed to:
+- **prod**: 2024-12-08
+### Changes:
+- Deployed version tag-v45.0.0
+- Commit Message: MAJOR seperated validation part ### Description of changes ###:MAJOR seperated validation part### Files Changed ###:MAJOR seperated validation part### Reason for Change ###:MAJOR seperated validation part### Task/Ticket/Issue ###:MAJOR seperated validation part
+
