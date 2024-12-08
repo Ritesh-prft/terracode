@@ -146,6 +146,11 @@ jobs:
             # Save the PR description to a file
             echo "$PR_DESCRIPTION" > pr_description.txt
             echo "PR Description saved to pr_description.txt"
+          
+          else
+            echo "No tag provided, skipping PR fetch."
+          fi
+
 
 
       - name: Validate PR Description
