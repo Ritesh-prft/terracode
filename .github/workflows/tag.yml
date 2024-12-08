@@ -127,8 +127,8 @@ jobs:
             RESPONSE=$(curl -s \
               -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               "https://api.github.com/repos/${{ github.repository }}/pulls?state=all&per_page=100&page=1" \
-              | jq -r ".[] | select(.head.sha == \"$COMMIT_SHA\") | .number")
-            
+              | jq -r ".[] | select(.head.sha == \"$COMMIT_SHA\" or .merge_commit_sha == \"$COMMIT_SHA\") | .number")
+
             echo "API Response for PR number: $RESPONSE"  # Debugging line to print the raw response
 
             if [[ -z "$RESPONSE" ]]; then
@@ -152,6 +152,7 @@ jobs:
           else
             echo "No tag provided, skipping PR fetch."
           fi
+
 
 
 
