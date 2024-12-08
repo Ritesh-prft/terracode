@@ -9,10 +9,15 @@ on:
       - edited      # Trigger when a PR is edited
   workflow_dispatch:
     inputs:
-      tag_to_deploy:
-        description: 'Tag to deploy'
-        required: false
+      publish:
+        description: 'Choose where you want to publish the build'
+        required: true
         default: ''
+        type: choice
+        options:
+          - GooglePlay
+          - AppTester
+          - Both
 
 
 jobs:
