@@ -341,3 +341,11 @@
 - Deployed version tag-v43.0.1
 - Commit Message: PATCH added job seperation using ##### ### Description of changes ###: PATCH added job seperation using ######## Files Changed ###: tag.yml### Reason for Change ###: need to deploy to project### Task/Ticket/Issue ###: dummy
 
+
+## [tag-v43.0.2] - 2024-12-08
+### Deployed to:
+- **qa**: 2024-12-08
+### Changes:
+- Deployed version tag-v43.0.2
+- Commit Message: PATCH added job seperation using ##### ### Description of changes ###: PATCH added job seperation using ######## Files Changed ###: tag.yml### Reason for Change ###: need to deploy to project### Task/Ticket/Issue ###: dummy
+
