@@ -98,7 +98,7 @@ jobs:
           echo "PR Description is valid!"
 
 ###########################################################
-  validate_featched_pr:
+  validate_fetched_pr:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'workflow_dispatch' }}
     steps:
@@ -201,7 +201,7 @@ jobs:
           echo "PR Description is valid!"
 ############################################################
   create_tag_and_deploy:
-    needs: validate_pr_description
+    needs: validate_created_pr
     if: |
       github.event.pull_request.action == 'opened' ||
       github.event.pull_request.action == 'reopened' ||
@@ -442,7 +442,7 @@ jobs:
 ###########################################################
 
   read_tag_and_deploy:
-    needs: validate_pr_description
+    needs: validate_fetched_pr
     if: github.event_name == 'workflow_dispatch' 
     runs-on: ubuntu-latest
     steps:
