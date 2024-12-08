@@ -1,22 +1,6 @@
 on:
   workflow_dispatch:
     inputs:
-      description_of_changes:
-        description: 'Enter Description of changes'
-        required: true
-        type: string
-      files_changed:
-        description: 'Enter Files Changed'
-        required: true
-        type: string
-      reason_for_change:
-        description: 'Enter Reason for Change'
-        required: true
-        type: string
-      task_ticket_issue:
-        description: 'Enter Task/Ticket/Issue'
-        required: true
-        type: string
       tag_to_deploy:
         description: 'Enter the tag to deploy (e.g., tag-v1.0.0)'
         required: true
@@ -42,41 +26,65 @@ jobs:
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "Using manual inputs"
-
+            
             # Capture manual inputs
-            DESCRIPTION_OF_CHANGES="${{ github.event.inputs.description_of_changes }}"
-            FILES_CHANGED="${{ github.event.inputs.files_changed }}"
-            REASON_FOR_CHANGE="${{ github.event.inputs.reason_for_change }}"
-            TASK_TICKET_ISSUE="${{ github.event.inputs.task_ticket_issue }}"
+            TAG_TO_DEPLOY="${{ github.event.inputs.tag_to_deploy }}"
+            
+            if [[ -n "$TAG_TO_DEPLOY" ]]; then
+              echo "Fetching PR description associated with the tag: $TAG_TO_DEPLOY"
 
-            echo "Manual Description of Changes: $DESCRIPTION_OF_CHANGES"
-            echo "Manual Files Changed: $FILES_CHANGED"
-            echo "Manual Reason for Change: $REASON_FOR_CHANGE"
-            echo "Manual Task/Ticket/Issue: $TASK_TICKET_ISSUE"
+              # Step 1: Get the commit SHA for the tag
+              COMMIT_SHA=$(git rev-list -n 1 "$TAG_TO_DEPLOY")
+              echo "Commit SHA for tag $TAG_TO_DEPLOY: $COMMIT_SHA"
+              
+              # Step 2: Use the GitHub API to find the PR associated with the commit SHA
+              PR_NUMBER=$(curl -s \
+                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                "https://api.github.com/repos/${{ github.repository }}/pulls?state=all&head=${COMMIT_SHA}" \
+                | jq -r '.[0].number')
 
-            # Ensure all required manual inputs are provided
-            if [[ -z "$DESCRIPTION_OF_CHANGES" || -z "$FILES_CHANGED" || -z "$REASON_FOR_CHANGE" || -z "$TASK_TICKET_ISSUE" ]]; then
-              echo "Error: All required fields (Description of changes, Files Changed, Reason for Change, Task/Ticket/Issue) must be provided for manual trigger."
-              exit 1
+              if [[ -z "$PR_NUMBER" ]]; then
+                echo "Error: No PR found for the given tag."
+                exit 1
+              fi
+              echo "Found PR #$PR_NUMBER for tag $TAG_TO_DEPLOY"
+              
+              # Fetch the PR description using the PR number
+              PR_DESCRIPTION=$(curl -s \
+                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                "https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER" \
+                | jq -r '.body')
+
+              echo "PR Description fetched for the tag: $PR_DESCRIPTION"
+              # Output the PR description to the console for debugging
+              
+              echo "$PR_DESCRIPTION"  # Debugging output
+
+              # Save the PR description to a file
+              echo "$PR_DESCRIPTION" > pr_description.txt
+              
+              # Output the saved description for debugging
+              echo "PR Description saved to pr_description.txt"
             fi
+          fi
           else
             # If triggered by a PR, fetch the PR description
             PR_NUMBER=${{ github.event.pull_request.number }}
-            echo "Fetching PR description from PR #$PR_NUMBER"
             PR_DESCRIPTION=$(curl -s \
               -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
               | jq -r '.body')
 
-            echo "PR Description: $PR_DESCRIPTION"
-          fi
+            # Output the PR description to the console for debugging
+            echo "PR Description:"
+            echo "$PR_DESCRIPTION"  # Debugging output
 
-          # If using manual trigger, assign values to PR_DESCRIPTION
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            PR_DESCRIPTION="### Description of changes\n$DESCRIPTION_OF_CHANGES\n### Files Changed\n$FILES_CHANGED\n### Reason for Change\n$REASON_FOR_CHANGE\n### Task/Ticket/Issue\n$TASK_TICKET_ISSUE"
-          fi
+            # Save the PR description to a file
+            echo "$PR_DESCRIPTION" > pr_description.txt
+            
+            # Output the saved description for debugging
+            echo "PR Description saved to pr_description.txt"
 
-          echo "$PR_DESCRIPTION" > pr_description.txt
       - name: Print manual inputs (for debugging)
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
