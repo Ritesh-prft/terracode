@@ -69,6 +69,14 @@ jobs:
             echo "PR Description: $PR_DESCRIPTION"
           fi
           echo "$PR_DESCRIPTION" > pr_description.txt
+      - name: Print manual inputs (for debugging)
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "Manual Description of Changes: ${{ github.event.inputs.description_of_changes }}"
+            echo "Manual Files Changed: ${{ github.event.inputs.files_changed }}"
+            echo "Manual Reason for Change: ${{ github.event.inputs.reason_for_change }}"
+            echo "Manual Task/Ticket/Issue: ${{ github.event.inputs.task_ticket_issue }}"
+          fi
 
       - name: Validate PR Description
         run: |
