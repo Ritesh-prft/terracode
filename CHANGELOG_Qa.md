@@ -381,3 +381,11 @@
 - Deployed version 
 - Commit Message: PATCH update yml file to remove comments ### Description of changes ###: removed comment to make it clean### Files Changed ###: tag,yml file### Reason for Change ###: for testing purpose### Task/Ticket/Issue ###: not provided
 
+
+## [tag-v44.0.0] - 2024-12-08
+### Deployed to:
+- **qa**: 2024-12-08
+### Changes:
+- Deployed version tag-v44.0.0
+- Commit Message: MAJOR updated file to test validation ### Description of changes ###: MAJOR updated file to test validation### Files Changed ###: MAJOR updated file to test validation### Reason for Change ###: MAJOR updated file to test validation### Task/Ticket/Issue ###: MAJOR updated file to test validation
+
