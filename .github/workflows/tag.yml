@@ -90,7 +90,7 @@ jobs:
 
 
   create_tag_and_deploy:
-    needs: validate_pr_description
+    needs: ${{ github.event_name == 'pull_request' && 'validate_pr_description' || '' }}
     if: |
       github.event.pull_request.action == 'opened' ||
       github.event.pull_request.action == 'reopened' ||
