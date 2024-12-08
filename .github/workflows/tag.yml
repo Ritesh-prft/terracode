@@ -53,8 +53,9 @@ jobs:
             echo "Using manual inputs"
             PR_DESCRIPTION="${{ github.event.inputs.description_of_changes }}"
 
+            # Only proceed if all required inputs are provided for manual trigger
             if [[ -z "${{ github.event.inputs.files_changed }}" || -z "${{ github.event.inputs.reason_for_change }}" || -z "${{ github.event.inputs.task_ticket_issue }}" ]]; then
-              echo "Warning: Some manual inputs are missing. Please provide all required inputs."
+              echo "Error: All required inputs (Files Changed, Reason for Change, Task/Ticket/Issue) must be provided."
               exit 1
             fi
           fi
