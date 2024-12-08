@@ -515,7 +515,7 @@ jobs:
 
       - name: Update Changelog for Dev Deployment
         run: |
-          TAG_NAME="${{ env.NEW_TAG }}"
+          NEW_TAG="${{ github.event.inputs.tag_to_deploy }}"
           DATE=$(date +'%Y-%m-%d')
           ENVIRONMENT="dev"
           COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
