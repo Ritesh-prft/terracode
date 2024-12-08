@@ -40,27 +40,34 @@ jobs:
       - name: Fetch PR description if not manually provided
         id: pr-description
         run: |
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          
-          # Check if inputs are provided for manual trigger
-          if [[ -z "${{ github.event.inputs.description_of_changes }}" && -z "${{ github.event.inputs.files_changed }}" && -z "${{ github.event.inputs.reason_for_change }}" && -z "${{ github.event.inputs.task_ticket_issue }}" ]]; then
-            echo "Fetching PR description from PR"
+          # Check if the workflow is triggered manually
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "Using manual inputs"
+
+            # Capture manual inputs
+            DESCRIPTION_OF_CHANGES="${{ github.event.inputs.description_of_changes }}"
+            FILES_CHANGED="${{ github.event.inputs.files_changed }}"
+            REASON_FOR_CHANGE="${{ github.event.inputs.reason_for_change }}"
+            TASK_TICKET_ISSUE="${{ github.event.inputs.task_ticket_issue }}"
+
+            echo "PR Description: $DESCRIPTION_OF_CHANGES"
+            
+            # Ensure all required manual inputs are provided
+            if [[ -z "$DESCRIPTION_OF_CHANGES" || -z "$FILES_CHANGED" || -z "$REASON_FOR_CHANGE" || -z "$TASK_TICKET_ISSUE" ]]; then
+              echo "Error: All required fields (Description of changes, Files Changed, Reason for Change, Task/Ticket/Issue) must be provided for manual trigger."
+              exit 1
+            fi
+          else
+            # If triggered by a PR, fetch the PR description
+            PR_NUMBER=${{ github.event.pull_request.number }}
+            echo "Fetching PR description from PR #$PR_NUMBER"
             PR_DESCRIPTION=$(curl -s \
               -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
               | jq -r '.body')
-          else
-            echo "Using manual inputs"
-            PR_DESCRIPTION="${{ github.event.inputs.description_of_changes }}"
 
-            # Only proceed if all required inputs are provided for manual trigger
-            if [[ -z "${{ github.event.inputs.files_changed }}" || -z "${{ github.event.inputs.reason_for_change }}" || -z "${{ github.event.inputs.task_ticket_issue }}" ]]; then
-              echo "Error: All required inputs (Files Changed, Reason for Change, Task/Ticket/Issue) must be provided."
-              exit 1
-            fi
+            echo "PR Description: $PR_DESCRIPTION"
           fi
-
-          echo "PR Description: $PR_DESCRIPTION"
           echo "$PR_DESCRIPTION" > pr_description.txt
 
       - name: Validate PR Description
