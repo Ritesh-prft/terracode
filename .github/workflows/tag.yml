@@ -10,9 +10,8 @@ on:
   workflow_dispatch:
     inputs:
       tag_to_deploy:
-        description: 'Enter a tag to deploy (optional, leave blank for latest)'
-        required: false
-        default: ''
+        description: 'Tag to deploy'
+        required: true
 
 
 jobs:
