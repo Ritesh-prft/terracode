@@ -243,6 +243,35 @@ jobs:
           echo "Created and pushed tag: $NEW_TAG"
 
       - name: Fetch PR commit message using GitHub API
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        
+        id: pr_commit_message
+        run: |
+          TAG_TO_DEPLOY="${{ github.event.inputs.tag_to_deploy }}"
+
+          # Step 1: Get the commit SHA for the tag
+          COMMIT_SHA=$(git rev-list -n 1 "$TAG_TO_DEPLOY")
+          echo "Commit SHA for tag $TAG_TO_DEPLOY: $COMMIT_SHA"
+              
+          # Step 2: Use the GitHub API to find the PR associated with the commit SHA
+          PR_NUMBER=$(curl -s \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls?state=all&head=${COMMIT_SHA}" \
+            | jq -r '.[0].number')
+          COMMIT_MESSAGE=$(curl -s \
+            -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
+            | jq -r '.title + " " + .body')
+
+          # Sanitize the commit message: Remove newlines and extra spaces
+          COMMIT_MESSAGE=$(echo "$COMMIT_MESSAGE" | tr -d '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+
+          # Set commit message for later use, ensuring it’s valid for the environment variable
+          echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_ENV
+          echo "Fetched Commit Message: $COMMIT_MESSAGE"
+
+      - name: Fetch PR commit message using GitHub API
+        if: ${{ github.event_name != 'workflow_dispatch' }}
         id: pr_commit_message
         run: |
           PR_NUMBER="${{ github.event.pull_request.number }}"
@@ -260,6 +289,15 @@ jobs:
 
           
       - name: Checkout the tag for deployment
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          NEW_TAG="${{ github.event.inputs.tag_to_deploy }}"
+          git checkout $NEW_TAG
+          echo "Checked out tag: $NEW_TAG"
+          ls -alh  # List files to verify the tag content
+      
+      - name: Checkout the tag for deployment
+        if: ${{ github.event_name != 'workflow_dispatch' }}
         run: |
           NEW_TAG="${{ env.NEW_TAG }}"
           git checkout $NEW_TAG
