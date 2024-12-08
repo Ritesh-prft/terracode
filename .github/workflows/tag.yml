@@ -123,12 +123,11 @@ jobs:
             COMMIT_SHA=$(git rev-list -n 1 "$TAG_TO_DEPLOY")
             echo "Commit SHA for tag $TAG_TO_DEPLOY: $COMMIT_SHA"
               
-            # Step 2: Find the PR containing the commit SHA
-            # Fetch all PRs (including closed ones)
+            # Step 2: Use the GitHub API to find the PR associated with the commit SHA
             PR_NUMBER=$(curl -s \
               -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/${{ github.repository }}/pulls?state=all" \
-              | jq -r '.[] | select(.head.sha == "'$COMMIT_SHA'") | .number' | head -n 1)
+              "https://api.github.com/repos/${{ github.repository }}/pulls?state=all&per_page=100&page=1" \
+              | jq -r ".[] | select(.head.sha == \"$COMMIT_SHA\") | .number")
 
             if [[ -z "$PR_NUMBER" ]]; then
               echo "Error: No PR found for the given tag."
@@ -143,15 +142,11 @@ jobs:
               | jq -r '.body')
 
             echo "PR Description fetched for the tag: $PR_DESCRIPTION"
-            # Output the PR description to the console for debugging
-            echo "$PR_DESCRIPTION"  # Debugging output
-
+            
             # Save the PR description to a file
             echo "$PR_DESCRIPTION" > pr_description.txt
-              
-            # Output the saved description for debugging
             echo "PR Description saved to pr_description.txt"
-          fi  # Close the if statement here
+
 
       - name: Validate PR Description
         run: |
