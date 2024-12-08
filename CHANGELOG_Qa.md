@@ -405,3 +405,11 @@
 - Deployed version tag-v45.0.0
 - Commit Message: MAJOR seperated validation part ### Description of changes ###:MAJOR seperated validation part### Files Changed ###:MAJOR seperated validation part### Reason for Change ###:MAJOR seperated validation part### Task/Ticket/Issue ###:MAJOR seperated validation part
 
+
+## [tag-v46.0.0] - 2024-12-08
+### Deployed to:
+- **qa**: 2024-12-08
+### Changes:
+- Deployed version tag-v46.0.0
+- Commit Message: MAJOR seperated validation part ### Description of changes ###: testing11111111111111### Files Changed ###:testing11111111111111### Reason for Change ###:testing11111111111111### Task/Ticket/Issue ###:testing11111111111111
+
