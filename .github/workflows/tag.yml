@@ -336,7 +336,7 @@ jobs:
           # Get the changed files from the PR using GitHub API
           CHANGED_FILES=$(curl -s \
             -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}}/files" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}/files" \
             | jq -r '.[].filename')
 
           # Filter only files in the /src path
@@ -350,6 +350,7 @@ jobs:
           else
             echo "No files changed in /src."
           fi
+
 
       # Optionally, use the filtered files (e.g., copy them to S3)
       - name: Deploy changed files to S3 (example)
