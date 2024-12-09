@@ -827,3 +827,12 @@ fixed changelog logs workflow yml file want more logs in changelog no ticket
 - Deployed version tag-v71.3.0
 - Commit Message: Feature/tagging 01 ### Description of changes ###:01### Files Changed ###:01### Reason for Change ###:01### Task/Ticket/Issue ###:01
 
+
+#####
+## [tag-v71.4.0] - 2024-12-09
+### Deployed to:
+- **dev**: 2024-12-09
+### Changes:
+- Deployed version tag-v71.4.0
+- Commit Message: Feature/tagging 01 ### Description of changes ###:01### Files Changed ###:01### Reason for Change ###:01### Task/Ticket/Issue ###:01
+
