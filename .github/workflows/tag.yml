@@ -440,7 +440,7 @@ jobs:
       # Add 'automerge' label using the GitHub CLI
       - name: Add 'automerge' label with GitHub CLI
         run: |
-          gh pr label ${{ github.event.pull_request.number }} --add "automerge"
+          gh pr edit ${{ github.event.pull_request.number }} --add-label "automerge"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
