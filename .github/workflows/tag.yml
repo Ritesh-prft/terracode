@@ -346,6 +346,11 @@ jobs:
           if [ -n "$SRC_CHANGED_FILES" ]; then
             echo "Files changed in /src:"
             echo "$SRC_CHANGED_FILES"
+            echo "Current working directory: $(pwd)"
+            mkdir -p /dags/changedfiles/  # Ensure the directory exists
+            echo "$SRC_CHANGED_FILES" > /dags/changedfiles/changed_files.txt
+            cd /dags/changedfiles/
+            echo "Current working directory: $(pwd)"
             echo "$SRC_CHANGED_FILES" > changed_files.txt
             echo "$SRC_CHANGED_FILES" > /home/runner/work/my-repo/changed_files.txt
 
