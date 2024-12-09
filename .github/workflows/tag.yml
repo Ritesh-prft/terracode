@@ -323,6 +323,7 @@ jobs:
           
 
       - name: Update Changelog for Dev Deployment
+        id: dev_changelog
         run: |
           TAG_NAME="${{ env.NEW_TAG }}"
           DATE=$(date +'%Y-%m-%d')
@@ -355,6 +356,35 @@ jobs:
 
           # Push the changes
           git push origin HEAD:main
+
+      # Step 4: Check if deployment was successful
+      - name: Check deployment status
+        if: ${{ steps.dev_changelog.outcome == 'success' }}
+        run: |
+          echo "Dev deployment to S3 completed successfully."
+
+      # Step 5: Auto-merge PR if deployment was successful
+      - name: Auto-merge PR
+        if: ${{ steps.dev_changelog.outcome == 'success' }}  # Only run this step if deployment was successful
+        run: |
+          # GitHub API token (created automatically in the GitHub Actions context)
+          GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
+
+          # PR details
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          echo $PR_NUMBER
+          REPO_OWNER=${{ github.repository_owner }}
+          echo $REPO_OWNER
+          REPO_NAME=${{ github.event.repository.name }}
+          echo $REPO_NAME
+
+          # Merge PR using GitHub API
+          echo "Merging PR #$PR_NUMBER..."
+          curl -X PUT \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -d '{"merge_method": "merge"}' \
+            "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/pulls/$PR_NUMBER/merge"
 
       - name: Checkout the tag for deployment
         run: |
