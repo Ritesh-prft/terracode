@@ -378,6 +378,7 @@ jobs:
           REPO_NAME=${{ github.event.repository.name }}
           echo $REPO_NAME
 
+
           # Merge PR using GitHub API
           echo "Merging PR #$PR_NUMBER..."
           curl -X PUT \
