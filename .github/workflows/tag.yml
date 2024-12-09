@@ -374,12 +374,17 @@ jobs:
             if [ -f "$file" ]; then
               echo "Copying '$file' to S3..."
 
-              # Use quotes to handle files with spaces
-              aws s3 cp "$file" "s3://githubactions-testing-bucket/dags/$file"
+              # Remove the 'src/' part from the file path if it exists
+              TARGET_FILE_PATH=$(echo "$file" | sed 's|^src/||')
+
+              # Copy the file to the S3 bucket without the 'src/' prefix
+              aws s3 cp "$file" "s3://githubactions-testing-bucket/dags/$TARGET_FILE_PATH"
             else
               echo "File $file not found."
             fi
           done < /home/runner/work/terracode/terracode/changed_files.txt
+
+
 
       # - name: Deploy to Dev
       #   run: |
