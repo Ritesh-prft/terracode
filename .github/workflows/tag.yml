@@ -365,15 +365,19 @@ jobs:
       #     aws s3 cp --recursive ./src s3://your-bucket-path --exclude "*" --include "$(cat changed_files.txt)"
 
       - name: Deploy to Dev (Copy only changed files)
-
         run: |
           echo "Deploying to Dev environment using tag ${{ env.NEW_TAG }}"
           echo "Current working directory: $(pwd)"
+          
           # Loop through the changed files and copy them to the S3 bucket
           while IFS= read -r file; do
             if [ -f "$file" ]; then
-              echo "Copying $file to S3..."
-              aws s3 cp "$file" s3://githubactions-testing-bucket/dags/$file
+              echo "Copying '$file' to S3..."
+
+              # Use quotes to handle files with spaces
+              aws s3 cp "$file" "s3://githubactions-testing-bucket/dags/$file"
+            else
+              echo "File $file not found."
             fi
           done < /home/runner/work/terracode/terracode/changed_files.txt
 
