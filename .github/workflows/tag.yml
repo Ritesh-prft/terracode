@@ -438,11 +438,10 @@ jobs:
 
    
       # Add 'automerge' label using the GitHub CLI
-      - name: Add 'automerge' label with GitHub CLI
-        run: |
-          gh pr edit ${{ github.event.pull_request.number }} --add-label "automerge"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: ubuntudroid/automerge-labeler@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          label: 'auto-merge' # optional
 
       - name: Automerge PR
         id: automerge
