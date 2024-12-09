@@ -710,3 +710,12 @@ fixed changelog logs workflow yml file want more logs in changelog no ticket
 - Deployed version tag-v50.0.0
 - Commit Message: MAJOR updated pipeline file to add auto merge ### Description of changes ###:automerge### Files Changed ###:automerge### Reason for Change ###:automerge### Task/Ticket/Issue ###:automerge
 
+
+#####
+## [tag-v51.0.0] - 2024-12-09
+### Deployed to:
+- **dev**: 2024-12-09
+### Changes:
+- Deployed version tag-v51.0.0
+- Commit Message: MAJOR updated pipeline file to add auto merge ### Description of changes ###:automerge### Files Changed ###:automerge### Reason for Change ###:automerge### Task/Ticket/Issue ###:automerge
+
