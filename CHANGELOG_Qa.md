@@ -663,3 +663,11 @@
 - Deployed version tag-v69.0.0
 - Commit Message: Feature/git tagging ### Description of changes ###:tagging### Files Changed ###:tagging### Reason for Change ###:tagging### Task/Ticket/Issue ###:tagging
 
+
+## [tag-v70.0.0] - 2024-12-09
+### Deployed to:
+- **qa**: 2024-12-09
+### Changes:
+- Deployed version tag-v70.0.0
+- Commit Message: Feature/git tagging ### Description of changes ###:tagging### Files Changed ###:tagging### Reason for Change ###:tagging### Task/Ticket/Issue ###:tagging
+
