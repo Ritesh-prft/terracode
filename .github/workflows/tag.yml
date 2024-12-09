@@ -299,9 +299,6 @@ jobs:
           echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_ENV
           echo "Fetched Commit Message: $COMMIT_MESSAGE"
 
-          
-      
-
       - name: Set up AWS CLI
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -309,10 +306,18 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1  # Update to your region
 
-      - name: Checkout PR branch
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ github.head_ref }}  # Checkout the PR branch
+      # - name: Checkout PR branch
+      #   uses: actions/checkout@v3
+      #   with:
+      #     ref: ${{ github.head_ref }}  # Checkout the PR branch
+
+      - name: Checkout the tag for deployment
+        run: |
+          NEW_TAG="${{ env.NEW_TAG }}"
+          git fetch --tags
+          git checkout $NEW_TAG
+          echo "Checked out tag: $NEW_TAG"
+          ls -alh  # List files to verify the tag content
 
       - name: Fetch PR changed files using GitHub API
         id: changed_files
@@ -346,13 +351,7 @@ jobs:
             echo "No files changed in /src."
           fi
 
-      - name: Checkout the tag for deployment
-        run: |
-          NEW_TAG="${{ env.NEW_TAG }}"
-          git fetch --tags
-          git checkout $NEW_TAG
-          echo "Checked out tag: $NEW_TAG"
-          ls -alh  # List files to verify the tag content
+      
 
       # Optionally, use the filtered files (e.g., copy them to S3)
       # - name: Deploy changed files to S3 (example)
