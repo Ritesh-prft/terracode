@@ -365,7 +365,7 @@ jobs:
       #     aws s3 cp --recursive ./src s3://your-bucket-path --exclude "*" --include "$(cat changed_files.txt)"
 
       - name: Deploy to Dev (Copy only changed files)
-        working-directory: src
+
         run: |
           echo "Deploying to Dev environment using tag ${{ env.NEW_TAG }}"
           echo "Current working directory: $(pwd)"
