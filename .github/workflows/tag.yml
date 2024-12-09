@@ -441,7 +441,7 @@ jobs:
       - uses: ubuntudroid/automerge-labeler@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          label: 'auto-merge' # optional
+          label: 'automerge' # optional
 
       - name: Automerge PR
         id: automerge
