@@ -755,3 +755,12 @@ fixed changelog logs workflow yml file want more logs in changelog no ticket
 - Deployed version tag-v62.0.0
 - Commit Message: Feature/git tagging ### Description of changes ###:tagging### Files Changed ###:tagging### Reason for Change ###:tagging### Task/Ticket/Issue ###:tagging
 
+
+#####
+## [tag-v67.0.0] - 2024-12-09
+### Deployed to:
+- **dev**: 2024-12-09
+### Changes:
+- Deployed version tag-v67.0.0
+- Commit Message: Feature/git tagging ### Description of changes ###:tagging### Files Changed ###:tagging### Reason for Change ###:tagging### Task/Ticket/Issue ###:tagging
+
