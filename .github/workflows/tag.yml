@@ -365,7 +365,7 @@ jobs:
 
       # Step 5: Auto-merge PR if deployment was successful
       - name: Auto-merge PR
-        if: ${{ steps.deploy.outcome == 'success' }}  # Only run this step if deployment was successful
+        if: ${{ steps.dev_changelog.outcome == 'success' }}  # Only run this step if deployment was successful
         run: |
           # GitHub API token (created automatically in the GitHub Actions context)
           GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
