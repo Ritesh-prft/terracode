@@ -347,6 +347,8 @@ jobs:
             echo "Files changed in /src:"
             echo "$SRC_CHANGED_FILES"
             echo "$SRC_CHANGED_FILES" > changed_files.txt
+            echo "$SRC_CHANGED_FILES" > /home/runner/work/my-repo/changed_files.txt
+
           else
             echo "No files changed in /src."
           fi
@@ -373,7 +375,7 @@ jobs:
               echo "Copying $file to S3..."
               aws s3 cp "$file" s3://githubactions-testing-bucket/dags/$file
             fi
-          done < changed_files.txt
+          done < /home/runner/work/my-repo/changed_files.txt
 
       # - name: Deploy to Dev
       #   run: |
