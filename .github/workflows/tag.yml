@@ -375,7 +375,7 @@ jobs:
               echo "Copying '$file' to S3..."
 
               # Remove the 'src/' part from the file path if it exists
-              TARGET_FILE_PATH=$(echo "$file" | sed 's/^src\///')
+              TARGET_FILE_PATH=$(echo "$file" | sed 's|^src/||')
 
               # Copy the file to the S3 bucket without the 'src/' prefix
               aws s3 cp "$file" "s3://githubactions-testing-bucket/dags/$TARGET_FILE_PATH"
@@ -383,6 +383,7 @@ jobs:
               echo "File $file not found."
             fi
           done < /home/runner/work/terracode/terracode/changed_files.txt
+
 
 
       # - name: Deploy to Dev
