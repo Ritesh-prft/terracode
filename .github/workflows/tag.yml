@@ -13,6 +13,8 @@ on:
       - synchronize  # Trigger when the PR is updated (e.g., new commits pushed)
       - reopened     # Trigger when a PR is reopened
       - edited      # Trigger when a PR is edited
+    paths:
+      - 'src/**'
   
 
 
