@@ -791,3 +791,12 @@ fixed changelog logs workflow yml file want more logs in changelog no ticket
 - Deployed version tag-v71.0.0
 - Commit Message: Feature/git tagging ### Description of changes ###:tagging### Files Changed ###:tagging### Reason for Change ###:tagging### Task/Ticket/Issue ###:tagging
 
+
+#####
+## [tag-v71.0.1] - 2024-12-09
+### Deployed to:
+- **dev**: 2024-12-09
+### Changes:
+- Deployed version tag-v71.0.1
+- Commit Message: PATCH updated pipeline file to add auto merge ### Description of changes ###:PATCH ### Files Changed ###:PATCH ### Reason for Change ###:PATCH ### Task/Ticket/Issue ###:PATCH
+
