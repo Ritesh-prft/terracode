@@ -583,3 +583,11 @@
 - Deployed version tag-v47.0.0
 - Commit Message: Feat/tagging commit ### Description of changes ###:Testing### Files Changed ###:Testing### Reason for Change ###:Testing### Task/Ticket/Issue ###:Testing
 
+
+## [tag-v48.0.0] - 2024-12-09
+### Deployed to:
+- **prod**: 2024-12-09
+### Changes:
+- Deployed version tag-v48.0.0
+- Commit Message: Feat/tagging commit ### Description of changes ###:Testing### Files Changed ###:Testing### Reason for Change ###:Testing### Task/Ticket/Issue ###:Testing
+
