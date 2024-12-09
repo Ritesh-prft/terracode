@@ -575,3 +575,11 @@
 - Deployed version tag-v44.0.0
 - Commit Message: MAJOR seperated validation part ### Description of changes ###: testing11111111111111### Files Changed ###:testing11111111111111### Reason for Change ###:testing11111111111111### Task/Ticket/Issue ###:testing11111111111111
 
+
+## [tag-v47.0.0] - 2024-12-09
+### Deployed to:
+- **prod**: 2024-12-09
+### Changes:
+- Deployed version tag-v47.0.0
+- Commit Message: Feat/tagging commit ### Description of changes ###:Testing### Files Changed ###:Testing### Reason for Change ###:Testing### Task/Ticket/Issue ###:Testing
+
