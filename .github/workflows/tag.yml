@@ -323,7 +323,7 @@ jobs:
         id: changed_files
         run: |
           # Get the PR number
-          PR_NUMBER="${{ github.event.pull_request.number }}"
+          PR_NUMBER=${{ github.event.pull_request.number }}
 
           # Get changed files in the PR from GitHub API
           CHANGED_FILES=$(curl -s \
