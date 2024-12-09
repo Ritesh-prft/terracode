@@ -349,6 +349,7 @@ jobs:
       - name: Checkout the tag for deployment
         run: |
           NEW_TAG="${{ env.NEW_TAG }}"
+          git fetch --tags
           git checkout $NEW_TAG
           echo "Checked out tag: $NEW_TAG"
           ls -alh  # List files to verify the tag content
