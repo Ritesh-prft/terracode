@@ -347,12 +347,7 @@ jobs:
             echo "Files changed in /src:"
             echo "$SRC_CHANGED_FILES"
             echo "Current working directory: $(pwd)"
-            mkdir -p /dags/changedfiles/  # Ensure the directory exists
-            echo "$SRC_CHANGED_FILES" > /dags/changedfiles/changed_files.txt
-            cd /dags/changedfiles/
-            echo "Current working directory: $(pwd)"
             echo "$SRC_CHANGED_FILES" > changed_files.txt
-            echo "$SRC_CHANGED_FILES" > /home/runner/work/my-repo/changed_files.txt
 
           else
             echo "No files changed in /src."
@@ -373,14 +368,14 @@ jobs:
         working-directory: src
         run: |
           echo "Deploying to Dev environment using tag ${{ env.NEW_TAG }}"
-
+          echo "Current working directory: $(pwd)"
           # Loop through the changed files and copy them to the S3 bucket
           while IFS= read -r file; do
             if [ -f "$file" ]; then
               echo "Copying $file to S3..."
               aws s3 cp "$file" s3://githubactions-testing-bucket/dags/$file
             fi
-          done < /home/runner/work/my-repo/changed_files.txt
+          done < /home/runner/work/terracode/terracode/changed_files.txt
 
       # - name: Deploy to Dev
       #   run: |
