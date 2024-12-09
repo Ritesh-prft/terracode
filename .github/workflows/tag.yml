@@ -437,17 +437,19 @@ jobs:
             "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/pulls/$PR_NUMBER/merge"
 
    
-      - id: automerge
-        name: automerge
-        uses: "pascalgn/automerge-action@v0.15.6"
+      - name: Add 'automerge' label
+        uses: peter-evans/labeler@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          labels: 'automerge'
+
+      - name: Automerge PR
+        id: automerge
+        uses: pascalgn/automerge-action@v0.15.6
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-      - name: feedback
-        if: ${{ steps.automerge.outputs.mergeResult == 'merged' }}
-        run: |
-          echo "Pull request ${{ steps.automerge.outputs.pullRequestNumber }} merged!" 
 
-          
+
       - name: Checkout the tag for deployment
         run: |
           NEW_TAG="${{ env.NEW_TAG }}"
