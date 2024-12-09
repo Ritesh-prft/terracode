@@ -13,6 +13,8 @@ on:
       - synchronize  # Trigger when the PR is updated (e.g., new commits pushed)
       - reopened     # Trigger when a PR is reopened
       - edited      # Trigger when a PR is edited
+    paths:
+      - 'src/**'
   
 
 
@@ -297,14 +299,6 @@ jobs:
           echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_ENV
           echo "Fetched Commit Message: $COMMIT_MESSAGE"
 
-          
-      - name: Checkout the tag for deployment
-        run: |
-          NEW_TAG="${{ env.NEW_TAG }}"
-          git checkout $NEW_TAG
-          echo "Checked out tag: $NEW_TAG"
-          ls -alh  # List files to verify the tag content
-
       - name: Set up AWS CLI
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -312,13 +306,88 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1  # Update to your region
 
-      - name: Deploy to Dev
+      # - name: Checkout PR branch
+      #   uses: actions/checkout@v3
+      #   with:
+      #     ref: ${{ github.head_ref }}  # Checkout the PR branch
+
+      - name: Checkout the tag for deployment
+        run: |
+          NEW_TAG="${{ env.NEW_TAG }}"
+          git fetch --tags
+          git checkout $NEW_TAG
+          echo "Checked out tag: $NEW_TAG"
+          ls -alh  # List files to verify the tag content
+
+      - name: Fetch PR changed files using GitHub API
+        id: changed_files
+        run: |
+          # Ensure PR number is available
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          echo "PR Number: $PR_NUMBER"
+
+          if [ -z "$PR_NUMBER" ]; then
+            echo "PR number not found. Exiting."
+            exit 1
+          fi
+
+          echo "Fetching changed files for PR #$PR_NUMBER..."
+
+          # Get the changed files from the PR using GitHub API
+          CHANGED_FILES=$(curl -s \
+            -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}/files" \
+            | jq -r '.[].filename')
+
+          # Filter only files in the /src path
+          SRC_CHANGED_FILES=$(echo "$CHANGED_FILES" | grep "^src/")
+
+          # If there are any changes in /src, print them
+          if [ -n "$SRC_CHANGED_FILES" ]; then
+            echo "Files changed in /src:"
+            echo "$SRC_CHANGED_FILES"
+            echo "Current working directory: $(pwd)"
+            echo "$SRC_CHANGED_FILES" > changed_files.txt
+
+          else
+            echo "No files changed in /src."
+          fi
+
+      
+
+      # Optionally, use the filtered files (e.g., copy them to S3)
+      # - name: Deploy changed files to S3 (example)
+      #   if: steps.changed_files.outputs.changed_files != ''
+      #   run: |
+      #     # Assuming the changed files are listed in changed_files.txt
+      #     cat changed_files.txt
+      #     # Add your deployment commands here, e.g., using `aws s3 cp` to copy files
+      #     aws s3 cp --recursive ./src s3://your-bucket-path --exclude "*" --include "$(cat changed_files.txt)"
+
+      - name: Deploy to Dev (Copy only changed files)
         run: |
           echo "Deploying to Dev environment using tag ${{ env.NEW_TAG }}"
-          aws s3 sync . s3://githubactions-testing-bucket/dags
+          echo "Current working directory: $(pwd)"
           
-        id: mwaa_files
-        working-directory: src
+          # Loop through the changed files and copy them to the S3 bucket
+          while IFS= read -r file; do
+            if [ -f "$file" ]; then
+              echo "Copying '$file' to S3..."
+
+              # Use quotes to handle files with spaces
+              aws s3 cp "$file" "s3://githubactions-testing-bucket/dags/$file"
+            else
+              echo "File $file not found."
+            fi
+          done < /home/runner/work/terracode/terracode/changed_files.txt
+
+      # - name: Deploy to Dev
+      #   run: |
+      #     echo "Deploying to Dev environment using tag ${{ env.NEW_TAG }}"
+      #     aws s3 sync . s3://githubactions-testing-bucket/dags
+          
+      #   id: mwaa_files
+      #   working-directory: src
       
           
 
