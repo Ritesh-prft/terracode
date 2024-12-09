@@ -378,13 +378,21 @@ jobs:
           REPO_NAME=${{ github.event.repository.name }}
           echo $REPO_NAME
 
-          # Merge PR using GitHub API
+
+          # PR details
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          REPO_OWNER=${{ github.repository_owner }}
+          REPO_NAME=${{ github.event.repository.name }}
+          
+          # Merge the PR using the GitHub API
           echo "Merging PR #$PR_NUMBER..."
           curl -X PUT \
             -H "Authorization: token $GITHUB_TOKEN" \
             -H "Accept: application/vnd.github.v3+json" \
             -d '{"merge_method": "merge"}' \
             "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/pulls/$PR_NUMBER/merge"
+
+       
 
       - name: Checkout the tag for deployment
         run: |
