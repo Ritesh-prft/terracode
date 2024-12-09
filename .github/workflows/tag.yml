@@ -324,13 +324,14 @@ jobs:
         run: |
           # Get the PR number
           PR_NUMBER=${{ github.event.pull_request.number }}
-
+          echo $PR_NUMBER
           # Get changed files in the PR from GitHub API
+          echo "Getting changed file list"
           CHANGED_FILES=$(curl -s \
             -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
             "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}}/files" \
             | jq -r '.[].filename')
-
+          
           # Filter files to only include those in /src path
           SRC_CHANGED_FILES=$(echo "$CHANGED_FILES" | grep "^src/")
 
