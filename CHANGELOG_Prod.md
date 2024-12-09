@@ -631,3 +631,11 @@
 - Deployed version tag-v53.0.0
 - Commit Message: MAJOR updated pipeline file to add auto merge ### Description of changes ###:newbranch### Files Changed ###:newbranch### Reason for Change ###:newbranch### Task/Ticket/Issue ###:newbranch
 
+
+## [tag-v54.0.0] - 2024-12-09
+### Deployed to:
+- **prod**: 2024-12-09
+### Changes:
+- Deployed version tag-v54.0.0
+- Commit Message: MAJOR updated pipeline file to add auto merge ### Description of changes ###:newbranch### Files Changed ###:newbranch### Reason for Change ###:newbranch### Task/Ticket/Issue ###:newbranch
+
