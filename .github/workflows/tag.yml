@@ -314,50 +314,63 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1  # Update to your region
 
-      - name: Get the list of changed files in the PR
+      - name: Checkout PR branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}  # Checkout the PR branch
+
+      - name: Fetch PR changed files using GitHub API
         id: changed_files
         run: |
-          # Get the latest tag
-          LATEST_TAG="${{ env.NEW_TAG }}"
-          
-          # Fetch the latest changes from both the base branch and the PR branch
-          git fetch origin main  # assuming `main` is your base branch
-          git fetch origin ${{ github.head_ref }}
-          
-          # Get the list of changed files between the base branch and the PR
-          CHANGED_FILES=$(git diff --name-only origin/main...${{ github.head_ref }})
+          # Get the PR number
+          PR_NUMBER="${{ github.event.pull_request.number }}"
 
-          echo "Changed files: $CHANGED_FILES"
-          
-          # Save changed files to be used in later steps
-          echo "$CHANGED_FILES" > changed_files.txt
+          # Get changed files in the PR from GitHub API
+          CHANGED_FILES=$(curl -s \
+            -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}}/files" \
+            | jq -r '.[].filename')
 
-      - name: Set up AWS CLI
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1  # Update to your region
+          # Filter files to only include those in /src path
+          SRC_CHANGED_FILES=$(echo "$CHANGED_FILES" | grep "^src/")
 
-      - name: Deploy to Dev (Copy only changed files)
+          # If there are changes in /src, print the list
+          if [ -n "$SRC_CHANGED_FILES" ]; then
+            echo "Files changed in /src:"
+            echo "$SRC_CHANGED_FILES"
+            echo "$SRC_CHANGED_FILES" > changed_files.txt
+          else
+            echo "No files changed in /src"
+          fi
+
+      # Optionally, use the filtered files (e.g., copy them to S3)
+      - name: Deploy changed files to S3 (example)
+        if: steps.changed_files.outputs.changed_files != ''
         run: |
-          echo "Deploying to Dev environment using tag ${{ env.NEW_TAG }}"
+          # Assuming the changed files are listed in changed_files.txt
+          cat changed_files.txt
+          # Add your deployment commands here, e.g., using `aws s3 cp` to copy files
+          aws s3 cp --recursive ./src s3://your-bucket-path --exclude "*" --include "$(cat changed_files.txt)"
 
-          # Loop through the changed files and copy them to the S3 bucket
-          while IFS= read -r file; do
-            if [ -f "$file" ]; then
-              echo "Copying $file to S3..."
-              aws s3 cp "$file" s3://githubactions-testing-bucket/dags/$file
-            fi
-          done < changed_files.txt
+      # - name: Deploy to Dev (Copy only changed files)
+      #   run: |
+      #     echo "Deploying to Dev environment using tag ${{ env.NEW_TAG }}"
 
-      - name: Deploy to Dev
-        run: |
-          echo "Deploying to Dev environment using tag ${{ env.NEW_TAG }}"
-          aws s3 sync . s3://githubactions-testing-bucket/dags
+      #     # Loop through the changed files and copy them to the S3 bucket
+      #     while IFS= read -r file; do
+      #       if [ -f "$file" ]; then
+      #         echo "Copying $file to S3..."
+      #         aws s3 cp "$file" s3://githubactions-testing-bucket/dags/$file
+      #       fi
+      #     done < changed_files.txt
+
+      # - name: Deploy to Dev
+      #   run: |
+      #     echo "Deploying to Dev environment using tag ${{ env.NEW_TAG }}"
+      #     aws s3 sync . s3://githubactions-testing-bucket/dags
           
-        id: mwaa_files
-        working-directory: src
+      #   id: mwaa_files
+      #   working-directory: src
       
           
 
