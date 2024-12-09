@@ -322,26 +322,33 @@ jobs:
       - name: Fetch PR changed files using GitHub API
         id: changed_files
         run: |
-          # Get the PR number
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          echo $PR_NUMBER
-          # Get changed files in the PR from GitHub API
-          echo "Getting changed file list"
+          # Ensure PR number is available
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          echo "PR Number: $PR_NUMBER"
+
+          if [ -z "$PR_NUMBER" ]; then
+            echo "PR number not found. Exiting."
+            exit 1
+          fi
+
+          echo "Fetching changed files for PR #$PR_NUMBER..."
+
+          # Get the changed files from the PR using GitHub API
           CHANGED_FILES=$(curl -s \
             -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
             "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}}/files" \
             | jq -r '.[].filename')
-          
-          # Filter files to only include those in /src path
+
+          # Filter only files in the /src path
           SRC_CHANGED_FILES=$(echo "$CHANGED_FILES" | grep "^src/")
 
-          # If there are changes in /src, print the list
+          # If there are any changes in /src, print them
           if [ -n "$SRC_CHANGED_FILES" ]; then
             echo "Files changed in /src:"
             echo "$SRC_CHANGED_FILES"
             echo "$SRC_CHANGED_FILES" > changed_files.txt
           else
-            echo "No files changed in /src"
+            echo "No files changed in /src."
           fi
 
       # Optionally, use the filtered files (e.g., copy them to S3)
