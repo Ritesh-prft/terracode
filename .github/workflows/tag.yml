@@ -412,7 +412,7 @@ jobs:
         if: ${{ steps.dev_changelog.outcome == 'success' }}  # Only run this step if deployment was successful
         run: |
           # GitHub API token (created automatically in the GitHub Actions context)
-          GITHUB_TOKEN="${{ secrets.PAT_TOKEN }}"
+          GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
 
           # PR details
           PR_NUMBER=${{ github.event.pull_request.number }}
@@ -436,8 +436,18 @@ jobs:
             -d '{"merge_method": "merge"}' \
             "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/pulls/$PR_NUMBER/merge"
 
-       
+   
+      - id: automerge
+        name: automerge
+        uses: "pascalgn/automerge-action@v0.15.6"
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      - name: feedback
+        if: ${{ steps.automerge.outputs.mergeResult == 'merged' }}
+        run: |
+          echo "Pull request ${{ steps.automerge.outputs.pullRequestNumber }} merged!" 
 
+          
       - name: Checkout the tag for deployment
         run: |
           NEW_TAG="${{ env.NEW_TAG }}"
