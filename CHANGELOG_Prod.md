@@ -647,3 +647,11 @@
 - Deployed version tag-v62.0.0
 - Commit Message: Feature/git tagging ### Description of changes ###:tagging### Files Changed ###:tagging### Reason for Change ###:tagging### Task/Ticket/Issue ###:tagging
 
+
+## [tag-v67.0.0] - 2024-12-09
+### Deployed to:
+- **prod**: 2024-12-09
+### Changes:
+- Deployed version tag-v67.0.0
+- Commit Message: Feature/git tagging ### Description of changes ###:tagging### Files Changed ###:tagging### Reason for Change ###:tagging### Task/Ticket/Issue ###:tagging
+
