@@ -306,10 +306,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1  # Update to your region
 
-      # - name: Checkout PR branch
-      #   uses: actions/checkout@v3
-      #   with:
-      #     ref: ${{ github.head_ref }}  # Checkout the PR branch
 
       - name: Checkout the tag for deployment
         run: |
@@ -353,16 +349,6 @@ jobs:
             echo "No files changed in /src."
           fi
 
-      
-
-      # Optionally, use the filtered files (e.g., copy them to S3)
-      # - name: Deploy changed files to S3 (example)
-      #   if: steps.changed_files.outputs.changed_files != ''
-      #   run: |
-      #     # Assuming the changed files are listed in changed_files.txt
-      #     cat changed_files.txt
-      #     # Add your deployment commands here, e.g., using `aws s3 cp` to copy files
-      #     aws s3 cp --recursive ./src s3://your-bucket-path --exclude "*" --include "$(cat changed_files.txt)"
 
       - name: Deploy to Dev (Copy only changed files)
         run: |
@@ -378,22 +364,11 @@ jobs:
               TARGET_FILE_PATH=$(echo "$file" | sed 's|^src/||')
 
               # Copy the file to the S3 bucket without the 'src/' prefix
-              aws s3 cp "$file" "s3://githubactions-testing-bucket/dags/$TARGET_FILE_PATH"
+              aws s3 cp "$file" "s3://githubactions-testing-bucket/dev/$TARGET_FILE_PATH"
             else
               echo "File $file not found."
             fi
           done < /home/runner/work/terracode/terracode/changed_files.txt
-
-
-
-      # - name: Deploy to Dev
-      #   run: |
-      #     echo "Deploying to Dev environment using tag ${{ env.NEW_TAG }}"
-      #     aws s3 sync . s3://githubactions-testing-bucket/dags
-          
-      #   id: mwaa_files
-      #   working-directory: src
-      
           
 
       - name: Update Changelog for Dev Deployment
@@ -431,18 +406,13 @@ jobs:
           # Push the changes
           git push origin HEAD:main
 
-      # Step 4: Check if deployment was successful
-      - name: Check deployment status
-        if: ${{ steps.dev_changelog.outcome == 'success' }}
-        run: |
-          echo "Dev deployment to S3 completed successfully."
 
       # Step 5: Auto-merge PR if deployment was successful
       - name: Auto-merge PR
         if: ${{ steps.dev_changelog.outcome == 'success' }}  # Only run this step if deployment was successful
         run: |
           # GitHub API token (created automatically in the GitHub Actions context)
-          GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          GITHUB_TOKEN="${{ secrets.PAT_TOKEN }}"
 
           # PR details
           PR_NUMBER=${{ github.event.pull_request.number }}
@@ -475,12 +445,25 @@ jobs:
           echo "Checked out tag: $NEW_TAG"
           ls -alh  # List files to verify the tag content
 
-      - name: Deploy to QA
+      - name: Deploy to Qa (Copy only changed files)
         run: |
-          echo "Deploying to QA environment using tag ${{ env.NEW_TAG }}"
-          dir
-          ls
-          # Add your deployment commands for the QA environment here.
+          echo "Deploying to Qa environment using tag ${{ env.NEW_TAG }}"
+          echo "Current working directory: $(pwd)"
+          
+          # Loop through the changed files and copy them to the S3 bucket
+          while IFS= read -r file; do
+            if [ -f "$file" ]; then
+              echo "Copying '$file' to S3..."
+
+              # Remove the 'src/' part from the file path if it exists
+              TARGET_FILE_PATH=$(echo "$file" | sed 's|^src/||')
+
+              # Copy the file to the S3 bucket without the 'src/' prefix
+              aws s3 cp "$file" "s3://githubactions-testing-bucket/qa/$TARGET_FILE_PATH"
+            else
+              echo "File $file not found."
+            fi
+          done < /home/runner/work/terracode/terracode/changed_files.txt
 
       - name: Update Changelog for Qa Deployment
         run: |
@@ -523,12 +506,25 @@ jobs:
           echo "Checked out tag: $NEW_TAG"
           ls -alh  # List files to verify the tag content
 
-      - name: Deploy to PROD
+      - name: Deploy to Prod (Copy only changed files)
         run: |
-          echo "Deploying to PROD environment using tag ${{ env.NEW_TAG }}"
-          dir
-          ls
-          # Add your deployment commands for the PROD environment here.
+          echo "Deploying to Prod environment using tag ${{ env.NEW_TAG }}"
+          echo "Current working directory: $(pwd)"
+          
+          # Loop through the changed files and copy them to the S3 bucket
+          while IFS= read -r file; do
+            if [ -f "$file" ]; then
+              echo "Copying '$file' to S3..."
+
+              # Remove the 'src/' part from the file path if it exists
+              TARGET_FILE_PATH=$(echo "$file" | sed 's|^src/||')
+
+              # Copy the file to the S3 bucket without the 'src/' prefix
+              aws s3 cp "$file" "s3://githubactions-testing-bucket/prod/$TARGET_FILE_PATH"
+            else
+              echo "File $file not found."
+            fi
+          done < /home/runner/work/terracode/terracode/changed_files.txt
 
       - name: Update Changelog for Prod Deployment
         run: |
