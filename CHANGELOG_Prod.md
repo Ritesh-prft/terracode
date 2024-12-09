@@ -687,3 +687,11 @@
 - Deployed version tag-v71.0.1
 - Commit Message: PATCH updated pipeline file to add auto merge ### Description of changes ###:PATCH ### Files Changed ###:PATCH ### Reason for Change ###:PATCH ### Task/Ticket/Issue ###:PATCH
 
+
+## [tag-v71.1.0] - 2024-12-09
+### Deployed to:
+- **prod**: 2024-12-09
+### Changes:
+- Deployed version tag-v71.1.0
+- Commit Message: Feature/tagging 01 ### Description of changes ###:01### Files Changed ###:01### Reason for Change ###:01### Task/Ticket/Issue ###:01
+
