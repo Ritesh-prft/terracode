@@ -300,12 +300,7 @@ jobs:
           echo "Fetched Commit Message: $COMMIT_MESSAGE"
 
           
-      - name: Checkout the tag for deployment
-        run: |
-          NEW_TAG="${{ env.NEW_TAG }}"
-          git checkout $NEW_TAG
-          echo "Checked out tag: $NEW_TAG"
-          ls -alh  # List files to verify the tag content
+      
 
       - name: Set up AWS CLI
         uses: aws-actions/configure-aws-credentials@v1
@@ -351,6 +346,12 @@ jobs:
             echo "No files changed in /src."
           fi
 
+      - name: Checkout the tag for deployment
+        run: |
+          NEW_TAG="${{ env.NEW_TAG }}"
+          git checkout $NEW_TAG
+          echo "Checked out tag: $NEW_TAG"
+          ls -alh  # List files to verify the tag content
 
       # Optionally, use the filtered files (e.g., copy them to S3)
       - name: Deploy changed files to S3 (example)
