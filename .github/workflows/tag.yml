@@ -437,11 +437,12 @@ jobs:
             "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/pulls/$PR_NUMBER/merge"
 
    
-      - name: Add 'automerge' label
-        uses: peter-evans/labeler@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          labels: 'automerge'
+      # Add 'automerge' label using the GitHub CLI
+      - name: Add 'automerge' label with GitHub CLI
+        run: |
+          gh pr label ${{ github.event.pull_request.number }} --add "automerge"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Automerge PR
         id: automerge
