@@ -305,22 +305,12 @@ jobs:
           echo "Checked out tag: $NEW_TAG"
           ls -alh  # List files to verify the tag content
 
-      - name: Set up AWS CLI
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1  # Update to your region
-
       - name: Deploy to Dev
         run: |
           echo "Deploying to Dev environment using tag ${{ env.NEW_TAG }}"
-          aws s3 sync . s3://githubactions-testing-bucket/dags
-          
-        id: mwaa_files
-        working-directory: src
-      
-          
+          dir
+          ls
+          # Add your deployment commands for the Dev environment here.
 
       - name: Update Changelog for Dev Deployment
         run: |
