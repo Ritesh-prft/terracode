@@ -665,3 +665,12 @@ fixed changelog logs workflow yml file want more logs in changelog no ticket
 - Deployed version tag-v43.0.0
 - Commit Message: MAJOR seperated validation part ### Description of changes ###: testing11111111111111### Files Changed ###:testing11111111111111### Reason for Change ###:testing11111111111111### Task/Ticket/Issue ###:testing11111111111111
 
+
+#####
+## [tag-v44.0.0] - 2024-12-09
+### Deployed to:
+- **dev**: 2024-12-09
+### Changes:
+- Deployed version tag-v44.0.0
+- Commit Message: MAJOR seperated validation part ### Description of changes ###: testing11111111111111### Files Changed ###:testing11111111111111### Reason for Change ###:testing11111111111111### Task/Ticket/Issue ###:testing11111111111111
+
