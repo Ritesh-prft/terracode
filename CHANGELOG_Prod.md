@@ -711,3 +711,11 @@
 - Deployed version tag-v71.5.0
 - Commit Message: Feature/tagging 01 ### Description of changes ###:01### Files Changed ###:01### Reason for Change ###:01### Task/Ticket/Issue ###:01
 
+
+## [tag-v71.6.0] - 2024-12-09
+### Deployed to:
+- **prod**: 2024-12-09
+### Changes:
+- Deployed version tag-v71.6.0
+- Commit Message: Feature/tagging 01 ### Description of changes ###:01### Files Changed ###:01### Reason for Change ###:01### Task/Ticket/Issue ###:01
+
