@@ -355,25 +355,26 @@ jobs:
           ls -alh  # List files to verify the tag content
 
       # Optionally, use the filtered files (e.g., copy them to S3)
-      - name: Deploy changed files to S3 (example)
-        if: steps.changed_files.outputs.changed_files != ''
-        run: |
-          # Assuming the changed files are listed in changed_files.txt
-          cat changed_files.txt
-          # Add your deployment commands here, e.g., using `aws s3 cp` to copy files
-          aws s3 cp --recursive ./src s3://your-bucket-path --exclude "*" --include "$(cat changed_files.txt)"
-
-      # - name: Deploy to Dev (Copy only changed files)
+      # - name: Deploy changed files to S3 (example)
+      #   if: steps.changed_files.outputs.changed_files != ''
       #   run: |
-      #     echo "Deploying to Dev environment using tag ${{ env.NEW_TAG }}"
+      #     # Assuming the changed files are listed in changed_files.txt
+      #     cat changed_files.txt
+      #     # Add your deployment commands here, e.g., using `aws s3 cp` to copy files
+      #     aws s3 cp --recursive ./src s3://your-bucket-path --exclude "*" --include "$(cat changed_files.txt)"
 
-      #     # Loop through the changed files and copy them to the S3 bucket
-      #     while IFS= read -r file; do
-      #       if [ -f "$file" ]; then
-      #         echo "Copying $file to S3..."
-      #         aws s3 cp "$file" s3://githubactions-testing-bucket/dags/$file
-      #       fi
-      #     done < changed_files.txt
+      - name: Deploy to Dev (Copy only changed files)
+        working-directory: src
+        run: |
+          echo "Deploying to Dev environment using tag ${{ env.NEW_TAG }}"
+
+          # Loop through the changed files and copy them to the S3 bucket
+          while IFS= read -r file; do
+            if [ -f "$file" ]; then
+              echo "Copying $file to S3..."
+              aws s3 cp "$file" s3://githubactions-testing-bucket/dags/$file
+            fi
+          done < changed_files.txt
 
       # - name: Deploy to Dev
       #   run: |
