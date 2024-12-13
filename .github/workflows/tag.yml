@@ -374,7 +374,7 @@ jobs:
           done < /home/runner/work/terracode/terracode/changed_files.txt
 
   qa_deploy:
-      needs: [create_tag_and_deploy,validate_fetched_pr]
+      needs: [create_tag_and_deploy,validate_created_pr]
       runs-on: ubuntu-latest
       env:
         NEW_TAG: ${{ needs.create_tag_and_deploy.outputs.NEW_TAG }}
