@@ -216,7 +216,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       NEW_TAG: ${{ steps.get_version.outputs.NEW_TAG }}
-      COMMIT_MESSAGE: ${{ steps.get_version.outputs.COMMIT_MESSAGE }}
+      COMMIT_MESSAGE: ${{ steps.pr_commit_message.outputs.COMMIT_MESSAGE }}
     steps:
       - name: Checkout code from PR branch
         uses: actions/checkout@v3
