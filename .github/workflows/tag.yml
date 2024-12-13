@@ -369,413 +369,439 @@ jobs:
               echo "File $file not found."
             fi
           done < /home/runner/work/terracode/terracode/changed_files.txt
+
+  qa_deploy:
+      needs: create_tag_and_deploy
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout code from PR branch
+          uses: actions/checkout@v3
+          with:
+            ref: ${{ github.head_ref }} 
+            token: ${{ secrets.PAT_TOKEN }}
+
+        - name: Set up Git for tagging
+          run: |
+            git config --global user.name "github-actions"
+            git config --global user.email "github-actions@github.com"
+
+        - name: Fetch tags from remote
+          run: |
+            git fetch --tags
+            NEW_TAG="${{ env.NEW_TAG }}"
+            echo "tag is : $NEW_TAG"
+
+        - name: Get latest tag and determine version increment
+          id: get_version
+          run: |
+            # Get the latest tag in the repo
+            LATEST_TAG=$(git tag --list 'tag-v*' | sort -V | tail -n 1)
+
+#       - name: Update Changelog for Dev Deployment
+#         id: dev_changelog
+#         run: |
+#           TAG_NAME="${{ env.NEW_TAG }}"
+#           DATE=$(date +'%Y-%m-%d')
+#           ENVIRONMENT="dev"
+#           COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
+
+#           # Ensure we're on the main branch to update the changelog file
+#           git checkout main
+#           git pull origin main
+
+#           # Add a changelog entry for the Dev deployment with PR commit message
+#           echo -e "\n#####\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Dev.md
+
+#           # Commit and push changes
+#           git add CHANGELOG_Dev.md
+#           git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
+
+#           # Fetch and merge remote changes before pushing
+#           git fetch origin main
+#           git merge origin/main --no-edit --allow-unrelated-histories || true
+
+#           # Handle conflicts manually if necessary
+#           if git ls-files -u | grep -q .; then
+#             echo "Merge conflicts detected, resolving..."
+#             git checkout --ours .github/workflows/tag.yml  # Keep local changes in workflow
+#             git checkout --ours CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md  # Keep local changes in changelog
+#             git add CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md .github/workflows/tag.yml
+#             git commit -m "Resolved conflicts for changelog and workflows"
+#           fi
+
+#           # Push the changes
+#           git push origin HEAD:main
+
+
+#       # Step 5: Auto-merge PR if deployment was successful
+#       - name: Auto-merge PR
+#         if: ${{ steps.dev_changelog.outcome == 'success' }}  # Only run this step if deployment was successful
+#         run: |
+#           # GitHub API token (created automatically in the GitHub Actions context)
+#           GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
+
+#           # PR details
+#           PR_NUMBER=${{ github.event.pull_request.number }}
+#           echo $PR_NUMBER
+#           REPO_OWNER=${{ github.repository_owner }}
+#           echo $REPO_OWNER
+#           REPO_NAME=${{ github.event.repository.name }}
+#           echo $REPO_NAME
+
+
+#           # PR details
+#           PR_NUMBER=${{ github.event.pull_request.number }}
+#           REPO_OWNER=${{ github.repository_owner }}
+#           REPO_NAME=${{ github.event.repository.name }}
           
-
-      - name: Update Changelog for Dev Deployment
-        id: dev_changelog
-        run: |
-          TAG_NAME="${{ env.NEW_TAG }}"
-          DATE=$(date +'%Y-%m-%d')
-          ENVIRONMENT="dev"
-          COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
-
-          # Ensure we're on the main branch to update the changelog file
-          git checkout main
-          git pull origin main
-
-          # Add a changelog entry for the Dev deployment with PR commit message
-          echo -e "\n#####\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Dev.md
-
-          # Commit and push changes
-          git add CHANGELOG_Dev.md
-          git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
-
-          # Fetch and merge remote changes before pushing
-          git fetch origin main
-          git merge origin/main --no-edit --allow-unrelated-histories || true
-
-          # Handle conflicts manually if necessary
-          if git ls-files -u | grep -q .; then
-            echo "Merge conflicts detected, resolving..."
-            git checkout --ours .github/workflows/tag.yml  # Keep local changes in workflow
-            git checkout --ours CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md  # Keep local changes in changelog
-            git add CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md .github/workflows/tag.yml
-            git commit -m "Resolved conflicts for changelog and workflows"
-          fi
-
-          # Push the changes
-          git push origin HEAD:main
-
-
-      # Step 5: Auto-merge PR if deployment was successful
-      - name: Auto-merge PR
-        if: ${{ steps.dev_changelog.outcome == 'success' }}  # Only run this step if deployment was successful
-        run: |
-          # GitHub API token (created automatically in the GitHub Actions context)
-          GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
-
-          # PR details
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          echo $PR_NUMBER
-          REPO_OWNER=${{ github.repository_owner }}
-          echo $REPO_OWNER
-          REPO_NAME=${{ github.event.repository.name }}
-          echo $REPO_NAME
-
-
-          # PR details
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          REPO_OWNER=${{ github.repository_owner }}
-          REPO_NAME=${{ github.event.repository.name }}
-          
-          # Merge the PR using the GitHub API
-          echo "Merging PR #$PR_NUMBER..."
-          curl -X PUT \
-            -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            -d '{"merge_method": "merge"}' \
-            "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/pulls/$PR_NUMBER/merge"
+#           # Merge the PR using the GitHub API
+#           echo "Merging PR #$PR_NUMBER..."
+#           curl -X PUT \
+#             -H "Authorization: token $GITHUB_TOKEN" \
+#             -H "Accept: application/vnd.github.v3+json" \
+#             -d '{"merge_method": "merge"}' \
+#             "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/pulls/$PR_NUMBER/merge"
 
    
-      # Add 'automerge' label using the GitHub CLI
-      - uses: ubuntudroid/automerge-labeler@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          label: 'automerge' # optional
+#       # Add 'automerge' label using the GitHub CLI
+#       - uses: ubuntudroid/automerge-labeler@v1
+#         with:
+#           token: ${{ secrets.GITHUB_TOKEN }}
+#           label: 'automerge' # optional
 
-      - name: Automerge PR
-        id: automerge
-        uses: pascalgn/automerge-action@v0.15.6
-        env:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+#       - name: Automerge PR
+#         id: automerge
+#         uses: pascalgn/automerge-action@v0.15.6
+#         env:
+#           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
 
-      - name: Checkout the tag for deployment
-        run: |
-          NEW_TAG="${{ env.NEW_TAG }}"
-          git checkout --detach $NEW_TAG
-          echo "Checked out tag: $NEW_TAG"
-          ls -alh  # List files to verify the tag content
+#       - name: Checkout the tag for deployment
+#         run: |
+#           NEW_TAG="${{ env.NEW_TAG }}"
+#           git checkout --detach $NEW_TAG
+#           echo "Checked out tag: $NEW_TAG"
+#           ls -alh  # List files to verify the tag content
 
-      - name: Deploy to Qa (Copy only changed files)
-        run: |
-          echo "Deploying to Qa environment using tag ${{ env.NEW_TAG }}"
-          echo "Current working directory: $(pwd)"
+#       - name: Deploy to Qa (Copy only changed files)
+#         run: |
+#           echo "Deploying to Qa environment using tag ${{ env.NEW_TAG }}"
+#           echo "Current working directory: $(pwd)"
           
-          # Loop through the changed files and copy them to the S3 bucket
-          while IFS= read -r file; do
-            if [ -f "$file" ]; then
-              echo "Copying '$file' to S3..."
+#           # Loop through the changed files and copy them to the S3 bucket
+#           while IFS= read -r file; do
+#             if [ -f "$file" ]; then
+#               echo "Copying '$file' to S3..."
 
-              # Remove the 'src/' part from the file path if it exists
-              TARGET_FILE_PATH=$(echo "$file" | sed 's|^src/||')
+#               # Remove the 'src/' part from the file path if it exists
+#               TARGET_FILE_PATH=$(echo "$file" | sed 's|^src/||')
 
-              # Copy the file to the S3 bucket without the 'src/' prefix
-              aws s3 cp "$file" "s3://githubactions-testing-bucket/qa/$TARGET_FILE_PATH"
-            else
-              echo "File $file not found."
-            fi
-          done < /home/runner/work/terracode/terracode/changed_files.txt
+#               # Copy the file to the S3 bucket without the 'src/' prefix
+#               aws s3 cp "$file" "s3://githubactions-testing-bucket/qa/$TARGET_FILE_PATH"
+#             else
+#               echo "File $file not found."
+#             fi
+#           done < /home/runner/work/terracode/terracode/changed_files.txt
 
-      - name: Update Changelog for Qa Deployment
-        run: |
-          TAG_NAME="${{ env.NEW_TAG }}"
-          DATE=$(date +'%Y-%m-%d')
-          ENVIRONMENT="qa"
-          COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
+#       - name: Update Changelog for Qa Deployment
+#         run: |
+#           TAG_NAME="${{ env.NEW_TAG }}"
+#           DATE=$(date +'%Y-%m-%d')
+#           ENVIRONMENT="qa"
+#           COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
 
-          # Ensure we're on the main branch to update the changelog file
-          git checkout main
-          git pull origin main
+#           # Ensure we're on the main branch to update the changelog file
+#           git checkout main
+#           git pull origin main
 
-          # Add a changelog entry for the Qa deployment with PR commit message
-          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Qa.md
+#           # Add a changelog entry for the Qa deployment with PR commit message
+#           echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Qa.md
 
-          # Commit and push changes
-          git add CHANGELOG_Qa.md
-          git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
+#           # Commit and push changes
+#           git add CHANGELOG_Qa.md
+#           git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
 
-          # Fetch and merge remote changes before pushing
-          git fetch origin main
-          git merge origin/main --no-edit --allow-unrelated-histories || true
+#           # Fetch and merge remote changes before pushing
+#           git fetch origin main
+#           git merge origin/main --no-edit --allow-unrelated-histories || true
 
-          # Handle conflicts manually if necessary
-          if git ls-files -u | grep -q .; then
-            echo "Merge conflicts detected, resolving..."
-            git checkout --ours .github/workflows/tag.yml  # Keep local changes in workflow
-            git checkout --ours CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md  # Keep local changes in changelog
-            git add CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md .github/workflows/tag.yml
-            git commit -m "Resolved conflicts for changelog and workflows"
-          fi
+#           # Handle conflicts manually if necessary
+#           if git ls-files -u | grep -q .; then
+#             echo "Merge conflicts detected, resolving..."
+#             git checkout --ours .github/workflows/tag.yml  # Keep local changes in workflow
+#             git checkout --ours CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md  # Keep local changes in changelog
+#             git add CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md .github/workflows/tag.yml
+#             git commit -m "Resolved conflicts for changelog and workflows"
+#           fi
 
-          # Push the changes
-          git push origin HEAD:main
+#           # Push the changes
+#           git push origin HEAD:main
 
-      - name: Checkout the tag for deployment
-        run: |
-          NEW_TAG="${{ env.NEW_TAG }}"
-          git checkout --detach $NEW_TAG
-          echo "Checked out tag: $NEW_TAG"
-          ls -alh  # List files to verify the tag content
+#       - name: Checkout the tag for deployment
+#         run: |
+#           NEW_TAG="${{ env.NEW_TAG }}"
+#           git checkout --detach $NEW_TAG
+#           echo "Checked out tag: $NEW_TAG"
+#           ls -alh  # List files to verify the tag content
 
-      - name: Deploy to Prod (Copy only changed files)
-        run: |
-          echo "Deploying to Prod environment using tag ${{ env.NEW_TAG }}"
-          echo "Current working directory: $(pwd)"
+#       - name: Deploy to Prod (Copy only changed files)
+#         run: |
+#           echo "Deploying to Prod environment using tag ${{ env.NEW_TAG }}"
+#           echo "Current working directory: $(pwd)"
           
-          # Loop through the changed files and copy them to the S3 bucket
-          while IFS= read -r file; do
-            if [ -f "$file" ]; then
-              echo "Copying '$file' to S3..."
+#           # Loop through the changed files and copy them to the S3 bucket
+#           while IFS= read -r file; do
+#             if [ -f "$file" ]; then
+#               echo "Copying '$file' to S3..."
 
-              # Remove the 'src/' part from the file path if it exists
-              TARGET_FILE_PATH=$(echo "$file" | sed 's|^src/||')
+#               # Remove the 'src/' part from the file path if it exists
+#               TARGET_FILE_PATH=$(echo "$file" | sed 's|^src/||')
 
-              # Copy the file to the S3 bucket without the 'src/' prefix
-              aws s3 cp "$file" "s3://githubactions-testing-bucket/prod/$TARGET_FILE_PATH"
-            else
-              echo "File $file not found."
-            fi
-          done < /home/runner/work/terracode/terracode/changed_files.txt
+#               # Copy the file to the S3 bucket without the 'src/' prefix
+#               aws s3 cp "$file" "s3://githubactions-testing-bucket/prod/$TARGET_FILE_PATH"
+#             else
+#               echo "File $file not found."
+#             fi
+#           done < /home/runner/work/terracode/terracode/changed_files.txt
 
-      - name: Update Changelog for Prod Deployment
-        run: |
-          TAG_NAME="${{ env.NEW_TAG }}"
-          DATE=$(date +'%Y-%m-%d')
-          ENVIRONMENT="prod"
-          COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
+#       - name: Update Changelog for Prod Deployment
+#         run: |
+#           TAG_NAME="${{ env.NEW_TAG }}"
+#           DATE=$(date +'%Y-%m-%d')
+#           ENVIRONMENT="prod"
+#           COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
 
-          # Ensure we're on the main branch to update the changelog file
-          git checkout main
-          git pull origin main
+#           # Ensure we're on the main branch to update the changelog file
+#           git checkout main
+#           git pull origin main
 
-          # Add a changelog entry for the Prod deployment with PR commit message
-          echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Prod.md
+#           # Add a changelog entry for the Prod deployment with PR commit message
+#           echo -e "\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Prod.md
 
-          # Commit and push changes
-          git add CHANGELOG_Prod.md
-          git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
+#           # Commit and push changes
+#           git add CHANGELOG_Prod.md
+#           git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
 
-          # Fetch and merge remote changes before pushing
-          git fetch origin main
-          git merge origin/main --no-edit --allow-unrelated-histories || true
+#           # Fetch and merge remote changes before pushing
+#           git fetch origin main
+#           git merge origin/main --no-edit --allow-unrelated-histories || true
 
-          # Handle conflicts manually if necessary
-          if git ls-files -u | grep -q .; then
-            echo "Merge conflicts detected, resolving..."
-            git checkout --ours .github/workflows/tag.yml  # Keep local changes in workflow
-            git checkout --ours CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md  # Keep local changes in changelog
-            git add CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md .github/workflows/tag.yml
-            git commit -m "Resolved conflicts for changelog and workflows"
-          fi
+#           # Handle conflicts manually if necessary
+#           if git ls-files -u | grep -q .; then
+#             echo "Merge conflicts detected, resolving..."
+#             git checkout --ours .github/workflows/tag.yml  # Keep local changes in workflow
+#             git checkout --ours CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md  # Keep local changes in changelog
+#             git add CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md .github/workflows/tag.yml
+#             git commit -m "Resolved conflicts for changelog and workflows"
+#           fi
 
-          # Push the changes
-          git push origin HEAD:main
-
-
-###########################################################
-
-  read_tag_and_deploy:
-    needs: validate_fetched_pr
-    if: github.event_name == 'workflow_dispatch' 
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code from PR branch
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ github.head_ref }}  # Checkout the feature branch (PR source branch)
-          token: ${{ secrets.PAT_TOKEN }}
-
-      - name: Set up Git for tagging
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
-
-      - name: Fetch tags from remote
-        run: |
-          git fetch --tags
+#           # Push the changes
+#           git push origin HEAD:main
 
 
-      - name: Fetch PR commit message using GitHub API
-        id: maunal_pr_commit_message
-        run: |
-          TAG_TO_DEPLOY="${{ github.event.inputs.tag_to_deploy }}"
+# ###########################################################
+
+#   read_tag_and_deploy:
+#     needs: validate_fetched_pr
+#     if: github.event_name == 'workflow_dispatch' 
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout code from PR branch
+#         uses: actions/checkout@v3
+#         with:
+#           ref: ${{ github.head_ref }}  # Checkout the feature branch (PR source branch)
+#           token: ${{ secrets.PAT_TOKEN }}
+
+#       - name: Set up Git for tagging
+#         run: |
+#           git config --global user.name "github-actions"
+#           git config --global user.email "github-actions@github.com"
+
+#       - name: Fetch tags from remote
+#         run: |
+#           git fetch --tags
+
+
+#       - name: Fetch PR commit message using GitHub API
+#         id: maunal_pr_commit_message
+#         run: |
+#           TAG_TO_DEPLOY="${{ github.event.inputs.tag_to_deploy }}"
           
-          # Ensure the tag variable is set correctly
-          echo "Deploying Tag: $TAG_TO_DEPLOY"
+#           # Ensure the tag variable is set correctly
+#           echo "Deploying Tag: $TAG_TO_DEPLOY"
 
-          # Step 1: Get the commit SHA for the tag
-          COMMIT_SHA=$(git rev-list -n 1 "$TAG_TO_DEPLOY")
-          echo "Commit SHA for tag $TAG_TO_DEPLOY: $COMMIT_SHA"
+#           # Step 1: Get the commit SHA for the tag
+#           COMMIT_SHA=$(git rev-list -n 1 "$TAG_TO_DEPLOY")
+#           echo "Commit SHA for tag $TAG_TO_DEPLOY: $COMMIT_SHA"
               
-          # Step 2: Use the GitHub API to find the PR associated with the commit SHA
-          PR_NUMBER=$(curl -s \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/pulls?state=all&head=${COMMIT_SHA}" \
-            | jq -r '.[0].number')
+#           # Step 2: Use the GitHub API to find the PR associated with the commit SHA
+#           PR_NUMBER=$(curl -s \
+#             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+#             "https://api.github.com/repos/${{ github.repository }}/pulls?state=all&head=${COMMIT_SHA}" \
+#             | jq -r '.[0].number')
           
-          # Fetch PR details
-          COMMIT_MESSAGE=$(curl -s \
-            -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
-            | jq -r '.title + " " + .body')
+#           # Fetch PR details
+#           COMMIT_MESSAGE=$(curl -s \
+#             -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
+#             "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
+#             | jq -r '.title + " " + .body')
 
-          # Sanitize the commit message: Remove newlines and extra spaces
-          COMMIT_MESSAGE=$(echo "$COMMIT_MESSAGE" | tr -d '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+#           # Sanitize the commit message: Remove newlines and extra spaces
+#           COMMIT_MESSAGE=$(echo "$COMMIT_MESSAGE" | tr -d '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
-          # Set commit message for later use, ensuring it’s valid for the environment variable
-          echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_ENV
-          echo "Fetched Commit Message: $COMMIT_MESSAGE"
+#           # Set commit message for later use, ensuring it’s valid for the environment variable
+#           echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_ENV
+#           echo "Fetched Commit Message: $COMMIT_MESSAGE"
           
-      - name: Checkout the tag for deployment
-        run: |
-          NEW_TAG="${{ github.event.inputs.tag_to_deploy }}"
-          git checkout $NEW_TAG
-          echo "Checked out tag: $NEW_TAG"
-          ls -alh  # List files to verify the tag content
+#       - name: Checkout the tag for deployment
+#         run: |
+#           NEW_TAG="${{ github.event.inputs.tag_to_deploy }}"
+#           git checkout $NEW_TAG
+#           echo "Checked out tag: $NEW_TAG"
+#           ls -alh  # List files to verify the tag content
 
-      - name: Deploy to Dev
-        run: |
-          echo "Deploying to Dev environment using tag ${{ env.NEW_TAG }}"
-          dir
-          ls
-          # Add your deployment commands for the Dev environment here.
-
-
-      - name: Update Changelog for Dev Deployment
-        run: |
-          TAG_NAME="${{ github.event.inputs.tag_to_deploy }}"
-          DATE=$(date +'%Y-%m-%d')
-          ENVIRONMENT="dev"
-          COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
-
-          # Ensure we're on the main branch to update the changelog file
-          git checkout main
-          git pull origin main
-
-          # Debugging: Print the value of TAG_NAME to ensure it is correct
-          echo "Updating changelog for tag: $TAG_NAME"
-
-          # Add a changelog entry for the Dev deployment with PR commit message
-          echo -e "\n#####\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Dev.md
-
-          # Commit and push changes
-          git add CHANGELOG_Dev.md
-          git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
-
-          # Fetch and merge remote changes before pushing
-          git fetch origin main
-          git merge origin/main --no-edit --allow-unrelated-histories || true
-
-          # Handle conflicts manually if necessary
-          if git ls-files -u | grep -q .; then
-            echo "Merge conflicts detected, resolving..."
-            git checkout --ours CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md  # Keep local changes in changelog
-            git add CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md
-            git commit -m "Resolved conflicts for changelog files"
-          fi
-
-          # Push the changes
-          git push origin HEAD:main
+#       - name: Deploy to Dev
+#         run: |
+#           echo "Deploying to Dev environment using tag ${{ env.NEW_TAG }}"
+#           dir
+#           ls
+#           # Add your deployment commands for the Dev environment here.
 
 
-      - name: Checkout the tag for deployment
-        run: |
-          NEW_TAG="${{ github.event.inputs.tag_to_deploy }}"
-          git checkout $NEW_TAG
-          echo "Checked out tag: $NEW_TAG"
-          ls -alh  # List files to verify the tag content
+#       - name: Update Changelog for Dev Deployment
+#         run: |
+#           TAG_NAME="${{ github.event.inputs.tag_to_deploy }}"
+#           DATE=$(date +'%Y-%m-%d')
+#           ENVIRONMENT="dev"
+#           COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
 
-      - name: Deploy to QA
-        run: |
-          echo "Deploying to QA environment using tag ${{ env.NEW_TAG }}"
-          dir
-          ls
-          # Add your deployment commands for the QA environment here.
+#           # Ensure we're on the main branch to update the changelog file
+#           git checkout main
+#           git pull origin main
 
-      - name: Update Changelog for Qa Deployment
-        run: |
-          TAG_NAME="${{ github.event.inputs.tag_to_deploy }}"
-          DATE=$(date +'%Y-%m-%d')
-          ENVIRONMENT="qa"
-          COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
+#           # Debugging: Print the value of TAG_NAME to ensure it is correct
+#           echo "Updating changelog for tag: $TAG_NAME"
 
-          # Ensure we're on the main branch to update the changelog file
-          git checkout main
-          git pull origin main
+#           # Add a changelog entry for the Dev deployment with PR commit message
+#           echo -e "\n#####\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Dev.md
 
-          # Debugging: Print the value of TAG_NAME to ensure it is correct
-          echo "Updating changelog for tag: $TAG_NAME"
+#           # Commit and push changes
+#           git add CHANGELOG_Dev.md
+#           git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
 
-          # Add a changelog entry for the QA deployment with PR commit message
-          echo -e "\n#####\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Qa.md
+#           # Fetch and merge remote changes before pushing
+#           git fetch origin main
+#           git merge origin/main --no-edit --allow-unrelated-histories || true
 
-          # Commit and push changes
-          git add CHANGELOG_Qa.md
-          git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
+#           # Handle conflicts manually if necessary
+#           if git ls-files -u | grep -q .; then
+#             echo "Merge conflicts detected, resolving..."
+#             git checkout --ours CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md  # Keep local changes in changelog
+#             git add CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md
+#             git commit -m "Resolved conflicts for changelog files"
+#           fi
 
-          # Fetch and merge remote changes before pushing
-          git fetch origin main
-          git merge origin/main --no-edit --allow-unrelated-histories || true
-
-          # Handle conflicts manually if necessary
-          if git ls-files -u | grep -q .; then
-            echo "Merge conflicts detected, resolving..."
-            git checkout --ours CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md  # Keep local changes in changelog
-            git add CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md
-            git commit -m "Resolved conflicts for changelog files"
-          fi
-
-          # Push the changes
-          git push origin HEAD:main
-
-      - name: Checkout the tag for deployment
-        run: |
-          NEW_TAG="${{ github.event.inputs.tag_to_deploy }}"
-          git checkout $NEW_TAG
-          echo "Checked out tag: $NEW_TAG"
-          ls -alh  # List files to verify the tag content
-
-      - name: Deploy to PROD
-        run: |
-          echo "Deploying to PROD environment using tag ${{ env.NEW_TAG }}"
-          dir
-          ls
-          # Add your deployment commands for the PROD environment here.
-
-      - name: Update Changelog for Prod Deployment
-        run: |
-          TAG_NAME="${{ github.event.inputs.tag_to_deploy }}"
-          DATE=$(date +'%Y-%m-%d')
-          ENVIRONMENT="prod"
-          COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
-
-          # Ensure we're on the main branch to update the changelog file
-          git checkout main
-          git pull origin main
-
-          # Debugging: Print the value of TAG_NAME to ensure it is correct
-          echo "Updating changelog for tag: $TAG_NAME"
-
-          # Add a changelog entry for the prod deployment with PR commit message
-          echo -e "\n#####\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Prod.md
+#           # Push the changes
+#           git push origin HEAD:main
 
 
-          # Commit and push changes
-          git add CHANGELOG_Prod.md
-          git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
+#       - name: Checkout the tag for deployment
+#         run: |
+#           NEW_TAG="${{ github.event.inputs.tag_to_deploy }}"
+#           git checkout $NEW_TAG
+#           echo "Checked out tag: $NEW_TAG"
+#           ls -alh  # List files to verify the tag content
 
-          # Fetch and merge remote changes before pushing
-          git fetch origin main
-          git merge origin/main --no-edit --allow-unrelated-histories || true
+#       - name: Deploy to QA
+#         run: |
+#           echo "Deploying to QA environment using tag ${{ env.NEW_TAG }}"
+#           dir
+#           ls
+#           # Add your deployment commands for the QA environment here.
 
-          # Handle conflicts manually if necessary
-          if git ls-files -u | grep -q .; then
-            echo "Merge conflicts detected, resolving..."
-            git checkout --ours CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md  # Keep local changes in changelog
-            git add CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md
-            git commit -m "Resolved conflicts for changelog files"
-          fi
+#       - name: Update Changelog for Qa Deployment
+#         run: |
+#           TAG_NAME="${{ github.event.inputs.tag_to_deploy }}"
+#           DATE=$(date +'%Y-%m-%d')
+#           ENVIRONMENT="qa"
+#           COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
 
-          # Push the changes
-          git push origin HEAD:main
+#           # Ensure we're on the main branch to update the changelog file
+#           git checkout main
+#           git pull origin main
+
+#           # Debugging: Print the value of TAG_NAME to ensure it is correct
+#           echo "Updating changelog for tag: $TAG_NAME"
+
+#           # Add a changelog entry for the QA deployment with PR commit message
+#           echo -e "\n#####\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Qa.md
+
+#           # Commit and push changes
+#           git add CHANGELOG_Qa.md
+#           git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
+
+#           # Fetch and merge remote changes before pushing
+#           git fetch origin main
+#           git merge origin/main --no-edit --allow-unrelated-histories || true
+
+#           # Handle conflicts manually if necessary
+#           if git ls-files -u | grep -q .; then
+#             echo "Merge conflicts detected, resolving..."
+#             git checkout --ours CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md  # Keep local changes in changelog
+#             git add CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md
+#             git commit -m "Resolved conflicts for changelog files"
+#           fi
+
+#           # Push the changes
+#           git push origin HEAD:main
+
+#       - name: Checkout the tag for deployment
+#         run: |
+#           NEW_TAG="${{ github.event.inputs.tag_to_deploy }}"
+#           git checkout $NEW_TAG
+#           echo "Checked out tag: $NEW_TAG"
+#           ls -alh  # List files to verify the tag content
+
+#       - name: Deploy to PROD
+#         run: |
+#           echo "Deploying to PROD environment using tag ${{ env.NEW_TAG }}"
+#           dir
+#           ls
+#           # Add your deployment commands for the PROD environment here.
+
+#       - name: Update Changelog for Prod Deployment
+#         run: |
+#           TAG_NAME="${{ github.event.inputs.tag_to_deploy }}"
+#           DATE=$(date +'%Y-%m-%d')
+#           ENVIRONMENT="prod"
+#           COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
+
+#           # Ensure we're on the main branch to update the changelog file
+#           git checkout main
+#           git pull origin main
+
+#           # Debugging: Print the value of TAG_NAME to ensure it is correct
+#           echo "Updating changelog for tag: $TAG_NAME"
+
+#           # Add a changelog entry for the prod deployment with PR commit message
+#           echo -e "\n#####\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n" >> CHANGELOG_Prod.md
+
+
+#           # Commit and push changes
+#           git add CHANGELOG_Prod.md
+#           git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
+
+#           # Fetch and merge remote changes before pushing
+#           git fetch origin main
+#           git merge origin/main --no-edit --allow-unrelated-histories || true
+
+#           # Handle conflicts manually if necessary
+#           if git ls-files -u | grep -q .; then
+#             echo "Merge conflicts detected, resolving..."
+#             git checkout --ours CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md  # Keep local changes in changelog
+#             git add CHANGELOG_Dev.md CHANGELOG_Qa.md CHANGELOG_Prod.md
+#             git commit -m "Resolved conflicts for changelog files"
+#           fi
+
+#           # Push the changes
+#           git push origin HEAD:main
