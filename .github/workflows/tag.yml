@@ -376,8 +376,8 @@ jobs:
   qa_deploy:
       needs: create_tag_and_deploy
       runs-on: ubuntu-latest
-      env:
-        NEW_TAG: ${{ needs.create_tag_and_deploy.outputs.NEW_TAG }}
+      # env:
+      #   NEW_TAG: ${{ needs.create_tag_and_deploy.outputs.NEW_TAG }}
       steps:
         - name: Checkout code from PR branch
           uses: actions/checkout@v3
