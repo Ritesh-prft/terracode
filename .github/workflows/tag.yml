@@ -396,7 +396,7 @@ jobs:
           run: |
             # Get the latest tag in the repo
             LATEST_TAG=$(git tag --list 'tag-v*' | sort -V | tail -n 1)
-            echo "latest tag is : "$LATEST_TAG"
+            echo "latest tag is : $LATEST_TAG"
 
 #       - name: Update Changelog for Dev Deployment
 #         id: dev_changelog
