@@ -216,6 +216,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       NEW_TAG: ${{ steps.get_version.outputs.NEW_TAG }}
+      COMMIT_MESSAGE: ${{ steps.get_version.outputs.COMMIT_MESSAGE }}
     steps:
       - name: Checkout code from PR branch
         uses: actions/checkout@v3
@@ -301,6 +302,7 @@ jobs:
           # Set commit message for later use, ensuring it’s valid for the environment variable
           echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_ENV
           echo "Fetched Commit Message: $COMMIT_MESSAGE"
+          echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_OUTPUT
 
       - name: Set up AWS CLI
         uses: aws-actions/configure-aws-credentials@v1
@@ -378,6 +380,7 @@ jobs:
       runs-on: ubuntu-latest
       env:
         NEW_TAG: ${{ needs.create_tag_and_deploy.outputs.NEW_TAG }}
+        COMMIT_MESSAGE: ${{ needs.create_tag_and_deploy.outputs.COMMIT_MESSAGE }}
       steps:
         - name: Checkout code from PR branch
           uses: actions/checkout@v3
@@ -396,27 +399,17 @@ jobs:
             NEW_TAG="${{ env.NEW_TAG }}"
             echo "tag is : $NEW_TAG"
 
-        - name: Get latest tag and determine version increment
-          id: get_version
-          run: |
-            # Get the latest tag in the repo
-            LATEST_TAG=$(git tag --list 'tag-v*' | sort -V | tail -n 1)
-            echo "latest tag is : $LATEST_TAG"
+        # - name: Get latest tag and determine version increment
+        #   id: get_version
+        #   run: |
+        #     # Get the latest tag in the repo
+        #     LATEST_TAG=$(git tag --list 'tag-v*' | sort -V | tail -n 1)
+        #     echo "latest tag is : $LATEST_TAG"
 
         - name: Fetch PR commit message using GitHub API
           id: pr_commit_message
           run: |
-            PR_NUMBER="${{ github.event.pull_request.number }}"
-            COMMIT_MESSAGE=$(curl -s \
-              -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
-              "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
-              | jq -r '.title + " " + .body')
-
-            # Sanitize the commit message: Remove newlines and extra spaces
-            COMMIT_MESSAGE=$(echo "$COMMIT_MESSAGE" | tr -d '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-
-            # Set commit message for later use, ensuring it’s valid for the environment variable
-            echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_ENV
+            COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
             echo "Fetched Commit Message: $COMMIT_MESSAGE"
 
 #       - name: Update Changelog for Dev Deployment
