@@ -271,34 +271,34 @@ jobs:
           # Output all the changed files for debugging
           echo "All Changed files: ${CHANGED_FILES[@]}"
 
-          # Filter only files in the src/ path (Handle spaces in filenames)
-          SRC_CHANGED_FILES=$(echo "${CHANGED_FILES[@]}" | grep -E "^src/")
-          if [ $? -ne 0 ]; then
-              echo "Error during file filtering with grep."
-              exit 1
-          fi
+          # # Filter only files in the src/ path (Handle spaces in filenames)
+          # SRC_CHANGED_FILES=$(echo "${CHANGED_FILES[@]}" | grep -E "^src/")
+          # if [ $? -ne 0 ]; then
+          #     echo "Error during file filtering with grep."
+          #     exit 1
+          # fi
 
           # Display the count of changed files
           CHANGED_FILES_COUNT=${#CHANGED_FILES[@]}
           echo "changed files count is:  $CHANGED_FILES_COUNT"
 
-          SRC_CHANGED_FILES_COUNT=$(echo "$SRC_CHANGED_FILES" | wc -w)
-          echo "src_changed files count is:  $SRC_CHANGED_FILES_COUNT"
+          # SRC_CHANGED_FILES_COUNT=$(echo "$SRC_CHANGED_FILES" | wc -w)
+          # echo "src_changed files count is:  $SRC_CHANGED_FILES_COUNT"
 
-          # Handle the case where no files match the filter
-          if [ -z "$SRC_CHANGED_FILES" ]; then
-              echo "No files changed in 'src/'. Skipping further steps."
-              exit 0
-          fi
+          # # Handle the case where no files match the filter
+          # if [ -z "$SRC_CHANGED_FILES" ]; then
+          #     echo "No files changed in 'src/'. Skipping further steps."
+          #     exit 0
+          # fi
 
-          # Check for spaces in file paths
-          echo "Files changed in 'src/':"
-          for file in "${SRC_CHANGED_FILES[@]}"; do
-              echo "File: '$file'"
-          done
+          # # Check for spaces in file paths
+          # echo "Files changed in 'src/':"
+          # for file in "${SRC_CHANGED_FILES[@]}"; do
+          #     echo "File: '$file'"
+          # done
 
           # Output files to artifacts
-          echo "$SRC_CHANGED_FILES" > dags_changed_files.txt
+          # echo "$SRC_CHANGED_FILES" > dags_changed_files.txt
           echo "${CHANGED_FILES[@]}" > all_changed_files.txt
           echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_OUTPUT
 
