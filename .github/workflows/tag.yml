@@ -260,7 +260,9 @@ jobs:
               fi
 
               # Append files from this page to the list of changed files
-              CHANGED_FILES+=($FILES)
+              for file in $FILES; do
+                  CHANGED_FILES+=("$file")  # Add each file to the array, ensuring it handles spaces
+              done
 
               # Increment page number
               PAGE=$((PAGE + 1))
@@ -295,9 +297,11 @@ jobs:
               echo "File: '$file'"
           done
 
+          # Output files to artifacts
           echo "$SRC_CHANGED_FILES" > dags_changed_files.txt
           echo "${CHANGED_FILES[@]}" > all_changed_files.txt
           echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_OUTPUT
+
 
 
 
