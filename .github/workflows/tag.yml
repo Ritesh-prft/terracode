@@ -200,109 +200,43 @@ jobs:
           echo "Fetched Commit Message: $COMMIT_MESSAGE"
           echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_OUTPUT
 
-      # - name: Fetch PR changed files using GitHub API
-      #   id: changed_files
-      #   run: |
-      #     # Ensure PR number is available
-      #     PR_NUMBER="${{ github.event.pull_request.number }}"
-      #     echo "PR Number: $PR_NUMBER"
-      #     if [ -z "$PR_NUMBER" ]; then
-      #       echo "PR number not found. Exiting."
-      #       exit 1
-      #     fi
-      #     echo "Fetching changed files for PR #$PR_NUMBER..."
-      #     # Get the changed files from the PR using GitHub API
-      #     CHANGED_FILES=$(curl -s \
-      #       -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-      #       "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}/files" \
-      #       | jq -r '.[].filename')
-      #     echo "changed files are $CHANGED_FILES"
-      #     # Filter only files in the /src path (ignoring files outside /infra/src/dags/)
-      #     SRC_CHANGED_FILES=$(echo "$CHANGED_FILES" | grep "^infra/src/dags/")
-          
-
-      #     # Handle the case where no files match the filter
-      #     if [ -z "$SRC_CHANGED_FILES" ]; then
-      #       echo "No files changed in path 'infra/src/dags/'."
-      #       echo "Skipping further steps."
-      #       # You can exit successfully if no relevant files are found
-      #       exit 0
-      #     else
-      #       echo "Files changed in 'infra/src/dags/':"
-      #       echo "$SRC_CHANGED_FILES"
-      #       echo "Current working directory: $(pwd)"
-      #       echo "$SRC_CHANGED_FILES" > dags_changed_files.txt
-      #       echo "$CHANGED_FILES" > all_changed_files.txt
-      #     fi
-      #     echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_OUTPUT
       - name: Fetch PR changed files using GitHub API
         id: changed_files
         run: |
-          PR_NUMBER="${{ github.event.pull_request.number }}"
-          echo "Fetching changed files for PR #$PR_NUMBER..."
-          
-          # Initialize variables
-          PAGE=1
+          # Ensure PR number is available
           PER_PAGE=100
-          CHANGED_FILES=()
-
-          # Loop through pages to get all files
-          while true; do
-              # Fetch a page of changed files
-              RESPONSE=$(curl -s \
-                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-                "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}/files?per_page=$PER_PAGE&page=$PAGE")
-
-              # Check if there are no more files to fetch
-              FILES=$(echo "$RESPONSE" | jq -r '.[].filename')
-              if [ -z "$FILES" ]; then
-                  break
-              fi
-
-              # Append files from this page to the list of changed files
-              for file in $FILES; do
-                  # Quote file names to handle spaces correctly
-                  CHANGED_FILES+=("$file")
-              done
-
-              # Increment page number
-              PAGE=$((PAGE + 1))
-          done
-
-          # Output all the changed files for debugging
-          echo "All Changed files: ${CHANGED_FILES[@]}"
-
-          # Filter only files in the src/ path (Handle spaces in filenames)
-          SRC_CHANGED_FILES=$(echo "${CHANGED_FILES[@]}" | grep -E "^src/")
-          if [ $? -ne 0 ]; then
-              echo "Error during file filtering with grep."
-              exit 1
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          echo "PR Number: $PR_NUMBER"
+          if [ -z "$PR_NUMBER" ]; then
+            echo "PR number not found. Exiting."
+            exit 1
           fi
-
-          # Display the count of changed files
-          CHANGED_FILES_COUNT=${#CHANGED_FILES[@]}
-          echo "changed files count is:  $CHANGED_FILES_COUNT"
-
-          SRC_CHANGED_FILES_COUNT=$(echo "$SRC_CHANGED_FILES" | wc -w)
-          echo "src_changed files count is:  $SRC_CHANGED_FILES_COUNT"
+          echo "Fetching changed files for PR #$PR_NUMBER..."
+          # Get the changed files from the PR using GitHub API
+          CHANGED_FILES=$(curl -s \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}/files?per_page=$PER_PAGE" \
+            | jq -r '.[].filename')
+          
+          # Filter only files in the /src path (ignoring files outside /infra/src/dags/)
+          SRC_CHANGED_FILES=$(echo "$CHANGED_FILES" | grep "^infra/src/dags/")
+          
 
           # Handle the case where no files match the filter
           if [ -z "$SRC_CHANGED_FILES" ]; then
-              echo "No files changed in 'src/'. Skipping further steps."
-              exit 0
+            echo "No files changed in path 'infra/src/dags/'."
+            echo "Skipping further steps."
+            # You can exit successfully if no relevant files are found
+            exit 0
+          else
+            echo "Files changed in 'infra/src/dags/':"
+            echo "$SRC_CHANGED_FILES"
+            echo "Current working directory: $(pwd)"
+            echo "$SRC_CHANGED_FILES" > dags_changed_files.txt
+            echo "$CHANGED_FILES" > all_changed_files.txt
           fi
-
-          # Check for spaces in file paths
-          echo "Files changed in 'src/':"
-          for file in "${SRC_CHANGED_FILES[@]}"; do
-              echo "File: '$file'"
-          done
-
-          # Output files to artifacts
-          echo "$SRC_CHANGED_FILES" > dags_changed_files.txt
-          echo "${CHANGED_FILES[@]}" > all_changed_files.txt
           echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_OUTPUT
-
+      
 
 
 
