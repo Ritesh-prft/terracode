@@ -269,7 +269,7 @@ jobs:
           # Output all the changed files for debugging
           echo "All Changed files: ${CHANGED_FILES[@]}"
 
-          # Filter only files in the src/ path
+          # Filter only files in the src/ path (Handle spaces in filenames)
           SRC_CHANGED_FILES=$(echo "${CHANGED_FILES[@]}" | grep -E "^src/")
           if [ $? -ne 0 ]; then
               echo "Error during file filtering with grep."
@@ -289,11 +289,16 @@ jobs:
               exit 0
           fi
 
+          # Check for spaces in file paths
           echo "Files changed in 'src/':"
-          echo "$SRC_CHANGED_FILES"
+          for file in "${SRC_CHANGED_FILES[@]}"; do
+              echo "File: '$file'"
+          done
+
           echo "$SRC_CHANGED_FILES" > dags_changed_files.txt
           echo "${CHANGED_FILES[@]}" > all_changed_files.txt
           echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_OUTPUT
+
 
 
 
