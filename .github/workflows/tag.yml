@@ -272,6 +272,10 @@ jobs:
           # Filter only files in the infra/src/dags/ path
           SRC_CHANGED_FILES=$(echo "$CHANGED_FILES" | grep "^src/")
 
+          # Display the count of changed files
+          CHANGED_FILES_COUNT=$(echo "$CHANGED_FILES" | wc -w)
+          SRC_CHANGED_FILES_COUNT=$(echo "$SRC_CHANGED_FILES" | wc -w)
+
           # Handle the case where no files match the filter
           if [ -z "$SRC_CHANGED_FILES" ]; then
             echo "No files changed in path 'src/'."
