@@ -230,8 +230,9 @@ jobs:
             exit 1
           fi
 
-          # Extract filenames from the response using jq
-          CHANGED_FILES=$(echo "$RESPONSE" | jq -r '.[].filename')
+          # Extract filenames and status using jq
+          CHANGED_FILES=$(echo "$RESPONSE" | jq -r '.[] | select(.status != "removed") | .filename')
+
 
           # Check if files are being returned
           if [ -z "$CHANGED_FILES" ]; then
