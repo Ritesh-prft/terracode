@@ -270,15 +270,15 @@ jobs:
           echo "All Changed files: $CHANGED_FILES"
 
           # Filter only files in the infra/src/dags/ path
-          SRC_CHANGED_FILES=$(echo "$CHANGED_FILES" | grep "^infra/src/dags/")
+          SRC_CHANGED_FILES=$(echo "$CHANGED_FILES" | grep "^src/")
 
           # Handle the case where no files match the filter
           if [ -z "$SRC_CHANGED_FILES" ]; then
-            echo "No files changed in path 'infra/src/dags/'."
+            echo "No files changed in path 'src/'."
             echo "Skipping further steps."
             exit 0
           else
-            echo "Files changed in 'infra/src/dags/':"
+            echo "Files changed in 'src/':"
             echo "$SRC_CHANGED_FILES"
             echo "$SRC_CHANGED_FILES" > dags_changed_files.txt
             echo "$CHANGED_FILES" > all_changed_files.txt
@@ -308,7 +308,7 @@ jobs:
 
 
 
-          
+
 #   validate_fetched_pr:
 #     runs-on: ubuntu-latest
 #     if: ${{ github.event_name == 'workflow_dispatch' }}
