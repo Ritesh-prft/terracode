@@ -274,7 +274,9 @@ jobs:
 
           # Display the count of changed files
           CHANGED_FILES_COUNT=$(echo "$CHANGED_FILES" | wc -w)
+          echo "changed files count is :  $CHANGED_FILES_COUNT"
           SRC_CHANGED_FILES_COUNT=$(echo "$SRC_CHANGED_FILES" | wc -w)
+          echo "src_changed files count is :  $SRC_CHANGED_FILES_COUNT"
 
           # Handle the case where no files match the filter
           if [ -z "$SRC_CHANGED_FILES" ]; then
