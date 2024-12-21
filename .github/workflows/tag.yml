@@ -242,9 +242,8 @@ jobs:
           echo "Fetching changed files for PR #$PR_NUMBER..."
           
           # Initialize variables
-              # Initialize variables
           PAGE=1
-          PER_PAGE=100 
+          PER_PAGE=100
           CHANGED_FILES=()
 
           # Loop through pages to get all files
@@ -271,27 +270,31 @@ jobs:
           echo "All Changed files: ${CHANGED_FILES[@]}"
 
           # Filter only files in the src/ path
-          SRC_CHANGED_FILES=$(echo "${CHANGED_FILES[@]}" | grep "^src/")
+          SRC_CHANGED_FILES=$(echo "${CHANGED_FILES[@]}" | grep -E "^src/")
+          if [ $? -ne 0 ]; then
+              echo "Error during file filtering with grep."
+              exit 1
+          fi
 
           # Display the count of changed files
           CHANGED_FILES_COUNT=${#CHANGED_FILES[@]}
-          echo "changed files count is :  $CHANGED_FILES_COUNT"
+          echo "changed files count is:  $CHANGED_FILES_COUNT"
 
           SRC_CHANGED_FILES_COUNT=$(echo "$SRC_CHANGED_FILES" | wc -w)
-          echo "src_changed files count is :  $SRC_CHANGED_FILES_COUNT"
+          echo "src_changed files count is:  $SRC_CHANGED_FILES_COUNT"
 
           # Handle the case where no files match the filter
           if [ -z "$SRC_CHANGED_FILES" ]; then
-              echo "No files changed in path 'src/'."
-              echo "Skipping further steps."
+              echo "No files changed in 'src/'. Skipping further steps."
               exit 0
-          else
-              echo "Files changed in 'src/':"
-              echo "$SRC_CHANGED_FILES"
-              echo "$SRC_CHANGED_FILES" > dags_changed_files.txt
-              echo "${CHANGED_FILES[@]}" > all_changed_files.txt
           fi
+
+          echo "Files changed in 'src/':"
+          echo "$SRC_CHANGED_FILES"
+          echo "$SRC_CHANGED_FILES" > dags_changed_files.txt
+          echo "${CHANGED_FILES[@]}" > all_changed_files.txt
           echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_OUTPUT
+
 
 
 
