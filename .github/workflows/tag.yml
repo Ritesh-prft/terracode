@@ -240,15 +240,15 @@ jobs:
           fi
 
           # Filter only files in the /src path (ignoring files outside /infra/src/dags/)
-          SRC_CHANGED_FILES=$(echo "$CHANGED_FILES" | grep -E "^infra/src/dags/" || echo "")
+          SRC_CHANGED_FILES=$(echo "$CHANGED_FILES" | grep -E "^src/" || echo "")
 
           # Handle the case where no files match the filter
           if [ -z "$SRC_CHANGED_FILES" ]; then
-            echo "No files changed in path 'infra/src/dags/'."
+            echo "No files changed in path 'src/'."
             echo "Skipping further steps."
             exit 0
           else
-            echo "Files changed in 'infra/src/dags/':"
+            echo "Files changed in 'src/':"
             echo "$SRC_CHANGED_FILES"
             echo "Current working directory: $(pwd)"
             echo "$SRC_CHANGED_FILES" > dags_changed_files.txt
