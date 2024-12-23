@@ -111,7 +111,8 @@ jobs:
           # Merge the PR using GitHub CLI
           gh pr merge $pr_number --merge
           echo "PR #$pr_number merged successfully into main."
-##############################################################################################################
+###########################################################
+
   create_tag:
     needs: validate_created_pr
     runs-on: ubuntu-latest
@@ -199,6 +200,7 @@ jobs:
           echo "Fetched Commit Message: $COMMIT_MESSAGE"
           echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_OUTPUT
 
+
       - name: Fetch PR changed files using GitHub API
         id: changed_files
         run: |
@@ -219,6 +221,9 @@ jobs:
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}/files?per_page=$PER_PAGE")
 
+          # Print the full API response to debug
+          # echo "API Response: $RESPONSE"
+
           # Check if the response is empty or malformed
           if [ -z "$RESPONSE" ]; then
             echo "API response is empty. Exiting."
@@ -236,7 +241,7 @@ jobs:
           fi
 
           # Filter only files in the /src path (ignoring files outside /infra/src/dags/)
-          SRC_CHANGED_FILES=$(echo "$CHANGED_FILES" | grep -E "^infra/src/dags/" || echo "")
+          SRC_CHANGED_FILES=$(echo "$CHANGED_FILES" | grep -E "^src/" || echo "")
 
           # Display the count of changed files
           CHANGED_FILES_COUNT=$(echo "$CHANGED_FILES" | wc -l)
@@ -246,11 +251,11 @@ jobs:
 
           # Handle the case where no files match the filter
           if [ -z "$SRC_CHANGED_FILES" ]; then
-            echo "No files changed in path 'infra/src/dags/'."
+            echo "No files changed in path 'src/'."
             echo "Skipping further steps."
             exit 0
           else
-            echo "Files changed in 'infra/src/dags/':"
+            echo "Files changed in 'src/':"
             echo "$SRC_CHANGED_FILES"
             echo "Current working directory: $(pwd)"
             echo "$SRC_CHANGED_FILES" > dags_changed_files.txt
@@ -259,6 +264,50 @@ jobs:
 
           # Output the commit message (if needed)
           echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_OUTPUT
+
+      # - name: Fetch PR changed files using GitHub API
+      #   id: changed_files
+      #   run: |
+      #     # Ensure PR number is available
+      #     PER_PAGE=100
+      #     PR_NUMBER="${{ github.event.pull_request.number }}"
+      #     echo "PR Number: $PR_NUMBER"
+      #     if [ -z "$PR_NUMBER" ]; then
+      #       echo "PR number not found. Exiting."
+      #       exit 1
+      #     fi
+      #     echo "Fetching changed files for PR #$PR_NUMBER..."
+      #     # Get the changed files from the PR using GitHub API
+      #     CHANGED_FILES=$(curl -s \
+      #       -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+      #       "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}/files?per_page=$PER_PAGE" \
+      #       | jq -r '.[].filename')
+          
+      #     # Filter only files in the /src path (ignoring files outside /infra/src/dags/)
+      #     SRC_CHANGED_FILES=$(echo "$CHANGED_FILES" | grep "^infra/src/dags/")
+          
+
+      #     # Handle the case where no files match the filter
+      #     if [ -z "$SRC_CHANGED_FILES" ]; then
+      #       echo "No files changed in path 'infra/src/dags/'."
+      #       echo "Skipping further steps."
+      #       # You can exit successfully if no relevant files are found
+      #       exit 0
+      #     else
+      #       echo "Files changed in 'infra/src/dags/':"
+      #       echo "$SRC_CHANGED_FILES"
+      #       echo "Current working directory: $(pwd)"
+      #       echo "$SRC_CHANGED_FILES" > dags_changed_files.txt
+      #       echo "$CHANGED_FILES" > all_changed_files.txt
+      #     fi
+      #     echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_OUTPUT
+      
+
+
+
+
+
+
 
 
       - name: Upload all_changed_files.txt artifact
@@ -272,127 +321,8 @@ jobs:
         with:
           name: dags-changed-files
           path: dags_changed_files.txt
-          
-##############################################################################################################
-  create_merge_dev_changelog_pr:
-    needs: create_tag
-    runs-on: ubuntu-latest
-    env:
-        NEW_TAG: ${{ needs.create_tag.outputs.NEW_TAG }}
-        COMMIT_MESSAGE: ${{ needs.create_tag.outputs.COMMIT_MESSAGE }}
-    permissions:
-      id-token: write # This is required for requesting the JWT
-      contents: write  # Allow GITHUB_TOKEN to write to repository contents
-      pull-requests: write  # Allow GITHUB_TOKEN to create and manage pull requests
-    steps:
-      - name: user config
-        run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
 
-      - name: Checkout code from PR branch
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ github.head_ref }}
-          fetch-depth: 0  # Ensure that the entire history and all tags are fetched
 
-      - name: Fetch all tags
-        run: git fetch --tags
-
-      - name: Download all_changed_files.txt artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: all-changed-files
-
-      - name: Update Changelog for Dev Deployment
-        env:
-          GITHUB_TOKEN: ${{ secrets.PR_TOKEN_GLOBAL }}
-        run: |
-          TAG_NAME="${{ env.NEW_TAG }}"
-          DATE=$(date +'%Y-%m-%d')
-          ENVIRONMENT="dev"
-          COMMIT_MESSAGE="${{ env.COMMIT_MESSAGE }}"
-          CHANGED_FILES_CONTENT=$(cat all_changed_files.txt)
-          # Ensure we're on the main branch to update the changelog file
-          git checkout main
-          git pull origin main
-          FEATURE_BRANCH="feature/changelog-$ENVIRONMENT-$NEW_TAG-$(date +'%Y%m%d%H%M%S')"
-          git checkout -b "$FEATURE_BRANCH"
-          echo "Created new feature branch: $FEATURE_BRANCH"
-          # Add a changelog entry for the Dev deployment with PR commit message
-          echo -e "\n#####\n## [${TAG_NAME}] - $DATE\n### Deployed to:\n- **${ENVIRONMENT}**: ${DATE}\n### Changes:\n- Deployed version ${TAG_NAME}\n- Commit Message: $COMMIT_MESSAGE\n- Files Updated: $CHANGED_FILES_CONTENT" >> CHANGELOG_Dev.md
-          # Commit and push changes
-          git add CHANGELOG_Dev.md
-          git commit -m "Update changelog for ${TAG_NAME} deployment to ${ENVIRONMENT}"
-          # Push the changes
-          git push origin "$FEATURE_BRANCH"
-          echo "pushed changes to $FEATURE_BRANCH branch"
-          echo "creating PR ...."
-          # Create PR and store PR number
-          pr_url=$(gh pr create \
-            --title "Changelog Update ${FEATURE_BRANCH}" \
-            --body "Automated PR for changelog update" \
-            --base main \
-            --head $FEATURE_BRANCH)
-              
-          echo "PR created and pending review at ${pr_url}"
-          # Save the PR number for later steps
-          pr_number=$(gh pr list --state=open --base main --head $FEATURE_BRANCH --json number --jq '.[0].number')
-          echo "PR number: $pr_number"
-          echo "changelog_pr_number=$pr_number" >> $GITHUB_ENV
-
-      - name: Get PR details
-        env:
-          GH_TOKEN: ${{ secrets.PR_TOKEN_GLOBAL }}
-        run: |
-          echo "Fetching PR details"
-          pr_number="${{ env.changelog_pr_number }}"
-          pr_creator=$(gh pr view $pr_number --json author --jq '.author.login')
-          echo "PR number: $pr_number"
-          echo "PR creator: $pr_creator"
-          echo "changelog_pr_creator=$pr_creator" >> $GITHUB_ENV    
-
-      - name: Authenticate GitHub CLI
-        run: |
-          echo "${{ secrets.PR_TOKEN_GLOBAL }}" | gh auth login --with-token
-      - name: Check PR review status
-        run: |
-          echo "Fetching PR review details..."
-          pr_number="${{ env.changelog_pr_number }}"
-
-          
-          Poll until PR is approved
-          while true; do
-            # Fetch all reviews for the PR
-            pr_reviews=$(gh pr view $pr_number --json reviews --jq '.reviews')
-            
-            if [[ $? -ne 0 ]]; then
-              echo "Failed to fetch PR details. Error: $pr_reviews"
-              exit 1
-            fi
-            
-            echo "PR Reviews: $pr_reviews"
-            # If there are no reviews, print a message and wait
-            if [ -z "$pr_reviews" ]; then
-              echo "No reviews found yet. Waiting for reviews..."
-              sleep 30  # Sleep for 30 seconds before checking again
-              continue  # Continue checking without exiting
-            fi
-            # Check for approval status
-            approval_status=$(echo "$pr_reviews" | jq '.[] | select(.state == "APPROVED")' | wc -l)
-            echo "Approval status is: $approval_status"
-            # If PR is approved, proceed with merge
-            if [ "$approval_status" -ge 1 ]; then
-              echo "PR is approved, proceeding with merge."
-              # Merge the PR using GitHub CLI
-              gh pr merge $pr_number --merge --delete-branch  # Or use --squash or --rebase
-              echo "PR #$pr_number merged successfully into main."
-              break  # Exit the loop after successful merge
-            else
-              echo "PR is not approved yet, waiting..."
-              sleep 30  # Wait for approval, check again after some time
-            fi
-          done
 
 
 
