@@ -16,10 +16,95 @@ on:
     paths:
       - 'src/**'
   
+concurrency:
+  group: ${{ github.head_ref }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
+permissions:
+  id-token: write
+  contents: write
+  pull-requests: write
 
 jobs:
+  check-approval:
+    runs-on: ubuntu-latest
+    outputs:
+      approval-status: ${{ steps.check-approval.outputs.status }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Fetch PR changed files using GitHub API
+        id: changed_files
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          echo "PR Number: $PR_NUMBER"
+          
+          if [ -z "$PR_NUMBER" ]; then
+            echo "PR number not found. Exiting."
+            exit 1
+          fi
+
+          CHANGED_FILES=$(curl -s \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}/files" \
+            | jq -r '.[].filename')
+
+          echo "Changed files are:"
+          echo "$CHANGED_FILES"
+
+          SRC_CHANGED_FILES=$(echo "$CHANGED_FILES" | grep "^infra/src/dags/" || true)
+
+          if [ -z "$SRC_CHANGED_FILES" ]; then
+            echo "No files changed in path 'infra/src/dags/'. Exiting."
+            exit 0
+          else
+            echo "Files changed in 'infra/src/dags/':"
+            echo "$SRC_CHANGED_FILES"
+            echo "Proceeding with further actions..."
+          fi
+      - name: Authenticate GitHub CLI
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+      - name: Check if PR is approved
+        id: check-approval
+        run: |
+          pr_number="${{ github.event.pull_request.number }}"
+          # Poll until PR is approved
+          while true; do
+            # Fetch all reviews for the PR
+            pr_reviews=$(gh pr view $pr_number --json reviews --jq '.reviews')
+            
+            if [[ $? -ne 0 ]]; then
+              echo "Failed to fetch PR details. Error: $pr_reviews"
+              exit 1
+            fi
+            
+            echo "PR Reviews: $pr_reviews"
+            # If there are no reviews, print a message and wait
+            if [ -z "$pr_reviews" ]; then
+              echo "No reviews found yet. Waiting for reviews..."
+              sleep 30  # Sleep for 30 seconds before checking again
+              continue  # Continue checking without exiting
+            fi
+            # Check for approval status
+            approval_status=$(echo "$pr_reviews" | jq '.[] | select(.state == "APPROVED")' | wc -l)
+            echo "Approval status is: $approval_status"
+            # If PR is approved, proceed with further steps
+            if [ "$approval_status" -ge 1 ]; then
+              echo "PR is approved, proceeding with further steps."
+
+              
+              break  # Exit the loop after successful merge
+            else
+              echo "PR is not approved yet, waiting..."
+              sleep 30  # Wait for approval, check again after some time
+            fi
+          done
+
   validate_created_pr:
+    needs: check-approval
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request'}}
     permissions:
