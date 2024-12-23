@@ -446,7 +446,7 @@ jobs:
           pr_number="${{ env.changelog_pr_number }}"
           echo "PR is approved, proceeding with merge."
           # Merge the PR using GitHub CLI
-          gh pr merge $pr_number --merge --delete-branch  # Or use --squash or --rebase
+          gh pr merge $pr_number --merge --admin --delete-branch  # Or use --squash or --rebase
           echo "PR #$pr_number merged successfully into main."
           
           # Poll until PR is approved
