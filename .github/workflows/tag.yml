@@ -14,7 +14,7 @@ on:
       - reopened     # Trigger when a PR is reopened
       - edited      # Trigger when a PR is edited
     paths:
-      - 'src/**'
+      - 'infra/src/dags/**'
   
 concurrency:
   group: ${{ github.head_ref }}-${{ github.event.pull_request.number }}
