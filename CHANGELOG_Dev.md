@@ -854,3 +854,12 @@ fixed changelog logs workflow yml file want more logs in changelog no ticket
 - Deployed version tag-v71.6.0
 - Commit Message: Feature/tagging 01 ### Description of changes ###:01### Files Changed ###:01### Reason for Change ###:01### Task/Ticket/Issue ###:01
 
+
+#####
+## [tag-v95.0.0] - 2024-12-23
+### Deployed to:
+- **dev**: 2024-12-23
+### Changes:
+- Deployed version tag-v95.0.0
+- Commit Message: MAJOR updated pipeline file to add auto merge_3 ### Description of changes ###: MAJOR updated pipeline file to add auto merge_3### Files Changed ###: MAJOR updated pipeline file to add auto merge_3### Reason for Change ###: MAJOR updated pipeline file to add auto merge_3### Task/Ticket/Issue ###: MAJOR updated pipeline file to add auto merge_3
+- Files Updated: infra/src/dags/file copy 2.py
