@@ -854,3 +854,13 @@ fixed changelog logs workflow yml file want more logs in changelog no ticket
 - Deployed version tag-v71.6.0
 - Commit Message: Feature/tagging 01 ### Description of changes ###:01### Files Changed ###:01### Reason for Change ###:01### Task/Ticket/Issue ###:01
 
+
+#####
+## [tag-v97.0.0] - 2024-12-23
+### Deployed to:
+- **dev**: 2024-12-23
+### Changes:
+- Deployed version tag-v97.0.0
+- Commit Message: Feature/tagging 01 ### Description of changes ###:Feature/tagging 01### Files Changed ###:Feature/tagging 01### Reason for Change ###:Feature/tagging 01### Task/Ticket/Issue ###:Feature/tagging 01
+- Files Updated: .github/workflows/tag.yml
+infra/src/dags/file copy 2.py
