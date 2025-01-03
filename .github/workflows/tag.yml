@@ -197,7 +197,7 @@ jobs:
           gh pr merge $pr_number --merge
           echo "PR #$pr_number merged successfully into main."
 ##############################################################################################################
-  create_tag:
+  create_tag_for_deployment:
     needs: validate_created_pr
     runs-on: ubuntu-latest
     outputs:
@@ -291,12 +291,10 @@ jobs:
           PER_PAGE=100
           PR_NUMBER="${{ github.event.pull_request.number }}"
           echo "PR Number: $PR_NUMBER"
-          
           if [ -z "$PR_NUMBER" ]; then
             echo "PR number not found. Exiting."
             exit 1
           fi
-
           echo "Fetching changed files for PR #$PR_NUMBER..."
 
           # Fetch the changed files from the PR using GitHub API
@@ -333,6 +331,7 @@ jobs:
           if [ -z "$SRC_CHANGED_FILES" ]; then
             echo "No files changed in path 'infra/src/dags/'."
             echo "Skipping further steps."
+            # You can exit successfully if no relevant files are found
             exit 0
           else
             echo "Files changed in 'infra/src/dags/':"
@@ -341,10 +340,7 @@ jobs:
             echo "$SRC_CHANGED_FILES" > dags_changed_files.txt
             echo "$CHANGED_FILES" > all_changed_files.txt
           fi
-
-          # Output the commit message (if needed)
           echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_OUTPUT
-
 
       - name: Upload all_changed_files.txt artifact
         uses: actions/upload-artifact@v3
@@ -359,12 +355,12 @@ jobs:
           path: dags_changed_files.txt
           
 ##############################################################################################################
-  create_merge_dev_changelog_pr:
-    needs: create_tag
+  dev_changelog_pr_approve_it_manually:
+    needs: [create_tag_for_deployment]
     runs-on: ubuntu-latest
     env:
-        NEW_TAG: ${{ needs.create_tag.outputs.NEW_TAG }}
-        COMMIT_MESSAGE: ${{ needs.create_tag.outputs.COMMIT_MESSAGE }}
+        NEW_TAG: ${{ needs.create_tag_for_deployment.outputs.NEW_TAG }}
+        COMMIT_MESSAGE: ${{ needs.create_tag_for_deployment.outputs.COMMIT_MESSAGE }}
     permissions:
       id-token: write # This is required for requesting the JWT
       contents: write  # Allow GITHUB_TOKEN to write to repository contents
@@ -391,7 +387,7 @@ jobs:
 
       - name: Update Changelog for Dev Deployment
         env:
-          GITHUB_TOKEN: ${{ secrets.PR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PR_TOKEN_GLOBAL }}
         run: |
           TAG_NAME="${{ env.NEW_TAG }}"
           DATE=$(date +'%Y-%m-%d')
@@ -425,10 +421,12 @@ jobs:
           pr_number=$(gh pr list --state=open --base main --head $FEATURE_BRANCH --json number --jq '.[0].number')
           echo "PR number: $pr_number"
           echo "changelog_pr_number=$pr_number" >> $GITHUB_ENV
+          echo "changelog_pr_url=$pr_url" >> $GITHUB_ENV
+          echo "dev_changelog_feature_branch=$FEATURE_BRANCH" >> $GITHUB_ENV
 
       - name: Get PR details
         env:
-          GH_TOKEN: ${{ secrets.PR_TOKEN }}
+          GH_TOKEN: ${{ secrets.PR_TOKEN_GLOBAL }}
         run: |
           echo "Fetching PR details"
           pr_number="${{ env.changelog_pr_number }}"
@@ -439,16 +437,12 @@ jobs:
 
       - name: Authenticate GitHub CLI
         run: |
-          echo "${{ secrets.PR_TOKEN }}" | gh auth login --with-token
+          echo "${{ secrets.PR_TOKEN_GLOBAL }}" | gh auth login --with-token
       - name: Check PR review status
         run: |
           echo "Fetching PR review details..."
           pr_number="${{ env.changelog_pr_number }}"
-          echo "PR is approved, proceeding with merge."
-          # Merge the PR using GitHub CLI
-          gh pr merge $pr_number --merge --admin --delete-branch  # Or use --squash or --rebase
-          echo "PR #$pr_number merged successfully into main."
-          
+          FEATURE_BRANCH="${{ env.dev_changelog_feature_branch }}"
           # Poll until PR is approved
           while true; do
             # Fetch all reviews for the PR
@@ -472,12 +466,33 @@ jobs:
             # If PR is approved, proceed with merge
             if [ "$approval_status" -ge 1 ]; then
               echo "PR is approved, proceeding with merge."
-              # Merge the PR using GitHub CLI
-              gh pr merge $pr_number --merge --delete-branch  # Or use --squash or --rebase
+              # Rebase and merge the PR
+              git fetch origin
+              git checkout main
+              git pull origin main
+              git checkout $FEATURE_BRANCH  # Checkout the feature branch
+              git rebase main  # Rebase onto main to include any updates from other merged PRs
+
+              # Check for conflicts after rebase
+              if git ls-files -u | grep -q 'CHANGELOG_Dev.md'; then
+                echo "Conflict detected in CHANGELOG_Dev.md, resolving..."
+                # Resolve the conflict by accepting both changes
+                git checkout --theirs CHANGELOG_Dev.md  # Accept incoming PR changes
+                git checkout --ours CHANGELOG_Dev.md   # Accept current branch changes (main)
+                git add CHANGELOG_Dev.md
+                git commit --amend --no-edit  # Amend commit to reflect the conflict resolution
+              fi
+
+              git push origin $FEATURE_BRANCH --force-with-lease  # Push rebased branch
+
+              # Now merge the PR using GitHub CLI
+              gh pr merge $pr_number --merge --delete-branch
               echo "PR #$pr_number merged successfully into main."
               break  # Exit the loop after successful merge
             else
               echo "PR is not approved yet, waiting..."
+              echo "Approve the PR , click on link to go to PR $changelog_pr_url"
+              echo "Anyone can approve this PR, go to changed file section and aprpove"
               sleep 30  # Wait for approval, check again after some time
             fi
           done
