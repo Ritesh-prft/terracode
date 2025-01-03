@@ -946,3 +946,13 @@ infra/src/dags/file copy 10.py
 - Deployed version tag-v121.0.0
 - Commit Message: MAJOR updated pipeline file to add auto merge_5 ### Description of changes ###: MAJOR updated pipeline file to add auto merge_5### Files Changed ###: MAJOR updated pipeline file to add auto merge_5### Reason for Change ###: MAJOR updated pipeline file to add auto merge_5### Task/Ticket/Issue ###: MAJOR updated pipeline file to add auto merge_5
 - Files Updated: infra/src/dags/file copy 2.py
+
+#####
+## [tag-v122.0.0] - 2025-01-03
+### Deployed to:
+- **dev**: 2025-01-03
+### Changes:
+- Deployed version tag-v122.0.0
+- Commit Message: MAJOR updated pipeline file to add auto merge_5 ### Description of changes ###: MAJOR updated pipeline file to add auto merge_5### Files Changed ###: MAJOR updated pipeline file to add auto merge_5### Reason for Change ###: MAJOR updated pipeline file to add auto merge_5### Task/Ticket/Issue ###: MAJOR updated pipeline file to add auto merge_5
+- Files Updated: .github/workflows/tag.yml
+infra/src/dags/file copy 8.py
