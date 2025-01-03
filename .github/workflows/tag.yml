@@ -439,13 +439,13 @@ jobs:
         run: |
           echo "${{ secrets.PR_TOKEN }}" | gh auth login --with-token
 
-      - name: Check PR review status and merge
+      - name: Check PR review status and wait for conflict resolution
         run: |
           echo "Fetching PR review details..."
           pr_number="${{ env.changelog_pr_number }}"
           FEATURE_BRANCH="${{ env.dev_changelog_feature_branch }}"
           
-          # Poll until PR is approved and there's no conflict
+          # Poll until PR is approved and there are no conflicts
           while true; do
             # Fetch all reviews for the PR
             pr_reviews=$(gh pr view $pr_number --json reviews --jq '.reviews')
@@ -476,27 +476,30 @@ jobs:
               git checkout $FEATURE_BRANCH  # Checkout the feature branch
               git rebase main  # Rebase onto main to include any updates from other merged PRs
               
-              # Check if there are merge conflicts
+              # Check if there are merge conflicts in CHANGELOG_Dev.md
               if git ls-files -u | grep -q 'CHANGELOG_Dev.md'; then
-                echo "Conflict detected in CHANGELOG_Dev.md, retrying..."
-                sleep 30  # Wait for 30 seconds before checking again
-                continue  # Continue checking for conflicts
+                echo "Conflict detected in CHANGELOG_Dev.md, waiting for manual resolution..."
+
+                # Wait for the conflict to be resolved manually
+                echo "Waiting for manual conflict resolution. Please resolve the conflict in CHANGELOG_Dev.md and commit the changes."
+                sleep 30  # Check every 30 seconds, this will give time for manual conflict resolution
+                continue  # Continue checking until the conflict is resolved
               else
                 echo "No conflicts, proceeding with merge."
-
-                # Push rebased branch
-                git push origin $FEATURE_BRANCH --force-with-lease
-
-                # Now merge the PR using GitHub CLI
-                gh pr merge $pr_number --merge --delete-branch
-                echo "PR #$pr_number merged successfully into main."
-                break  # Exit the loop after successful merge
+                break  # Exit the loop when no conflicts are found and PR is approved
               fi
             else
               echo "PR is not approved yet, waiting..."
               sleep 30  # Wait for approval, check again after some time
             fi
           done
+
+      - name: Merge the PR after conflict resolution
+        run: |
+          pr_number="${{ env.changelog_pr_number }}"
+          gh pr merge $pr_number --merge --delete-branch
+          echo "PR #$pr_number merged successfully into main."
+
 
 
 
