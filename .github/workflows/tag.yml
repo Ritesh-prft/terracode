@@ -359,12 +359,12 @@ jobs:
     needs: [create_tag_for_deployment]
     runs-on: ubuntu-latest
     env:
-        NEW_TAG: ${{ needs.create_tag_for_deployment.outputs.NEW_TAG }}
-        COMMIT_MESSAGE: ${{ needs.create_tag_for_deployment.outputs.COMMIT_MESSAGE }}
+      NEW_TAG: ${{ needs.create_tag_for_deployment.outputs.NEW_TAG }}
+      COMMIT_MESSAGE: ${{ needs.create_tag_for_deployment.outputs.COMMIT_MESSAGE }}
     permissions:
-      id-token: write # This is required for requesting the JWT
-      contents: write  # Allow GITHUB_TOKEN to write to repository contents
-      pull-requests: write  # Allow GITHUB_TOKEN to create and manage pull requests
+      id-token: write
+      contents: write
+      pull-requests: write
     steps:
       - name: user config
         run: |
@@ -415,7 +415,7 @@ jobs:
             --body "Automated PR for changelog update" \
             --base main \
             --head $FEATURE_BRANCH)
-              
+            
           echo "PR created and pending review at ${pr_url}"
           # Save the PR number for later steps
           pr_number=$(gh pr list --state=open --base main --head $FEATURE_BRANCH --json number --jq '.[0].number')
@@ -438,13 +438,14 @@ jobs:
       - name: Authenticate GitHub CLI
         run: |
           echo "${{ secrets.PR_TOKEN }}" | gh auth login --with-token
-      - name: Check PR review status
+
+      - name: Check PR review status and merge
         run: |
           echo "Fetching PR review details..."
           pr_number="${{ env.changelog_pr_number }}"
           FEATURE_BRANCH="${{ env.dev_changelog_feature_branch }}"
           
-          # Poll until PR is approved
+          # Poll until PR is approved and there's no conflict
           while true; do
             # Fetch all reviews for the PR
             pr_reviews=$(gh pr view $pr_number --json reviews --jq '.reviews')
@@ -466,39 +467,37 @@ jobs:
             echo "Approval status is: $approval_status"
             
             if [ "$approval_status" -ge 1 ]; then
-              echo "PR is approved, proceeding with merge."
-              
-              # Rebase and merge the PR
+              echo "PR is approved, checking for conflicts."
+
+              # Rebase and check for conflicts
               git fetch origin
               git checkout main
               git pull origin main
               git checkout $FEATURE_BRANCH  # Checkout the feature branch
               git rebase main  # Rebase onto main to include any updates from other merged PRs
               
-              # Check and resolve conflicts automatically
+              # Check if there are merge conflicts
               if git ls-files -u | grep -q 'CHANGELOG_Dev.md'; then
-                echo "Conflict detected in CHANGELOG_Dev.md, resolving..."
+                echo "Conflict detected in CHANGELOG_Dev.md, retrying..."
+                sleep 30  # Wait for 30 seconds before checking again
+                continue  # Continue checking for conflicts
+              else
+                echo "No conflicts, proceeding with merge."
 
-                # Manually stage both versions of the conflict
-                git add CHANGELOG_Dev.md
+                # Push rebased branch
+                git push origin $FEATURE_BRANCH --force-with-lease
 
-                # Continue the rebase process
-                git rebase --continue
+                # Now merge the PR using GitHub CLI
+                gh pr merge $pr_number --merge --delete-branch
+                echo "PR #$pr_number merged successfully into main."
+                break  # Exit the loop after successful merge
               fi
-              
-              # Push rebased branch
-              git push origin $FEATURE_BRANCH --force-with-lease
-
-              # Now merge the PR using GitHub CLI
-              gh pr merge $pr_number --merge --delete-branch
-              echo "PR #$pr_number merged successfully into main."
-              break  # Exit the loop after successful merge
-              
             else
               echo "PR is not approved yet, waiting..."
               sleep 30  # Wait for approval, check again after some time
             fi
           done
+
 
 
 
