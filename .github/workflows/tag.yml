@@ -387,7 +387,7 @@ jobs:
 
       - name: Update Changelog for Dev Deployment
         env:
-          GITHUB_TOKEN: ${{ secrets.PR_TOKEN_GLOBAL }}
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           TAG_NAME="${{ env.NEW_TAG }}"
           DATE=$(date +'%Y-%m-%d')
