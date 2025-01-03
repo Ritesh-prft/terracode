@@ -443,6 +443,7 @@ jobs:
           echo "Fetching PR review details..."
           pr_number="${{ env.changelog_pr_number }}"
           FEATURE_BRANCH="${{ env.dev_changelog_feature_branch }}"
+          
           # Poll until PR is approved
           while true; do
             # Fetch all reviews for the PR
@@ -452,50 +453,61 @@ jobs:
               echo "Failed to fetch PR details. Error: $pr_reviews"
               exit 1
             fi
-            
+
             echo "PR Reviews: $pr_reviews"
-            # If there are no reviews, print a message and wait
+            
             if [ -z "$pr_reviews" ]; then
               echo "No reviews found yet. Waiting for reviews..."
               sleep 30  # Sleep for 30 seconds before checking again
               continue  # Continue checking without exiting
             fi
-            # Check for approval status
+            
             approval_status=$(echo "$pr_reviews" | jq '.[] | select(.state == "APPROVED")' | wc -l)
             echo "Approval status is: $approval_status"
-            # If PR is approved, proceed with merge
+            
             if [ "$approval_status" -ge 1 ]; then
               echo "PR is approved, proceeding with merge."
+              
               # Rebase and merge the PR
               git fetch origin
               git checkout main
               git pull origin main
               git checkout $FEATURE_BRANCH  # Checkout the feature branch
               git rebase main  # Rebase onto main to include any updates from other merged PRs
-
-              # Check for conflicts after rebase
+              
+              # Check and resolve conflicts automatically
               if git ls-files -u | grep -q 'CHANGELOG_Dev.md'; then
                 echo "Conflict detected in CHANGELOG_Dev.md, resolving..."
-                # Resolve the conflict by accepting both changes
-                git checkout --theirs CHANGELOG_Dev.md  # Accept incoming PR changes
-                git checkout --ours CHANGELOG_Dev.md   # Accept current branch changes (main)
+                
+                # Resolve the conflict automatically: 
+                # Accept both changes by applying both theirs and ours in a valid way
+                git checkout --theirs CHANGELOG_Dev.md  # Accept the incoming changes
                 git add CHANGELOG_Dev.md
+                
+                git checkout --ours CHANGELOG_Dev.md   # Accept the current branch changes
+                git add CHANGELOG_Dev.md
+                
+                # Commit the conflict resolution
                 git commit --amend --no-edit  # Amend commit to reflect the conflict resolution
-              fi
 
-              git push origin $FEATURE_BRANCH --force-with-lease  # Push rebased branch
+                # Continue with the rebase
+                git rebase --continue
+              fi
+              
+              # Push rebased branch
+              git push origin $FEATURE_BRANCH --force-with-lease
 
               # Now merge the PR using GitHub CLI
               gh pr merge $pr_number --merge --delete-branch
               echo "PR #$pr_number merged successfully into main."
               break  # Exit the loop after successful merge
+              
             else
               echo "PR is not approved yet, waiting..."
-              echo "Approve the PR , click on link to go to PR $changelog_pr_url"
-              echo "Anyone can approve this PR, go to changed file section and aprpove"
               sleep 30  # Wait for approval, check again after some time
             fi
           done
+
 
 
 
