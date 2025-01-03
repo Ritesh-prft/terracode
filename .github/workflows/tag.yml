@@ -450,37 +450,37 @@ jobs:
           echo "PR #$pr_number merged successfully into main."
           
           # Poll until PR is approved
-          # while true; do
-          #   # Fetch all reviews for the PR
-          #   pr_reviews=$(gh pr view $pr_number --json reviews --jq '.reviews')
+          while true; do
+            # Fetch all reviews for the PR
+            pr_reviews=$(gh pr view $pr_number --json reviews --jq '.reviews')
             
-          #   if [[ $? -ne 0 ]]; then
-          #     echo "Failed to fetch PR details. Error: $pr_reviews"
-          #     exit 1
-          #   fi
+            if [[ $? -ne 0 ]]; then
+              echo "Failed to fetch PR details. Error: $pr_reviews"
+              exit 1
+            fi
             
-          #   echo "PR Reviews: $pr_reviews"
-          #   # If there are no reviews, print a message and wait
-          #   if [ -z "$pr_reviews" ]; then
-          #     echo "No reviews found yet. Waiting for reviews..."
-          #     sleep 30  # Sleep for 30 seconds before checking again
-          #     continue  # Continue checking without exiting
-          #   fi
-          #   # Check for approval status
-          #   approval_status=$(echo "$pr_reviews" | jq '.[] | select(.state == "APPROVED")' | wc -l)
-          #   echo "Approval status is: $approval_status"
-          #   # If PR is approved, proceed with merge
-          #   if [ "$approval_status" -ge 1 ]; then
-          #     echo "PR is approved, proceeding with merge."
-          #     # Merge the PR using GitHub CLI
-          #     gh pr merge $pr_number --merge --delete-branch  # Or use --squash or --rebase
-          #     echo "PR #$pr_number merged successfully into main."
-          #     break  # Exit the loop after successful merge
-          #   else
-          #     echo "PR is not approved yet, waiting..."
-          #     sleep 30  # Wait for approval, check again after some time
-          #   fi
-          # done
+            echo "PR Reviews: $pr_reviews"
+            # If there are no reviews, print a message and wait
+            if [ -z "$pr_reviews" ]; then
+              echo "No reviews found yet. Waiting for reviews..."
+              sleep 30  # Sleep for 30 seconds before checking again
+              continue  # Continue checking without exiting
+            fi
+            # Check for approval status
+            approval_status=$(echo "$pr_reviews" | jq '.[] | select(.state == "APPROVED")' | wc -l)
+            echo "Approval status is: $approval_status"
+            # If PR is approved, proceed with merge
+            if [ "$approval_status" -ge 1 ]; then
+              echo "PR is approved, proceeding with merge."
+              # Merge the PR using GitHub CLI
+              gh pr merge $pr_number --merge --delete-branch  # Or use --squash or --rebase
+              echo "PR #$pr_number merged successfully into main."
+              break  # Exit the loop after successful merge
+            else
+              echo "PR is not approved yet, waiting..."
+              sleep 30  # Wait for approval, check again after some time
+            fi
+          done
 
 
 
