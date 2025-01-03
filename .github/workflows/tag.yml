@@ -479,12 +479,7 @@ jobs:
               if git ls-files -u | grep -q 'CHANGELOG_Dev.md'; then
                 echo "Conflict detected in CHANGELOG_Dev.md, resolving..."
 
-                # Resolve conflict by accepting both changes:
-                # First accept incoming PR changes (theirs)
-                git restore --source=HEAD --staged CHANGELOG_Dev.md
-                git restore --source=FETCH_HEAD --staged CHANGELOG_Dev.md
-
-                # Stage the changes
+                # Manually stage both versions of the conflict
                 git add CHANGELOG_Dev.md
 
                 # Continue the rebase process
@@ -504,6 +499,7 @@ jobs:
               sleep 30  # Wait for approval, check again after some time
             fi
           done
+
 
 
 
