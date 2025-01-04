@@ -478,8 +478,13 @@ jobs:
               git rebase origin/main || {
                 echo "Rebase failed due to conflicts. Resolving conflicts automatically."
                 git rebase --abort
+                echo "checking out theirs change."
                 git checkout --theirs CHANGELOG_Dev.md  # Automatically accept changes from the base branch
+                echo "checking out ours change."
+                git checkout --ours CHANGELOG_Dev.md  # Automatically accept changes from the base branch
+                echo "adding changes to remote repo."
                 git add CHANGELOG_Dev.md
+                echo "running git rebase command."
                 git rebase --continue || {
                   echo "Rebase failed even after automatic resolution. Please resolve manually."
                   exit 1
