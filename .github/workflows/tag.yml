@@ -474,18 +474,17 @@ jobs:
               echo "feature branch is checking out"
               git checkout $FEATURE_BRANCH  # Checkout the feature branch
               echo "main branch is being merged"
-              git merge main  # Rebase onto main to include any updates from other merged PRs
-              echo "main branch is merged into feature branch"
-              # Check for conflicts after rebase
-              echo "checking if feature branch have any conflicts"
-              if git ls-files -u | grep -q 'CHANGELOG_Dev.md'; then
-                echo "Conflict detected in CHANGELOG_Dev.md, resolving..."
-                # Resolve the conflict by accepting both changes
-                git checkout --theirs CHANGELOG_Dev.md  # Accept incoming PR changes
-                git checkout --ours CHANGELOG_Dev.md   # Accept current branch changes (main)
+              echo "Attempting to rebase onto main"
+              git rebase origin/main || {
+                echo "Rebase failed due to conflicts. Resolving conflicts automatically."
+                git rebase --abort
+                git checkout --theirs CHANGELOG_Dev.md  # Automatically accept changes from the base branch
                 git add CHANGELOG_Dev.md
-                git commit --amend --no-edit  # Amend commit to reflect the conflict resolution
-              fi
+                git rebase --continue || {
+                  echo "Rebase failed even after automatic resolution. Please resolve manually."
+                  exit 1
+                }
+              }
 
               git push origin $FEATURE_BRANCH --force-with-lease  # Push rebased branch
 
