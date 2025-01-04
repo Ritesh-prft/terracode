@@ -485,7 +485,7 @@ jobs:
                 git add CHANGELOG_Dev.md
                 echo "running git commit command."
                 git commit --amend --no-edit
-                }
+                
               }
               echo "running git push command."
               git push origin $FEATURE_BRANCH --force-with-lease  # Push rebased branch
