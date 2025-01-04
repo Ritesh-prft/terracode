@@ -491,7 +491,7 @@ jobs:
               git push origin $FEATURE_BRANCH --force-with-lease  # Push rebased branch
 
               # Now merge the PR using GitHub CLI
-              gh pr merge $pr_number --merge --delete-branch
+              gh pr merge $pr_number --merge --auto --delete-branch
               echo "PR #$pr_number merged successfully into main."
               break  # Exit the loop after successful merge
             else
