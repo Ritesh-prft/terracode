@@ -1019,3 +1019,13 @@ infra/src/dags/file copy 13.py
 - Deployed version tag-v138.0.0
 - Commit Message: MAJOR updated pipeline file to add auto merge_14 ### Description of changes ###: MAJOR updated pipeline file to add auto merge_14### Files Changed ###: MAJOR updated pipeline file to add auto merge_14### Reason for Change ###: MAJOR updated pipeline file to add auto merge_14### Task/Ticket/Issue ###: MAJOR updated pipeline file to add auto merge_14
 - Files Updated: infra/src/dags/file copy 12.py
+
+#####
+## [tag-v139.0.0] - 2025-01-04
+### Deployed to:
+- **dev**: 2025-01-04
+### Changes:
+- Deployed version tag-v139.0.0
+- Commit Message: MAJOR updated pipeline file to add auto merge_14 ### Description of changes ###: MAJOR updated pipeline file to add auto merge_14### Files Changed ###: MAJOR updated pipeline file to add auto merge_14### Reason for Change ###: MAJOR updated pipeline file to add auto merge_14### Task/Ticket/Issue ###: MAJOR updated pipeline file to add auto merge_14
+- Files Updated: .github/workflows/tag.yml
+infra/src/dags/file copy 12.py
