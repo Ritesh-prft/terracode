@@ -484,7 +484,7 @@ jobs:
                 echo "adding changes to remote repo."
                 git add CHANGELOG_Dev.md
                 echo "running git commit command."
-                git commit --amend --no-edit
+                git commit -m "fixed conflict for changelog pr"
                 
               }
               echo "running git push command."
