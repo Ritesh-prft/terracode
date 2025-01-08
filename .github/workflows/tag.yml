@@ -1,3 +1,4 @@
+name: CI/CD Pipeline 
 on:
   workflow_dispatch:
     inputs:
@@ -258,6 +259,7 @@ jobs:
           echo "New tag: $NEW_TAG"
           echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
           echo "NEW_TAG=$NEW_TAG" >> $GITHUB_OUTPUT
+          # echo "::set-output name=NEW_TAG::$NEW_TAG"
 
       - name: Create and push tag from feature branch
         env:
@@ -358,6 +360,7 @@ jobs:
   dev_changelog_pr_approve_it_manually:
     needs: [create_tag_for_deployment]
     runs-on: ubuntu-latest
+    name: Deployment- ${{  needs.create_tag_for_deployment.outputs.NEW_TAG }}
     env:
         NEW_TAG: ${{ needs.create_tag_for_deployment.outputs.NEW_TAG }}
         COMMIT_MESSAGE: ${{ needs.create_tag_for_deployment.outputs.COMMIT_MESSAGE }}
