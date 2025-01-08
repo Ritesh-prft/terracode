@@ -448,8 +448,12 @@ jobs:
           pr_number="${{ env.changelog_pr_number }}"
           gh pr review $pr_number --approve --body "Automated approval"
         env:
-          GITHUB_TOKEN: ${{ secrets.PR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PR_APPROVER }}
 
+      - name: Authenticate GitHub CLI
+        run: |
+          echo "${{ secrets.PR_TOKEN }}" | gh auth login --with-token
+          
       - name: Merge the PR
         run: |
           echo "Merging the PR..."
