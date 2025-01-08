@@ -1,3 +1,4 @@
+name: CI/CD Pipeline - ${{ needs.create_tag_for_deployment.outputs.NEW_TAG }}
 on:
   workflow_dispatch:
     inputs:
