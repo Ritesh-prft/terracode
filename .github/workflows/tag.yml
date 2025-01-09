@@ -364,7 +364,7 @@ jobs:
           
 ##############################################################################################################
   dev_changelog_pr_approve_it_manually:
-    needs: [create_tag_for_deployment]
+    needs: [validate_created_pr]
     runs-on: ubuntu-latest
     name: Deployment- ${{  needs.create_tag_for_deployment.outputs.NEW_TAG }}
     env:
@@ -448,93 +448,93 @@ jobs:
         run: |
           echo "${{ secrets.PR_TOKEN }}" | gh auth login --with-token
 
-      - name: Approve the PR
-        run: |
-          echo "Approving the PR..."
-          pr_number="${{ env.changelog_pr_number }}"
-          gh pr review $pr_number --approve --body "Automated approval"
-        env:
-          GITHUB_TOKEN: ${{ secrets.PR_APPROVER }}
+      # - name: Approve the PR
+      #   run: |
+      #     echo "Approving the PR..."
+      #     pr_number="${{ env.changelog_pr_number }}"
+      #     gh pr review $pr_number --approve --body "Automated approval"
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.PR_APPROVER }}
 
-      - name: Authenticate GitHub CLI
-        run: |
-          echo "${{ secrets.PR_TOKEN }}" | gh auth login --with-token
+      # - name: Authenticate GitHub CLI
+      #   run: |
+      #     echo "${{ secrets.PR_TOKEN }}" | gh auth login --with-token
 
-      - name: Merge the PR
-        run: |
-          echo "Merging the PR..."
-          pr_number="${{ env.changelog_pr_number }}"
-          gh pr merge $pr_number --merge --auto --delete-branch
-          echo "PR #$pr_number merged successfully into main and deleted changelog feature branch"
+      # - name: Merge the PR
+      #   run: |
+      #     echo "Merging the PR..."
+      #     pr_number="${{ env.changelog_pr_number }}"
+      #     gh pr merge $pr_number --merge --auto --delete-branch
+      #     echo "PR #$pr_number merged successfully into main and deleted changelog feature branch"
 
       # - name: Authenticate GitHub CLI
       #   run: |
       #     echo "${{ secrets.PR_TOKEN }}" | gh auth login --with-token
 
       
-      # - name: Check PR review status
-      #   run: |
-      #     echo "Fetching PR review details..."
-      #     pr_number="${{ env.changelog_pr_number }}"
-      #     FEATURE_BRANCH="${{ env.dev_changelog_feature_branch }}"
-      #     # Poll until PR is approved
-      #     while true; do
-      #       # Fetch all reviews for the PR
-      #       pr_reviews=$(gh pr view $pr_number --json reviews --jq '.reviews')
+      - name: Check PR review status
+        run: |
+          echo "Fetching PR review details..."
+          pr_number="${{ env.changelog_pr_number }}"
+          FEATURE_BRANCH="${{ env.dev_changelog_feature_branch }}"
+          # Poll until PR is approved
+          while true; do
+            # Fetch all reviews for the PR
+            pr_reviews=$(gh pr view $pr_number --json reviews --jq '.reviews')
             
-      #       if [[ $? -ne 0 ]]; then
-      #         echo "Failed to fetch PR details. Error: $pr_reviews"
-      #         exit 1
-      #       fi
+            if [[ $? -ne 0 ]]; then
+              echo "Failed to fetch PR details. Error: $pr_reviews"
+              exit 1
+            fi
             
-      #       echo "PR Reviews: $pr_reviews"
-      #       # If there are no reviews, print a message and wait
-      #       if [ -z "$pr_reviews" ]; then
-      #         echo "No reviews found yet. Waiting for reviews..."
-      #         sleep 30  # Sleep for 30 seconds before checking again
-      #         continue  # Continue checking without exiting
-      #       fi
-      #       # Check for approval status
-      #       approval_status=$(echo "$pr_reviews" | jq '.[] | select(.state == "APPROVED")' | wc -l)
-      #       echo "Approval status is: $approval_status"
-      #       # If PR is approved, proceed with merge
-      #       if [ "$approval_status" -ge 1 ]; then
-      #         echo "PR is approved, proceeding with merge."
-      #         # Rebase and merge the PR
-      #         git fetch origin
-      #         echo "main branch is checking out"
-      #         git checkout main
-      #         git pull origin main
-      #         echo "feature branch is checking out"
-      #         git checkout $FEATURE_BRANCH  # Checkout the feature branch
-      #         echo "main branch is being merged"
-      #         echo "Attempting to rebase onto main"
-      #         git merge origin/main || {
-      #           echo "Rebase failed due to conflicts. Resolving conflicts automatically."
-      #           echo "checking out theirs change."
-      #           git checkout --theirs CHANGELOG_Dev.md  # Automatically accept changes from the base branch
-      #           echo "checking out ours change."
-      #           git checkout --ours CHANGELOG_Dev.md  # Automatically accept changes from the base branch
-      #           echo "adding changes to remote repo."
-      #           git add CHANGELOG_Dev.md
-      #           echo "running git commit command."
-      #           git commit -m "fixed conflict for changelog pr"
+            echo "PR Reviews: $pr_reviews"
+            # If there are no reviews, print a message and wait
+            if [ -z "$pr_reviews" ]; then
+              echo "No reviews found yet. Waiting for reviews..."
+              sleep 30  # Sleep for 30 seconds before checking again
+              continue  # Continue checking without exiting
+            fi
+            # Check for approval status
+            approval_status=$(echo "$pr_reviews" | jq '.[] | select(.state == "APPROVED")' | wc -l)
+            echo "Approval status is: $approval_status"
+            # If PR is approved, proceed with merge
+            if [ "$approval_status" -ge 1 ]; then
+              echo "PR is approved, proceeding with merge."
+              # Rebase and merge the PR
+              git fetch origin
+              echo "main branch is checking out"
+              git checkout main
+              git pull origin main
+              echo "feature branch is checking out"
+              git checkout $FEATURE_BRANCH  # Checkout the feature branch
+              echo "main branch is being merged"
+              echo "Attempting to rebase onto main"
+              git merge origin/main || {
+                echo "Rebase failed due to conflicts. Resolving conflicts automatically."
+                echo "checking out theirs change."
+                git checkout --theirs CHANGELOG_Dev.md  # Automatically accept changes from the base branch
+                echo "checking out ours change."
+                git checkout --ours CHANGELOG_Dev.md  # Automatically accept changes from the base branch
+                echo "adding changes to remote repo."
+                git add CHANGELOG_Dev.md
+                echo "running git commit command."
+                git commit -m "fixed conflict for changelog pr"
                 
-      #         }
-      #         echo "running git push command."
-      #         git push origin $FEATURE_BRANCH --force-with-lease  # Push rebased branch
+              }
+              echo "running git push command."
+              git push origin $FEATURE_BRANCH --force-with-lease  # Push rebased branch
 
-      #         # Now merge the PR using GitHub CLI
-      #         gh pr merge $pr_number --merge --auto --delete-branch
-      #         echo "PR #$pr_number merged successfully into main. and removed changelog feature branch"
-      #         break  # Exit the loop after successful merge
-      #       else
-      #         echo "PR is not approved yet, waiting..."
-      #         echo "Approve the PR , click on link to go to PR $changelog_pr_url"
-      #         echo "Anyone can approve this PR, go to changed file section and aprpove"
-      #         sleep 30  # Wait for approval, check again after some time
-      #       fi
-      #     done
+              # Now merge the PR using GitHub CLI
+              gh pr merge $pr_number --merge --auto --delete-branch
+              echo "PR #$pr_number merged successfully into main. and removed changelog feature branch"
+              break  # Exit the loop after successful merge
+            else
+              echo "PR is not approved yet, waiting..."
+              echo "Approve the PR , click on link to go to PR $changelog_pr_url"
+              echo "Anyone can approve this PR, go to changed file section and aprpove"
+              sleep 30  # Wait for approval, check again after some time
+            fi
+          done
 
 
   read_tag_and_deploy:
