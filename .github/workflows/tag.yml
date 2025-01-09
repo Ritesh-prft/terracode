@@ -27,7 +27,169 @@ permissions:
   pull-requests: write
 
 jobs:
+
+  create_tag_for_deployment:
+    
+    runs-on: ubuntu-latest
+    outputs:
+      NEW_TAG: ${{ steps.get_version.outputs.NEW_TAG }}
+      COMMIT_MESSAGE: ${{ steps.pr_commit_message.outputs.COMMIT_MESSAGE }}
+    permissions:
+      id-token: write # This is required for requesting the JWT
+      contents: write  # Allow GITHUB_TOKEN to write to repository contents
+      pull-requests: write  # Allow GITHUB_TOKEN to create and manage pull requests
+    steps:
+      - name: Checkout code from PR branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }} 
+          # token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Set up Git for tagging
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+      - name: Fetch tags from remote
+        run: |
+          git fetch --tags
+      - name: Get latest tag and determine version increment
+        id: get_version
+        run: |
+          # Get the latest tag in the repo
+          LATEST_TAG=$(git tag --list 'tag-v*' | sort -V | tail -n 1)
+          if [ -z "$LATEST_TAG" ]; then
+            LATEST_TAG="tag-v0.0.0"
+          fi
+          # Parse version components (e.g., tag-v1.0.0 -> MAJOR=1, MINOR=0, PATCH=0)
+          VERSION="${LATEST_TAG//tag-v/}"
+          VERSION_PARTS=(${VERSION//./ })
+          MAJOR="${VERSION_PARTS[0]}"
+          MINOR="${VERSION_PARTS[1]}"
+          PATCH="${VERSION_PARTS[2]}"
+          # Check commit message for version increment and modify
+          COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+          
+          if [[ "$COMMIT_MESSAGE" == *MAJOR* ]]; then
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+          elif [[ "$COMMIT_MESSAGE" == *MINOR* ]]; then
+            MINOR=$((MINOR + 1))
+            PATCH=0
+          elif [[ "$COMMIT_MESSAGE" == *PATCH* ]]; then
+            PATCH=$((PATCH + 1))
+          fi
+          # Set new tag
+          NEW_TAG="tag-v${MAJOR}.${MINOR}.${PATCH}"
+          # Ensure the tag is unique (increment PATCH if necessary)
+          while git rev-parse "$NEW_TAG" >/dev/null 2>&1; do
+            PATCH=$((PATCH + 1))
+            NEW_TAG="tag-v${MAJOR}.${MINOR}.${PATCH}"
+          done
+          echo "New tag: $NEW_TAG"
+          echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
+          echo "NEW_TAG=$NEW_TAG" >> $GITHUB_OUTPUT
+          # echo "::set-output name=NEW_TAG::$NEW_TAG"
+
+      - name: Create and push tag from feature branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          NEW_TAG="${{ env.NEW_TAG }}"
+          git tag $NEW_TAG
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
+          git push origin $NEW_TAG
+          echo "Created and pushed tag: $NEW_TAG"
+
+      - name: Fetch PR commit message using GitHub API
+        id: pr_commit_message
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          COMMIT_MESSAGE=$(curl -s \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
+            | jq -r '.title + " " + .body')
+          # Remove newlines and extra spaces
+          COMMIT_MESSAGE=$(echo "$COMMIT_MESSAGE" | tr -d '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+          # Set commit message for later use
+          echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_ENV
+          echo "Fetched Commit Message: $COMMIT_MESSAGE"
+          echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_OUTPUT
+
+      - name: Fetch PR changed files using GitHub API
+        id: changed_files
+        run: |
+          # Ensure PR number is available
+          PER_PAGE=100
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          echo "PR Number: $PR_NUMBER"
+          if [ -z "$PR_NUMBER" ]; then
+            echo "PR number not found. Exiting."
+            exit 1
+          fi
+          echo "Fetching changed files for PR #$PR_NUMBER..."
+
+          # Fetch the changed files from the PR using GitHub API
+          RESPONSE=$(curl -s \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}/files?per_page=$PER_PAGE")
+
+          # Check if the response is empty or malformed
+          if [ -z "$RESPONSE" ]; then
+            echo "API response is empty. Exiting."
+            exit 1
+          fi
+
+          # Extract filenames and status using jq
+          CHANGED_FILES=$(echo "$RESPONSE" | jq -r '.[] | select(.status != "removed") | .filename')
+
+
+          # Check if files are being returned
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No files found in the PR. Exiting."
+            exit 1
+          fi
+
+          # Filter only files in the /src path (ignoring files outside /infra/src/dags/)
+          SRC_CHANGED_FILES=$(echo "$CHANGED_FILES" | grep -E "^infra/src/dags/" || echo "")
+
+          # Display the count of changed files
+          CHANGED_FILES_COUNT=$(echo "$CHANGED_FILES" | wc -l)
+          echo "all changed files count: $CHANGED_FILES_COUNT"
+          SRC_CHANGED_FILES_COUNT=$(echo "$SRC_CHANGED_FILES" | wc -l)
+          echo "SRC changed files count: $SRC_CHANGED_FILES_COUNT"
+
+          # Handle the case where no files match the filter
+          if [ -z "$SRC_CHANGED_FILES" ]; then
+            echo "No files changed in path 'infra/src/dags/'."
+            echo "Skipping further steps."
+            # You can exit successfully if no relevant files are found
+            exit 0
+          else
+            echo "Files changed in 'infra/src/dags/':"
+            echo "$SRC_CHANGED_FILES"
+            echo "Current working directory: $(pwd)"
+            echo "$SRC_CHANGED_FILES" > dags_changed_files.txt
+            echo "$CHANGED_FILES" > all_changed_files.txt
+          fi
+          echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_OUTPUT
+
+      - name: Upload all_changed_files.txt artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: all-changed-files
+          path: all_changed_files.txt
+
+      - name: Upload dags_changed_files.txt artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: dags-changed-files
+          path: dags_changed_files.txt
+
+##########################################################################          
   check-approval:
+    name: Validating_PR_Approval
+    needs: create_tag_for_deployment
     runs-on: ubuntu-latest
     outputs:
       approval-status: ${{ steps.check-approval.outputs.status }}
@@ -198,167 +360,11 @@ jobs:
           gh pr merge $pr_number --merge
           echo "PR #$pr_number merged successfully into main."
 ##############################################################################################################
-  create_tag_for_deployment:
-    needs: validate_created_pr
-    runs-on: ubuntu-latest
-    outputs:
-      NEW_TAG: ${{ steps.get_version.outputs.NEW_TAG }}
-      COMMIT_MESSAGE: ${{ steps.pr_commit_message.outputs.COMMIT_MESSAGE }}
-    permissions:
-      id-token: write # This is required for requesting the JWT
-      contents: write  # Allow GITHUB_TOKEN to write to repository contents
-      pull-requests: write  # Allow GITHUB_TOKEN to create and manage pull requests
-    steps:
-      - name: Checkout code from PR branch
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ github.head_ref }} 
-          # token: ${{ secrets.GITHUB_TOKEN }}
-          
-      - name: Set up Git for tagging
-        run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
-      - name: Fetch tags from remote
-        run: |
-          git fetch --tags
-      - name: Get latest tag and determine version increment
-        id: get_version
-        run: |
-          # Get the latest tag in the repo
-          LATEST_TAG=$(git tag --list 'tag-v*' | sort -V | tail -n 1)
-          if [ -z "$LATEST_TAG" ]; then
-            LATEST_TAG="tag-v0.0.0"
-          fi
-          # Parse version components (e.g., tag-v1.0.0 -> MAJOR=1, MINOR=0, PATCH=0)
-          VERSION="${LATEST_TAG//tag-v/}"
-          VERSION_PARTS=(${VERSION//./ })
-          MAJOR="${VERSION_PARTS[0]}"
-          MINOR="${VERSION_PARTS[1]}"
-          PATCH="${VERSION_PARTS[2]}"
-          # Check commit message for version increment and modify
-          COMMIT_MESSAGE=$(git log -1 --pretty=%B)
-          
-          if [[ "$COMMIT_MESSAGE" == *MAJOR* ]]; then
-            MAJOR=$((MAJOR + 1))
-            MINOR=0
-            PATCH=0
-          elif [[ "$COMMIT_MESSAGE" == *MINOR* ]]; then
-            MINOR=$((MINOR + 1))
-            PATCH=0
-          elif [[ "$COMMIT_MESSAGE" == *PATCH* ]]; then
-            PATCH=$((PATCH + 1))
-          fi
-          # Set new tag
-          NEW_TAG="tag-v${MAJOR}.${MINOR}.${PATCH}"
-          # Ensure the tag is unique (increment PATCH if necessary)
-          while git rev-parse "$NEW_TAG" >/dev/null 2>&1; do
-            PATCH=$((PATCH + 1))
-            NEW_TAG="tag-v${MAJOR}.${MINOR}.${PATCH}"
-          done
-          echo "New tag: $NEW_TAG"
-          echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
-          echo "NEW_TAG=$NEW_TAG" >> $GITHUB_OUTPUT
-          # echo "::set-output name=NEW_TAG::$NEW_TAG"
-
-      - name: Create and push tag from feature branch
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          NEW_TAG="${{ env.NEW_TAG }}"
-          git tag $NEW_TAG
-          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
-          git push origin $NEW_TAG
-          echo "Created and pushed tag: $NEW_TAG"
-
-      - name: Fetch PR commit message using GitHub API
-        id: pr_commit_message
-        run: |
-          PR_NUMBER="${{ github.event.pull_request.number }}"
-          COMMIT_MESSAGE=$(curl -s \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
-            | jq -r '.title + " " + .body')
-          # Remove newlines and extra spaces
-          COMMIT_MESSAGE=$(echo "$COMMIT_MESSAGE" | tr -d '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-          # Set commit message for later use
-          echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_ENV
-          echo "Fetched Commit Message: $COMMIT_MESSAGE"
-          echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_OUTPUT
-
-      - name: Fetch PR changed files using GitHub API
-        id: changed_files
-        run: |
-          # Ensure PR number is available
-          PER_PAGE=100
-          PR_NUMBER="${{ github.event.pull_request.number }}"
-          echo "PR Number: $PR_NUMBER"
-          if [ -z "$PR_NUMBER" ]; then
-            echo "PR number not found. Exiting."
-            exit 1
-          fi
-          echo "Fetching changed files for PR #$PR_NUMBER..."
-
-          # Fetch the changed files from the PR using GitHub API
-          RESPONSE=$(curl -s \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}/files?per_page=$PER_PAGE")
-
-          # Check if the response is empty or malformed
-          if [ -z "$RESPONSE" ]; then
-            echo "API response is empty. Exiting."
-            exit 1
-          fi
-
-          # Extract filenames and status using jq
-          CHANGED_FILES=$(echo "$RESPONSE" | jq -r '.[] | select(.status != "removed") | .filename')
-
-
-          # Check if files are being returned
-          if [ -z "$CHANGED_FILES" ]; then
-            echo "No files found in the PR. Exiting."
-            exit 1
-          fi
-
-          # Filter only files in the /src path (ignoring files outside /infra/src/dags/)
-          SRC_CHANGED_FILES=$(echo "$CHANGED_FILES" | grep -E "^infra/src/dags/" || echo "")
-
-          # Display the count of changed files
-          CHANGED_FILES_COUNT=$(echo "$CHANGED_FILES" | wc -l)
-          echo "all changed files count: $CHANGED_FILES_COUNT"
-          SRC_CHANGED_FILES_COUNT=$(echo "$SRC_CHANGED_FILES" | wc -l)
-          echo "SRC changed files count: $SRC_CHANGED_FILES_COUNT"
-
-          # Handle the case where no files match the filter
-          if [ -z "$SRC_CHANGED_FILES" ]; then
-            echo "No files changed in path 'infra/src/dags/'."
-            echo "Skipping further steps."
-            # You can exit successfully if no relevant files are found
-            exit 0
-          else
-            echo "Files changed in 'infra/src/dags/':"
-            echo "$SRC_CHANGED_FILES"
-            echo "Current working directory: $(pwd)"
-            echo "$SRC_CHANGED_FILES" > dags_changed_files.txt
-            echo "$CHANGED_FILES" > all_changed_files.txt
-          fi
-          echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_OUTPUT
-
-      - name: Upload all_changed_files.txt artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: all-changed-files
-          path: all_changed_files.txt
-
-      - name: Upload dags_changed_files.txt artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: dags-changed-files
-          path: dags_changed_files.txt
+  
           
 ##############################################################################################################
   dev_changelog_pr_approve_it_manually:
-    needs: [create_tag_for_deployment]
+    needs: [validate_created_pr]
     runs-on: ubuntu-latest
     name: Deployment- ${{  needs.create_tag_for_deployment.outputs.NEW_TAG }}
     env:
@@ -442,93 +448,93 @@ jobs:
         run: |
           echo "${{ secrets.PR_TOKEN }}" | gh auth login --with-token
 
-      - name: Approve the PR
-        run: |
-          echo "Approving the PR..."
-          pr_number="${{ env.changelog_pr_number }}"
-          gh pr review $pr_number --approve --body "Automated approval"
-        env:
-          GITHUB_TOKEN: ${{ secrets.PR_APPROVER }}
+      # - name: Approve the PR
+      #   run: |
+      #     echo "Approving the PR..."
+      #     pr_number="${{ env.changelog_pr_number }}"
+      #     gh pr review $pr_number --approve --body "Automated approval"
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.PR_APPROVER }}
 
-      - name: Authenticate GitHub CLI
-        run: |
-          echo "${{ secrets.PR_TOKEN }}" | gh auth login --with-token
-          
-      - name: Merge the PR
-        run: |
-          echo "Merging the PR..."
-          pr_number="${{ env.changelog_pr_number }}"
-          gh pr merge $pr_number --merge --auto --delete-branch
-          echo "PR #$pr_number merged successfully into main and deleted changelog feature branch"
+      # - name: Authenticate GitHub CLI
+      #   run: |
+      #     echo "${{ secrets.PR_TOKEN }}" | gh auth login --with-token
+
+      # - name: Merge the PR
+      #   run: |
+      #     echo "Merging the PR..."
+      #     pr_number="${{ env.changelog_pr_number }}"
+      #     gh pr merge $pr_number --merge --auto --delete-branch
+      #     echo "PR #$pr_number merged successfully into main and deleted changelog feature branch"
 
       # - name: Authenticate GitHub CLI
       #   run: |
       #     echo "${{ secrets.PR_TOKEN }}" | gh auth login --with-token
 
       
-      # - name: Check PR review status
-      #   run: |
-      #     echo "Fetching PR review details..."
-      #     pr_number="${{ env.changelog_pr_number }}"
-      #     FEATURE_BRANCH="${{ env.dev_changelog_feature_branch }}"
-      #     # Poll until PR is approved
-      #     while true; do
-      #       # Fetch all reviews for the PR
-      #       pr_reviews=$(gh pr view $pr_number --json reviews --jq '.reviews')
+      - name: Check PR review status
+        run: |
+          echo "Fetching PR review details..."
+          pr_number="${{ env.changelog_pr_number }}"
+          FEATURE_BRANCH="${{ env.dev_changelog_feature_branch }}"
+          # Poll until PR is approved
+          while true; do
+            # Fetch all reviews for the PR
+            pr_reviews=$(gh pr view $pr_number --json reviews --jq '.reviews')
             
-      #       if [[ $? -ne 0 ]]; then
-      #         echo "Failed to fetch PR details. Error: $pr_reviews"
-      #         exit 1
-      #       fi
+            if [[ $? -ne 0 ]]; then
+              echo "Failed to fetch PR details. Error: $pr_reviews"
+              exit 1
+            fi
             
-      #       echo "PR Reviews: $pr_reviews"
-      #       # If there are no reviews, print a message and wait
-      #       if [ -z "$pr_reviews" ]; then
-      #         echo "No reviews found yet. Waiting for reviews..."
-      #         sleep 30  # Sleep for 30 seconds before checking again
-      #         continue  # Continue checking without exiting
-      #       fi
-      #       # Check for approval status
-      #       approval_status=$(echo "$pr_reviews" | jq '.[] | select(.state == "APPROVED")' | wc -l)
-      #       echo "Approval status is: $approval_status"
-      #       # If PR is approved, proceed with merge
-      #       if [ "$approval_status" -ge 1 ]; then
-      #         echo "PR is approved, proceeding with merge."
-      #         # Rebase and merge the PR
-      #         git fetch origin
-      #         echo "main branch is checking out"
-      #         git checkout main
-      #         git pull origin main
-      #         echo "feature branch is checking out"
-      #         git checkout $FEATURE_BRANCH  # Checkout the feature branch
-      #         echo "main branch is being merged"
-      #         echo "Attempting to rebase onto main"
-      #         git merge origin/main || {
-      #           echo "Rebase failed due to conflicts. Resolving conflicts automatically."
-      #           echo "checking out theirs change."
-      #           git checkout --theirs CHANGELOG_Dev.md  # Automatically accept changes from the base branch
-      #           echo "checking out ours change."
-      #           git checkout --ours CHANGELOG_Dev.md  # Automatically accept changes from the base branch
-      #           echo "adding changes to remote repo."
-      #           git add CHANGELOG_Dev.md
-      #           echo "running git commit command."
-      #           git commit -m "fixed conflict for changelog pr"
+            echo "PR Reviews: $pr_reviews"
+            # If there are no reviews, print a message and wait
+            if [ -z "$pr_reviews" ]; then
+              echo "No reviews found yet. Waiting for reviews..."
+              sleep 30  # Sleep for 30 seconds before checking again
+              continue  # Continue checking without exiting
+            fi
+            # Check for approval status
+            approval_status=$(echo "$pr_reviews" | jq '.[] | select(.state == "APPROVED")' | wc -l)
+            echo "Approval status is: $approval_status"
+            # If PR is approved, proceed with merge
+            if [ "$approval_status" -ge 1 ]; then
+              echo "PR is approved, proceeding with merge."
+              # Rebase and merge the PR
+              git fetch origin
+              echo "main branch is checking out"
+              git checkout main
+              git pull origin main
+              echo "feature branch is checking out"
+              git checkout $FEATURE_BRANCH  # Checkout the feature branch
+              echo "main branch is being merged"
+              echo "Attempting to rebase onto main"
+              git merge origin/main || {
+                echo "Rebase failed due to conflicts. Resolving conflicts automatically."
+                echo "checking out theirs change."
+                git checkout --theirs CHANGELOG_Dev.md  # Automatically accept changes from the base branch
+                echo "checking out ours change."
+                git checkout --ours CHANGELOG_Dev.md  # Automatically accept changes from the base branch
+                echo "adding changes to remote repo."
+                git add CHANGELOG_Dev.md
+                echo "running git commit command."
+                git commit -m "fixed conflict for changelog pr"
                 
-      #         }
-      #         echo "running git push command."
-      #         git push origin $FEATURE_BRANCH --force-with-lease  # Push rebased branch
+              }
+              echo "running git push command."
+              git push origin $FEATURE_BRANCH --force-with-lease  # Push rebased branch
 
-      #         # Now merge the PR using GitHub CLI
-      #         gh pr merge $pr_number --merge --auto --delete-branch
-      #         echo "PR #$pr_number merged successfully into main. and removed changelog feature branch"
-      #         break  # Exit the loop after successful merge
-      #       else
-      #         echo "PR is not approved yet, waiting..."
-      #         echo "Approve the PR , click on link to go to PR $changelog_pr_url"
-      #         echo "Anyone can approve this PR, go to changed file section and aprpove"
-      #         sleep 30  # Wait for approval, check again after some time
-      #       fi
-      #     done
+              # Now merge the PR using GitHub CLI
+              gh pr merge $pr_number --merge --auto --delete-branch
+              echo "PR #$pr_number merged successfully into main. and removed changelog feature branch"
+              break  # Exit the loop after successful merge
+            else
+              echo "PR is not approved yet, waiting..."
+              echo "Approve the PR , click on link to go to PR $changelog_pr_url"
+              echo "Anyone can approve this PR, go to changed file section and aprpove"
+              sleep 30  # Wait for approval, check again after some time
+            fi
+          done
 
 
   read_tag_and_deploy:
