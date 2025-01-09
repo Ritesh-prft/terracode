@@ -364,7 +364,7 @@ jobs:
           
 ##############################################################################################################
   dev_changelog_pr_approve_it_manually:
-    needs: [validate_created_pr]
+    needs: [validate_created_pr,create_tag_for_deployment]
     runs-on: ubuntu-latest
     name: Deployment- ${{  needs.create_tag_for_deployment.outputs.NEW_TAG }}
     env:
