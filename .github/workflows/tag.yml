@@ -6,6 +6,23 @@ on:
         description: 'Enter the tag to deploy (e.g., tag-v1.0.0)'
         required: true
         type: string
+      deploy_to_dev:
+        description: 'Deploy to Dev environment?'
+        required: true
+        type: boolean
+      deploy_to_qa:
+        description: 'Deploy to QA environment?'
+        required: true
+        type: boolean
+      deploy_to_stg:
+        description: 'Deploy to Staging environment?'
+        required: true
+        type: boolean
+      deploy_to_prd:
+        description: 'Deploy to Production environment?'
+        required: true
+        type: boolean
+        
   pull_request:
     branches:
       - main  # Trigger when a PR is targeting the 'main' branch
